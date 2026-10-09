@@ -1,4 +1,5 @@
 
+
 CREATE TABLE batalha_pokemons
 (
   id_batalha INT                    NOT NULL,
@@ -19,18 +20,6 @@ CREATE TABLE batalhas
   iniciada_em   DATETIME              NULL     DEFAULT CURRENT_TIMESTAMP,
   finalizada_em DATETIME              NULL    ,
   PRIMARY KEY (id_batalha)
-);
-
-CREATE TABLE log_turnos (
-    id_log INT AUTO_INCREMENT PRIMARY KEY,
-    id_batalha INT NOT NULL,
-    turno INT NOT NULL,
-    id_pokemon INT,
-    acao VARCHAR(50) NOT NULL,
-    descricao VARCHAR(255) NOT NULL,
-    hp_antes INT,
-    hp_depois INT,
-    registrado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
 );
 
 CREATE TABLE categorias_itens
@@ -86,6 +75,19 @@ CREATE TABLE perfis
   PRIMARY KEY (id_perfil)
 );
 
+CREATE TABLE pokedex
+(
+  id_pokedex INT          NOT NULL,
+  name       VARCHAR(100) NULL    ,
+  HP         INT          NULL    ,
+  ATQ        INT          NULL    ,
+  ATQE       INT          NULL    ,
+  DEF        INT          NULL    ,
+  DEFE       INT          NULL    ,
+  SPE        INT          NULL    ,
+  PRIMARY KEY (id_pokedex)
+);
+
 CREATE TABLE pokemon_tipos
 (
   id_pokemon INT NOT NULL,
@@ -95,21 +97,11 @@ CREATE TABLE pokemon_tipos
 
 CREATE TABLE pokemons
 (
-  id_pokemon      INT          NULL     AUTO_INCREMENT,
-  id_api          INT          NOT NULL,
-  nome            VARCHAR(100) NOT NULL,
-  nivel           INT          NOT NULL DEFAULT 1,
-  hp_max          INT          NOT NULL,
-  hp_atual        INT          NOT NULL,
-  ataque          INT          NOT NULL,
-  defesa          INT          NOT NULL,
-  ataque_especial INT          NOT NULL,
-  defesa_especial INT          NOT NULL,
-  velocidade      INT          NOT NULL,
-  prioridade      INT          NOT NULL DEFAULT 0,
-  experiencia     INT          NOT NULL DEFAULT 0,
-  status          VARCHAR(30)  NULL     DEFAULT NULL,
-  criado_em       DATETIME     NULL     DEFAULT CURRENT_TIMESTAMP,
+  id_pokemon INT          NULL     AUTO_INCREMENT,
+  id_pokedex INT          NOT NULL,
+  status     VARCHAR(30)  NOT NULL DEFAULT NULL,
+  nome       VARCHAR(100) NOT NULL,
+  criado_em  DATETIME     NULL     DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id_pokemon)
 );
 
@@ -221,3 +213,8 @@ ALTER TABLE compras
   ADD CONSTRAINT FK_itens_TO_compras
     FOREIGN KEY (id_item)
     REFERENCES itens (id_item);
+
+ALTER TABLE pokemons
+  ADD CONSTRAINT FK_pokedex_TO_pokemons
+    FOREIGN KEY (id_pokedex)
+    REFERENCES pokedex (id_pokedex);

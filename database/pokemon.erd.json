@@ -6,9 +6,9 @@
     "height": 2000,
     "scrollTop": 0,
     "scrollLeft": 0,
-    "originX": -2055.3534,
-    "originY": -1060.0389,
-    "zoomLevel": 1.21,
+    "originX": -250.1392,
+    "originY": -152.4925,
+    "zoomLevel": 0.61,
     "show": 431,
     "database": 4,
     "databaseName": "",
@@ -62,7 +62,8 @@
       "MXPjBtNWtUM_wb9eQp5dj",
       "LSznLgDClwmiSjCcT8tKk",
       "fEoAntzbxonHIoAsKzRCW",
-      "G_N7ARBLHDFYECuE5FrB0"
+      "G_N7ARBLHDFYECuE5FrB0",
+      "XNXVgyzxhjq0lDk1LSrKY"
     ],
     "indexIds": [],
     "memoIds": []
@@ -160,14 +161,18 @@
         "comment": "",
         "columnIds": [
           "J91phhWXwub025S9yFCWJ",
+          "kCKRmkLZQFuA-6yzpDAP8",
           "Oi7nBkL2Y0J36f9uBYRvG",
           "eWB_rzPN_NmLXWKGxYO_e",
           "4BhCc_vKAgjsOgGEjmdVL",
-          "-SGIGWs_DGW1mbYAlx2fm"
+          "zsHzzZQXFuykItCY31gKh",
+          "I39PHSe3JSaqgzgGeakOC"
         ],
         "seqColumnIds": [
           "J91phhWXwub025S9yFCWJ",
+          "-SGIGWs_DGW1mbYAlx2fm",
           "cf0IJXiQa1p3P3HeNR_lK",
+          "kCKRmkLZQFuA-6yzpDAP8",
           "Oi7nBkL2Y0J36f9uBYRvG",
           "AfFh09Zi1c3g-2V-Vg5bg",
           "ilGzqRZbk6ktAxRN-E0b4",
@@ -181,12 +186,13 @@
           "RD-FYv1e5gpjm-wLe-xBw",
           "Rpuy_pEIChsXtzS3dTpjZ",
           "eWB_rzPN_NmLXWKGxYO_e",
-          "4BhCc_vKAgjsOgGEjmdVL",
           "KUIPbxGX0A0wXA4tnoBNF",
-          "-SGIGWs_DGW1mbYAlx2fm"
+          "4BhCc_vKAgjsOgGEjmdVL",
+          "zsHzzZQXFuykItCY31gKh",
+          "I39PHSe3JSaqgzgGeakOC"
         ],
         "ui": {
-          "x": 1785.0677,
+          "x": 1795.7167,
           "y": 999.1652,
           "zIndex": 2,
           "widthName": 60,
@@ -194,7 +200,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1791229843287,
+          "updateAt": 1791564447506,
           "createAt": 1791223642837
         }
       },
@@ -500,7 +506,8 @@
           "HymWzOgomTg2hIS_6C0AU",
           "Q9NiHk2x40_VzLPQq5HFo",
           "qLXmeLo71g5G06W8KUu0o",
-          "lQ7E0m6AJHDsHR7FV0P8r"
+          "lQ7E0m6AJHDsHR7FV0P8r",
+          "U9ClK4WL7UkZrHUUIF41u"
         ],
         "seqColumnIds": [
           "kU3tAWTepNC5q5GNjH2h4",
@@ -512,18 +519,19 @@
           "Q9NiHk2x40_VzLPQq5HFo",
           "qLXmeLo71g5G06W8KUu0o",
           "lQ7E0m6AJHDsHR7FV0P8r",
-          "wyX23siWobDB70ZSTIg0-"
+          "wyX23siWobDB70ZSTIg0-",
+          "U9ClK4WL7UkZrHUUIF41u"
         ],
         "ui": {
-          "x": 2269.4686,
-          "y": 1319.4836,
+          "x": 2249.4686,
+          "y": 1315.4086,
           "zIndex": 14,
           "widthName": 60,
           "widthComment": 60,
           "color": ""
         },
         "meta": {
-          "updateAt": 1791229774949,
+          "updateAt": 1791564446059,
           "createAt": 1791227971213
         }
       }
@@ -2128,6 +2136,86 @@
           "updateAt": 1791229843077,
           "createAt": 1791229843077
         }
+      },
+      "kCKRmkLZQFuA-6yzpDAP8": {
+        "id": "kCKRmkLZQFuA-6yzpDAP8",
+        "tableId": "irK4GoqtlrsNqCm9zhyoE",
+        "name": "id_pokedex",
+        "comment": "",
+        "dataType": "INT",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 62,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1791563477291,
+          "createAt": 1791563477290
+        }
+      },
+      "zsHzzZQXFuykItCY31gKh": {
+        "id": "zsHzzZQXFuykItCY31gKh",
+        "tableId": "irK4GoqtlrsNqCm9zhyoE",
+        "name": "id_pokedex_2",
+        "comment": "",
+        "dataType": "INT",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 74,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1791563696234,
+          "createAt": 1791563696234
+        }
+      },
+      "U9ClK4WL7UkZrHUUIF41u": {
+        "id": "U9ClK4WL7UkZrHUUIF41u",
+        "tableId": "Gst34os3xYTM2GjQozVmw",
+        "name": "id_pokemon",
+        "comment": "",
+        "dataType": "INT",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 67,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1791564425354,
+          "createAt": 1791564425354
+        }
+      },
+      "I39PHSe3JSaqgzgGeakOC": {
+        "id": "I39PHSe3JSaqgzgGeakOC",
+        "tableId": "irK4GoqtlrsNqCm9zhyoE",
+        "name": "id_pokedex_3",
+        "comment": "",
+        "dataType": "INT",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 2,
+          "widthName": 74,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1791564447506,
+          "createAt": 1791564447506
+        }
       }
     },
     "relationshipEntities": {
@@ -2136,6 +2224,8 @@
         "identification": false,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "aCvektD9kxCjI3-T0FZ8p",
           "columnIds": [
@@ -2164,13 +2254,15 @@
         "identification": true,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "irK4GoqtlrsNqCm9zhyoE",
           "columnIds": [
             "J91phhWXwub025S9yFCWJ"
           ],
-          "x": 2012.5677,
-          "y": 1149.1652,
+          "x": 2026.7167,
+          "y": 1197.1652,
           "direction": 8
         },
         "end": {
@@ -2192,6 +2284,8 @@
         "identification": true,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "IbCyA1rM_jAtktiQ91ey_",
           "columnIds": [
@@ -2220,6 +2314,8 @@
         "identification": false,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "q1shjkLcFL8H3J4D8jOsm",
           "columnIds": [
@@ -2248,6 +2344,8 @@
         "identification": true,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "1r-9ty1-CeyH5sQyGpotR",
           "columnIds": [
@@ -2276,13 +2374,15 @@
         "identification": true,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "irK4GoqtlrsNqCm9zhyoE",
           "columnIds": [
             "J91phhWXwub025S9yFCWJ"
           ],
-          "x": 2240.0677,
-          "y": 1074.1652,
+          "x": 2257.7167,
+          "y": 1038.1652,
           "direction": 2
         },
         "end": {
@@ -2304,6 +2404,8 @@
         "identification": false,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "g0MGlt-m9J27r--h7-Y2V",
           "columnIds": [
@@ -2332,6 +2434,8 @@
         "identification": true,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "q1shjkLcFL8H3J4D8jOsm",
           "columnIds": [
@@ -2360,6 +2464,8 @@
         "identification": true,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "phFWStwUDVBRg4J-r8smK",
           "columnIds": [
@@ -2388,6 +2494,8 @@
         "identification": false,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "q1shjkLcFL8H3J4D8jOsm",
           "columnIds": [
@@ -2416,6 +2524,8 @@
         "identification": true,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "p6N4XcFfWHFlE586UPVKj",
           "columnIds": [
@@ -2444,13 +2554,15 @@
         "identification": true,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "irK4GoqtlrsNqCm9zhyoE",
           "columnIds": [
             "J91phhWXwub025S9yFCWJ"
           ],
-          "x": 1785.0677,
-          "y": 1074.1652,
+          "x": 1795.7167,
+          "y": 1098.1652,
           "direction": 1
         },
         "end": {
@@ -2472,6 +2584,8 @@
         "identification": false,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "q1shjkLcFL8H3J4D8jOsm",
           "columnIds": [
@@ -2500,6 +2614,8 @@
         "identification": false,
         "relationshipType": 4,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "phFWStwUDVBRg4J-r8smK",
           "columnIds": [
@@ -2528,6 +2644,8 @@
         "identification": false,
         "relationshipType": 16,
         "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
         "start": {
           "tableId": "Gst34os3xYTM2GjQozVmw",
           "columnIds": [
@@ -2549,6 +2667,126 @@
         "meta": {
           "updateAt": 1791229843077,
           "createAt": 1791229843077
+        }
+      },
+      "VUzRTJhBvO3r4FM5duqRk": {
+        "id": "VUzRTJhBvO3r4FM5duqRk",
+        "identification": false,
+        "relationshipType": 16,
+        "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
+        "start": {
+          "tableId": "Gst34os3xYTM2GjQozVmw",
+          "columnIds": [
+            "JEJwgU2h7XP_TcYpjTWNH"
+          ],
+          "x": 2463.4686,
+          "y": 1319.4836,
+          "direction": 4
+        },
+        "end": {
+          "tableId": "irK4GoqtlrsNqCm9zhyoE",
+          "columnIds": [
+            "kCKRmkLZQFuA-6yzpDAP8"
+          ],
+          "x": 2239.2412999999997,
+          "y": 1134.1652,
+          "direction": 2
+        },
+        "meta": {
+          "updateAt": 1791563630096,
+          "createAt": 1791563477291
+        }
+      },
+      "rY6HWG-95Rh94pzvKslaE": {
+        "id": "rY6HWG-95Rh94pzvKslaE",
+        "identification": false,
+        "relationshipType": 16,
+        "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
+        "start": {
+          "tableId": "Gst34os3xYTM2GjQozVmw",
+          "columnIds": [
+            "JEJwgU2h7XP_TcYpjTWNH"
+          ],
+          "x": 2463.4686,
+          "y": 1319.4836,
+          "direction": 4
+        },
+        "end": {
+          "tableId": "irK4GoqtlrsNqCm9zhyoE",
+          "columnIds": [
+            "zsHzzZQXFuykItCY31gKh"
+          ],
+          "x": 2246.2412999999997,
+          "y": 1146.1652,
+          "direction": 2
+        },
+        "meta": {
+          "updateAt": 1791563696234,
+          "createAt": 1791563696234
+        }
+      },
+      "fooOKpR9CLtbrcCPAqw4t": {
+        "id": "fooOKpR9CLtbrcCPAqw4t",
+        "identification": false,
+        "relationshipType": 16,
+        "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
+        "start": {
+          "tableId": "irK4GoqtlrsNqCm9zhyoE",
+          "columnIds": [
+            "J91phhWXwub025S9yFCWJ"
+          ],
+          "x": 2257.7167,
+          "y": 1146.1652,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "Gst34os3xYTM2GjQozVmw",
+          "columnIds": [
+            "U9ClK4WL7UkZrHUUIF41u"
+          ],
+          "x": 2465.9686,
+          "y": 1321.1229,
+          "direction": 4
+        },
+        "meta": {
+          "updateAt": 1791564425354,
+          "createAt": 1791564425354
+        }
+      },
+      "XNXVgyzxhjq0lDk1LSrKY": {
+        "id": "XNXVgyzxhjq0lDk1LSrKY",
+        "identification": false,
+        "relationshipType": 16,
+        "startRelationshipType": 2,
+        "onDelete": 1,
+        "onUpdate": 1,
+        "start": {
+          "tableId": "Gst34os3xYTM2GjQozVmw",
+          "columnIds": [
+            "JEJwgU2h7XP_TcYpjTWNH"
+          ],
+          "x": 2445.9686,
+          "y": 1315.4086,
+          "direction": 4
+        },
+        "end": {
+          "tableId": "irK4GoqtlrsNqCm9zhyoE",
+          "columnIds": [
+            "I39PHSe3JSaqgzgGeakOC"
+          ],
+          "x": 2257.7167,
+          "y": 1158.1652,
+          "direction": 2
+        },
+        "meta": {
+          "updateAt": 1791564447506,
+          "createAt": 1791564447506
         }
       }
     },

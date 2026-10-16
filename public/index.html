@@ -1,12 +1,408 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+
+    <title>MonstroBolso</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-     <title>POKELIN</title>
+
+    <header class="header">
+
+        <div class="logo">
+            <h1>MonstroBolso</h1>
+        </div>
+
+        <nav class="menu">
+
+            <button type="button" data-tela="inicio">
+                Início
+            </button>
+
+            <button type="button" data-tela="time">
+                Meu Time
+            </button>
+
+            <button type="button" data-tela="batalha">
+                Batalha
+            </button>
+
+            <button type="button" data-tela="loja">
+                Loja
+            </button>
+
+            <button type="button" data-tela="perfil">
+                Perfil
+            </button>
+
+        </nav>
+
+        <div class="usuario">
+
+            <span id="nomeUsuario">
+                Visitante
+            </span>
+
+            <span id="dinheiroUsuario">
+                🪙 0
+            </span>
+
+        </div>
+
+    </header>
+
+
+    <main id="app">
+
+        <!-- Tela inicial -->
+
+        <section id="tela-inicio" class="tela">
+
+            <div class="hero">
+
+                <h2>Bem-vindo ao MonstroBolso!</h2>
+
+                <p>
+                    Monte seu time, enfrente adversários
+                    e conquiste Pokédollars.
+                </p>
+
+                <button
+                    type="button"
+                    data-tela="time">
+                    Montar meu time
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- Team Builder -->
+
+        <section id="tela-time" class="tela">
+
+            <h2>Montagem de Time</h2>
+
+            <div id="time">
+
+                <div class="slot-pokemon">
+                    <span>Slot 1</span>
+                </div>
+
+                <div class="slot-pokemon">
+                    <span>Slot 2</span>
+                </div>
+
+                <div class="slot-pokemon">
+                    <span>Slot 3</span>
+                </div>
+
+                <div class="slot-pokemon">
+                    <span>Slot 4</span>
+                </div>
+
+                <div class="slot-pokemon">
+                    <span>Slot 5</span>
+                </div>
+
+                <div class="slot-pokemon">
+                    <span>Slot 6</span>
+                </div>
+
+            </div>
+
+            <div class="pokemon-disponiveis">
+
+                <h3>Pokémon disponíveis</h3>
+
+                <div id="listaPokemon">
+                    <!--
+                        Os Pokémon serão carregados
+                        pela API através do JavaScript.
+                    -->
+                </div>
+
+            </div>
+
+            <button type="button" id="salvarTime">
+                Salvar Time
+            </button>
+
+        </section>
+
+
+        <!-- Batalha -->
+
+        <section id="tela-batalha" class="tela">
+
+            <h2>Batalha</h2>
+
+            <div class="campo-batalha">
+
+                <div class="pokemon-inimigo">
+
+                    <h3>Adversário</h3>
+
+                    <div id="pokemonInimigo">
+                        Aguardando...
+                    </div>
+
+                    <div class="barra-hp">
+                        <div
+                            id="hpInimigo"
+                            class="hp">
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="pokemon-jogador">
+
+                    <h3>Seu Pokémon</h3>
+
+                    <div id="pokemonJogador">
+                        Aguardando...
+                    </div>
+
+                    <div class="barra-hp">
+                        <div
+                            id="hpJogador"
+                            class="hp">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="acoes-batalha">
+
+                <button
+                    type="button"
+                    id="atacar">
+                    Atacar
+                </button>
+
+                <button
+                    type="button"
+                    id="trocarPokemon">
+                    Trocar Pokémon
+                </button>
+
+                <button
+                    type="button"
+                    id="usarItem">
+                    Usar Item
+                </button>
+
+                <button
+                    type="button"
+                    id="fugir">
+                    Fugir
+                </button>
+
+            </div>
+
+
+            <div id="logBatalha" class="log-batalha">
+
+                <p>
+                    A batalha ainda não começou.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- Loja -->
+
+        <section id="tela-loja" class="tela">
+
+            <h2>Poké Mart</h2>
+
+            <p>
+                Seus Pokédollars:
+                <strong id="dinheiroLoja">0</strong>
+            </p>
+
+
+            <div id="produtos">
+
+                <article class="produto">
+
+                    <h3>Potion</h3>
+
+                    <p>Recupera 20 HP.</p>
+
+                    <strong>₽ 300</strong>
+
+                    <button
+                        type="button"
+                        data-item="potion">
+                        Comprar
+                    </button>
+
+                </article>
+
+
+                <article class="produto">
+
+                    <h3>Super Potion</h3>
+
+                    <p>Recupera 50 HP.</p>
+
+                    <strong>₽ 700</strong>
+
+                    <button
+                        type="button"
+                        data-item="super-potion">
+                        Comprar
+                    </button>
+
+                </article>
+
+
+                <article class="produto">
+
+                    <h3>Hyper Potion</h3>
+
+                    <p>Recupera 200 HP.</p>
+
+                    <strong>₽ 1200</strong>
+
+                    <button
+                        type="button"
+                        data-item="hyper-potion">
+                        Comprar
+                    </button>
+
+                </article>
+
+
+                <article class="produto">
+
+                    <h3>Max Potion</h3>
+
+                    <p>Recupera 100% do HP.</p>
+
+                    <strong>₽ 2500</strong>
+
+                    <button
+                        type="button"
+                        data-item="max-potion">
+                        Comprar
+                    </button>
+
+                </article>
+
+
+                <article class="produto">
+
+                    <h3>Full Restore</h3>
+
+                    <p>
+                        Recupera 100% do HP
+                        e cura condições de status.
+                    </p>
+
+                    <strong>₽ 3000</strong>
+
+                    <button
+                        type="button"
+                        data-item="full-restore">
+                        Comprar
+                    </button>
+
+                </article>
+
+
+                <article class="produto">
+
+                    <h3>Revive</h3>
+
+                    <p>
+                        Revive um Pokémon
+                        com metade da vida.
+                    </p>
+
+                    <strong>₽ 2000</strong>
+
+                    <button
+                        type="button"
+                        data-item="revive">
+                        Comprar
+                    </button>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- Perfil -->
+
+        <section id="tela-perfil" class="tela">
+
+            <h2>Perfil</h2>
+
+            <div class="perfil">
+
+                <p>
+                    Usuário:
+                    <strong id="perfilNome">
+                        Visitante
+                    </strong>
+                </p>
+
+                <p>
+                    Pokédollars:
+                    <strong id="perfilDinheiro">
+                        0
+                    </strong>
+                </p>
+
+                <p>
+                    Vitórias:
+                    <strong id="perfilVitorias">
+                        0
+                    </strong>
+                </p>
+
+                <p>
+                    Derrotas:
+                    <strong id="perfilDerrotas">
+                        0
+                    </strong>
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+
+        <p>
+            MonstroBolso © 2026
+        </p>
+
+    </footer>
+
+
+    <script src="java.js"></script>
 
 </body>
+
 </html>

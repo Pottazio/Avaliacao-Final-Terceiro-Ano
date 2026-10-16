@@ -1,0 +1,458 @@
+
+/* =========================
+   CONFIGURAÇÕES GERAIS
+========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    color: #222;
+}
+
+
+/* =========================
+   CABEÇALHO
+========================= */
+
+.header {
+    background-color: #d62828;
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 15px 30px;
+}
+
+.logo h1 {
+    font-size: 24px;
+}
+
+
+/* =========================
+   MENU
+========================= */
+
+.menu {
+    display: flex;
+    gap: 10px;
+}
+
+.menu button {
+    background-color: white;
+    color: #d62828;
+
+    border: none;
+    border-radius: 5px;
+
+    padding: 8px 12px;
+
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.menu button:hover {
+    background-color: #eeeeee;
+}
+
+
+/* =========================
+   USUÁRIO
+========================= */
+
+.usuario {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    gap: 5px;
+}
+
+
+/* =========================
+   CONTEÚDO PRINCIPAL
+========================= */
+
+main {
+    width: 90%;
+    max-width: 1100px;
+
+    margin: 30px auto;
+}
+
+.tela {
+    display: none;
+
+    background-color: white;
+
+    padding: 25px;
+
+    border-radius: 8px;
+
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.tela h2 {
+    margin-bottom: 20px;
+}
+
+
+/* =========================
+   TELA INICIAL
+========================= */
+
+.hero {
+    text-align: center;
+
+    padding: 60px 20px;
+}
+
+.hero h2 {
+    font-size: 32px;
+    margin-bottom: 15px;
+}
+
+.hero p {
+    margin-bottom: 25px;
+}
+
+.hero button {
+    background-color: #d62828;
+    color: white;
+
+    border: none;
+    border-radius: 5px;
+
+    padding: 12px 20px;
+
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.hero button:hover {
+    background-color: #b71c1c;
+}
+
+
+/* =========================
+   TEAM BUILDER
+========================= */
+
+#time {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 15px;
+
+    margin-bottom: 30px;
+}
+
+.slot-pokemon {
+    min-height: 120px;
+
+    border: 2px dashed #aaa;
+    border-radius: 8px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #777;
+
+    background-color: #fafafa;
+}
+
+.pokemon-disponiveis {
+    margin-bottom: 20px;
+}
+
+#listaPokemon {
+    min-height: 100px;
+
+    border: 1px solid #ddd;
+    border-radius: 5px;
+
+    padding: 15px;
+}
+
+#salvarTime {
+    background-color: #2a9d8f;
+    color: white;
+
+    border: none;
+    border-radius: 5px;
+
+    padding: 10px 18px;
+
+    cursor: pointer;
+}
+
+
+/* =========================
+   BATALHA
+========================= */
+
+.campo-batalha {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 30px;
+
+    margin-bottom: 30px;
+}
+
+.pokemon-inimigo,
+.pokemon-jogador {
+    width: 50%;
+
+    padding: 20px;
+
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    background-color: #fafafa;
+}
+
+.pokemon-inimigo {
+    text-align: right;
+}
+
+.pokemon-jogador {
+    text-align: left;
+}
+
+
+/* =========================
+   BARRA DE HP
+========================= */
+
+.barra-hp {
+    width: 100%;
+
+    height: 15px;
+
+    background-color: #ccc;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    margin-top: 10px;
+}
+
+.hp {
+    width: 100%;
+    height: 100%;
+
+    background-color: #2a9d8f;
+}
+
+
+/* =========================
+   BOTÕES DA BATALHA
+========================= */
+
+.acoes-batalha {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+.acoes-batalha button {
+    padding: 10px 15px;
+
+    border: none;
+    border-radius: 5px;
+
+    background-color: #457b9d;
+    color: white;
+
+    cursor: pointer;
+}
+
+.acoes-batalha button:hover {
+    background-color: #35627c;
+}
+
+
+/* =========================
+   LOG DA BATALHA
+========================= */
+
+.log-batalha {
+    background-color: #222;
+    color: white;
+
+    padding: 15px;
+
+    border-radius: 5px;
+
+    min-height: 80px;
+}
+
+
+/* =========================
+   LOJA
+========================= */
+
+#produtos {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 15px;
+}
+
+.produto {
+    border: 1px solid #ddd;
+
+    border-radius: 8px;
+
+    padding: 20px;
+
+    background-color: #fafafa;
+}
+
+.produto h3 {
+    margin-bottom: 10px;
+}
+
+.produto p {
+    margin-bottom: 10px;
+
+    color: #555;
+}
+
+.produto strong {
+    display: block;
+
+    margin-bottom: 15px;
+}
+
+.produto button {
+    background-color: #f4a261;
+    color: white;
+
+    border: none;
+    border-radius: 5px;
+
+    padding: 8px 12px;
+
+    cursor: pointer;
+}
+
+.produto button:hover {
+    background-color: #e76f51;
+}
+
+
+/* =========================
+   PERFIL
+========================= */
+
+.perfil {
+    background-color: #fafafa;
+
+    border: 1px solid #ddd;
+
+    border-radius: 8px;
+
+    padding: 20px;
+
+    max-width: 500px;
+}
+
+.perfil p {
+    margin-bottom: 15px;
+}
+
+
+/* =========================
+   RODAPÉ
+========================= */
+
+footer {
+    text-align: center;
+
+    padding: 20px;
+
+    color: #777;
+
+    margin-top: 30px;
+}
+
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width: 800px) {
+
+    .header {
+        flex-direction: column;
+
+        gap: 15px;
+    }
+
+    .usuario {
+        align-items: center;
+    }
+
+    .menu {
+        flex-wrap: wrap;
+
+        justify-content: center;
+    }
+
+    #time {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    #produtos {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .campo-batalha {
+        flex-direction: column;
+    }
+
+    .pokemon-inimigo,
+    .pokemon-jogador {
+        width: 100%;
+
+        text-align: center;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    #time {
+        grid-template-columns: 1fr;
+    }
+
+    #produtos {
+        grid-template-columns: 1fr;
+    }
+
+    .acoes-batalha {
+        flex-direction: column;
+    }
+
+    .acoes-batalha button {
+        width: 100%;
+    }
+}

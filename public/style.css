@@ -1,4 +1,3 @@
-
 /* =========================
    CONFIGURAÇÕES GERAIS
 ========================= */
@@ -55,6 +54,7 @@ body {
     padding: 8px 12px;
 
     cursor: pointer;
+
     font-weight: bold;
 }
 
@@ -87,6 +87,11 @@ main {
     margin: 30px auto;
 }
 
+
+/* =========================
+   TELAS NORMAIS
+========================= */
+
 .tela {
     display: none;
 
@@ -116,6 +121,7 @@ main {
 
 .hero h2 {
     font-size: 32px;
+
     margin-bottom: 15px;
 }
 
@@ -133,6 +139,7 @@ main {
     padding: 12px 20px;
 
     cursor: pointer;
+
     font-weight: bold;
 }
 
@@ -159,9 +166,11 @@ main {
     min-height: 120px;
 
     border: 2px dashed #aaa;
+
     border-radius: 8px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -178,6 +187,7 @@ main {
     min-height: 100px;
 
     border: 1px solid #ddd;
+
     border-radius: 5px;
 
     padding: 15px;
@@ -188,6 +198,7 @@ main {
     color: white;
 
     border: none;
+
     border-radius: 5px;
 
     padding: 10px 18px;
@@ -196,53 +207,143 @@ main {
 }
 
 
-/* =========================
-   BATALHA
-========================= */
+/* ==================================================
+   TELA DE BATALHA
+================================================== */
 
-.campo-batalha {
+/*
+    A tela ocupa toda a área disponível.
+
+    IMPORTANTE:
+    Não usamos position:absolute na própria tela.
+    O absolute fica nos elementos internos da gameplay.
+*/
+
+.tela-batalha {
+    position: relative;
+
+    width: 100%;
+    height: 100vh;
+
+    padding: 0;
+
+    margin: 0;
+
+    background-color: #222;
+
+    overflow: hidden;
+}
+
+
+/* ==================================================
+   ÁREA PRINCIPAL DA BATALHA
+   2/3 DA TELA
+================================================== */
+
+.area-batalha {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 66.6667%;
+    height: 100%;
+
+    background-color: #ff5555;
+}
+
+
+/* ==================================================
+   DISPLAY DA BATALHA
+   65% DA ÁREA
+================================================== */
+
+.display-batalha {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 65%;
+
+    padding: 30px;
+
+    border-bottom: 4px solid #111;
+
     display: flex;
 
     justify-content: space-between;
-
-    gap: 30px;
-
-    margin-bottom: 30px;
+    align-items: center;
 }
+
+
+/* ==================================================
+   POKÉMON
+================================================== */
 
 .pokemon-inimigo,
 .pokemon-jogador {
-    width: 50%;
+    width: 40%;
 
     padding: 20px;
 
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.3);
 
-    background-color: #fafafa;
+    border: 2px solid #111;
+
+    border-radius: 10px;
 }
 
+
+/* Pokémon inimigo */
+
 .pokemon-inimigo {
+    align-self: flex-start;
+
     text-align: right;
 }
 
+
+/* Pokémon jogador */
+
 .pokemon-jogador {
+    align-self: flex-end;
+
     text-align: left;
 }
 
 
-/* =========================
+/* ==================================================
+   ESPAÇO TEMPORÁRIO DO POKÉMON
+================================================== */
+
+.pokemon-placeholder {
+    height: 100px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(255, 255, 255, 0.4);
+
+    margin: 10px 0;
+}
+
+
+/* ==================================================
    BARRA DE HP
-========================= */
+================================================== */
 
 .barra-hp {
     width: 100%;
 
     height: 15px;
 
-    background-color: #ccc;
+    background-color: #333;
 
-    border-radius: 10px;
+    border: 2px solid #111;
 
     overflow: hidden;
 
@@ -257,50 +358,112 @@ main {
 }
 
 
-/* =========================
-   BOTÕES DA BATALHA
-========================= */
+/* ==================================================
+   ÁREA DOS MOVES
+   35% DA ÁREA
+================================================== */
 
-.acoes-batalha {
-    display: flex;
+.area-moves {
+    position: absolute;
 
-    justify-content: center;
+    left: 0;
+    bottom: 0;
+
+    width: 100%;
+    height: 35%;
+
+    background-color: #0757b8;
+
+    padding: 20px;
+}
+
+.area-moves h3 {
+    color: white;
+
+    margin-bottom: 15px;
+}
+
+
+/* ==================================================
+   GRID DOS MOVES
+================================================== */
+
+.moves {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
 
     gap: 10px;
 
-    margin-bottom: 20px;
+    height: calc(100% - 40px);
 }
 
-.acoes-batalha button {
-    padding: 10px 15px;
 
-    border: none;
+/* ==================================================
+   BOTÕES DOS MOVES
+================================================== */
+
+.move {
+    border: 3px solid #111;
+
     border-radius: 5px;
 
-    background-color: #457b9d;
-    color: white;
+    background-color: white;
+
+    font-size: 18px;
 
     cursor: pointer;
 }
 
-.acoes-batalha button:hover {
-    background-color: #35627c;
+.move:hover {
+    background-color: #ddd;
 }
 
 
-/* =========================
+/* ==================================================
    LOG DA BATALHA
-========================= */
+   1/3 DA TELA
+================================================== */
 
 .log-batalha {
-    background-color: #222;
-    color: white;
+    position: absolute;
 
-    padding: 15px;
+    top: 0;
+    right: 0;
+
+    width: 33.3333%;
+    height: 100%;
+
+    background-color: #75d94f;
+
+    border-left: 4px solid #111;
+
+    padding: 25px;
+
+    overflow-y: auto;
+}
+
+.log-batalha h2 {
+    margin-bottom: 20px;
+
+    border-bottom: 2px solid #111;
+
+    padding-bottom: 10px;
+}
+
+
+/* ==================================================
+   MENSAGENS DO LOG
+================================================== */
+
+#mensagens-batalha p {
+    background-color: rgba(255, 255, 255, 0.5);
+
+    padding: 10px;
+
+    margin-bottom: 10px;
 
     border-radius: 5px;
-
-    min-height: 80px;
 }
 
 
@@ -347,6 +510,7 @@ main {
     color: white;
 
     border: none;
+
     border-radius: 5px;
 
     padding: 8px 12px;
@@ -395,9 +559,9 @@ footer {
 }
 
 
-/* =========================
+/* ==================================================
    RESPONSIVIDADE
-========================= */
+================================================== */
 
 @media (max-width: 800px) {
 
@@ -425,15 +589,30 @@ footer {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .campo-batalha {
-        flex-direction: column;
+
+    /* Batalha */
+
+    .display-batalha {
+        padding: 15px;
     }
 
     .pokemon-inimigo,
     .pokemon-jogador {
-        width: 100%;
+        width: 45%;
 
-        text-align: center;
+        padding: 10px;
+    }
+
+    .pokemon-placeholder {
+        height: 70px;
+    }
+
+    .move {
+        font-size: 14px;
+    }
+
+    .log-batalha {
+        padding: 15px;
     }
 }
 
@@ -448,11 +627,71 @@ footer {
         grid-template-columns: 1fr;
     }
 
-    .acoes-batalha {
-        flex-direction: column;
+
+    /* Batalha em telas pequenas */
+
+    .tela-batalha {
+        height: calc(100vh - 100px);
     }
 
-    .acoes-batalha button {
-        width: 100%;
+    .area-batalha {
+        width: 60%;
+    }
+
+    .log-batalha {
+        width: 40%;
+    }
+
+    .display-batalha {
+        height: 60%;
+
+        padding: 10px;
+
+        flex-direction: column;
+
+        justify-content: space-between;
+    }
+
+    .pokemon-inimigo,
+    .pokemon-jogador {
+        width: 80%;
+
+        padding: 8px;
+    }
+
+    .pokemon-placeholder {
+        height: 50px;
+    }
+
+    .area-moves {
+        height: 40%;
+
+        padding: 10px;
+    }
+
+    .area-moves h3 {
+        font-size: 14px;
+
+        margin-bottom: 8px;
+    }
+
+    .move {
+        font-size: 12px;
+
+        border-width: 2px;
+    }
+
+    .log-batalha {
+        padding: 10px;
+    }
+
+    .log-batalha h2 {
+        font-size: 16px;
+    }
+
+    #mensagens-batalha p {
+        font-size: 12px;
+
+        padding: 7px;
     }
 }

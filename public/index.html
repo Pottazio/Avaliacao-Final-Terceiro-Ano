@@ -2,45 +2,76 @@
 <html lang="pt-BR">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>MonstroBolso</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="style.css">
+
 </head>
 
+
 <body>
+
+
+    <!-- =========================
+         CABEÇALHO
+    ========================== -->
 
     <header class="header">
 
         <div class="logo">
+
             <h1>MonstroBolso</h1>
+
         </div>
+
+
+        <!-- MENU PRINCIPAL -->
 
         <nav class="menu">
 
-            <button type="button" data-tela="inicio">
+            <button
+                type="button"
+                data-tela="inicio">
                 Início
             </button>
 
-            <button type="button" data-tela="time">
+            <button
+                type="button"
+                data-tela="time">
                 Meu Time
             </button>
 
-            <button type="button" data-tela="batalha">
+            <button
+                type="button"
+                data-tela="batalha">
                 Batalha
             </button>
 
-            <button type="button" data-tela="loja">
+            <button
+                type="button"
+                data-tela="loja">
                 Loja
             </button>
 
-            <button type="button" data-tela="perfil">
+            <button
+                type="button"
+                data-tela="perfil">
                 Perfil
             </button>
 
         </nav>
+
+
+        <!-- INFORMAÇÕES DO USUÁRIO -->
 
         <div class="usuario">
 
@@ -57,15 +88,27 @@
     </header>
 
 
+
+    <!-- =========================
+         CONTEÚDO PRINCIPAL
+    ========================== -->
+
     <main id="app">
 
-        <!-- Tela inicial -->
 
-        <section id="tela-inicio" class="tela">
+        <!-- =========================
+             TELA INICIAL
+        ========================== -->
+
+        <section
+            id="tela-inicio"
+            class="tela">
 
             <div class="hero">
 
-                <h2>Bem-vindo ao MonstroBolso!</h2>
+                <h2>
+                    Bem-vindo ao MonstroBolso!
+                </h2>
 
                 <p>
                     Monte seu time, enfrente adversários
@@ -75,7 +118,9 @@
                 <button
                     type="button"
                     data-tela="time">
+
                     Montar meu time
+
                 </button>
 
             </div>
@@ -83,11 +128,21 @@
         </section>
 
 
-        <!-- Team Builder -->
 
-        <section id="tela-time" class="tela">
+        <!-- =========================
+             TEAM BUILDER
+        ========================== -->
 
-            <h2>Montagem de Time</h2>
+        <section
+            id="tela-time"
+            class="tela">
+
+            <h2>
+                Montagem de Time
+            </h2>
+
+
+            <!-- SLOTS DO TIME -->
 
             <div id="time">
 
@@ -117,65 +172,195 @@
 
             </div>
 
+
+            <!-- POKÉMON DISPONÍVEIS -->
+
             <div class="pokemon-disponiveis">
 
-                <h3>Pokémon disponíveis</h3>
+                <h3>
+                    Pokémon disponíveis
+                </h3>
 
                 <div id="listaPokemon">
+
                     <!--
                         Os Pokémon serão carregados
-                        pela API através do JavaScript.
+                        posteriormente pela API.
                     -->
+
                 </div>
 
             </div>
 
-            <button type="button" id="salvarTime">
+
+            <button
+                type="button"
+                id="salvarTime">
+
                 Salvar Time
+
             </button>
 
         </section>
 
 
-        <!-- Batalha -->
 
-        <section id="tela-batalha" class="tela">
+        <!-- ==================================================
+             TELA DE BATALHA
+        =================================================== -->
 
-            <h2>Batalha</h2>
+        <section
+            id="tela-batalha"
+            class="tela-batalha">
 
-            <div class="campo-batalha">
 
-                <div class="pokemon-inimigo">
+            <!-- ==================================================
+                 ÁREA PRINCIPAL DA BATALHA
+                 2/3 DA TELA
+            =================================================== -->
 
-                    <h3>Adversário</h3>
+            <div class="area-batalha">
 
-                    <div id="pokemonInimigo">
-                        Aguardando...
+
+                <!-- ==================================================
+                     DISPLAY DA BATALHA
+                     PARTE SUPERIOR
+                =================================================== -->
+
+                <div class="display-batalha">
+
+
+                    <!-- =========================
+                         POKÉMON INIMIGO
+                    ========================== -->
+
+                    <div class="pokemon-inimigo">
+
+                        <h3>
+                            Pokémon inimigo
+                        </h3>
+
+
+                        <div
+                            class="pokemon-placeholder"
+                            id="imagemInimigo">
+
+                            Pokémon
+
+                        </div>
+
+
+                        <div class="barra-hp">
+
+                            <div
+                                id="hpInimigo"
+                                class="hp">
+                            </div>
+
+                        </div>
+
                     </div>
 
-                    <div class="barra-hp">
+
+
+                    <!-- =========================
+                         POKÉMON DO JOGADOR
+                    ========================== -->
+
+                    <div class="pokemon-jogador">
+
+                        <h3>
+                            Seu Pokémon
+                        </h3>
+
+
                         <div
-                            id="hpInimigo"
-                            class="hp">
+                            class="pokemon-placeholder"
+                            id="imagemJogador">
+
+                            Pokémon
+
                         </div>
+
+
+                        <div class="barra-hp">
+
+                            <div
+                                id="hpJogador"
+                                class="hp">
+                            </div>
+
+                        </div>
+
                     </div>
 
                 </div>
 
 
-                <div class="pokemon-jogador">
 
-                    <h3>Seu Pokémon</h3>
+                <!-- ==================================================
+                     ÁREA DOS MOVES
+                     PARTE INFERIOR
+                =================================================== -->
 
-                    <div id="pokemonJogador">
-                        Aguardando...
-                    </div>
+                <div class="area-moves">
 
-                    <div class="barra-hp">
-                        <div
-                            id="hpJogador"
-                            class="hp">
-                        </div>
+
+                    <h3>
+                        Escolha um movimento
+                    </h3>
+
+
+                    <div class="moves">
+
+
+                        <!-- MOVE 1 -->
+
+                        <button
+                            type="button"
+                            class="move"
+                            id="move1">
+
+                            Golpe 1
+
+                        </button>
+
+
+                        <!-- MOVE 2 -->
+
+                        <button
+                            type="button"
+                            class="move"
+                            id="move2">
+
+                            Golpe 2
+
+                        </button>
+
+
+                        <!-- MOVE 3 -->
+
+                        <button
+                            type="button"
+                            class="move"
+                            id="move3">
+
+                            Golpe 3
+
+                        </button>
+
+
+                        <!-- MOVE 4 -->
+
+                        <button
+                            type="button"
+                            class="move"
+                            id="move4">
+
+                            Golpe 4
+
+                        </button>
+
                     </div>
 
                 </div>
@@ -183,163 +368,236 @@
             </div>
 
 
-            <div class="acoes-batalha">
 
-                <button
-                    type="button"
-                    id="atacar">
-                    Atacar
-                </button>
+            <!-- ==================================================
+                 LOG DA BATALHA
+                 1/3 DA TELA
+            =================================================== -->
 
-                <button
-                    type="button"
-                    id="trocarPokemon">
-                    Trocar Pokémon
-                </button>
-
-                <button
-                    type="button"
-                    id="usarItem">
-                    Usar Item
-                </button>
-
-                <button
-                    type="button"
-                    id="fugir">
-                    Fugir
-                </button>
-
-            </div>
+            <aside class="log-batalha">
 
 
-            <div id="logBatalha" class="log-batalha">
+                <h2>
+                    Log da batalha
+                </h2>
 
-                <p>
-                    A batalha ainda não começou.
-                </p>
 
-            </div>
+                <div id="mensagens-batalha">
+
+
+                    <p>
+                        A batalha começou!
+                    </p>
+
+
+                    <p>
+                        Seu Pokémon está pronto.
+                    </p>
+
+
+                    <p>
+                        Escolha um movimento.
+                    </p>
+
+
+                </div>
+
+            </aside>
 
         </section>
 
 
-        <!-- Loja -->
 
-        <section id="tela-loja" class="tela">
+        <!-- =========================
+             LOJA
+        ========================== -->
 
-            <h2>Poké Mart</h2>
+        <section
+            id="tela-loja"
+            class="tela">
+
+            <h2>
+                Poké Mart
+            </h2>
+
 
             <p>
                 Seus Pokédollars:
-                <strong id="dinheiroLoja">0</strong>
+
+                <strong id="dinheiroLoja">
+                    0
+                </strong>
+
             </p>
 
 
             <div id="produtos">
 
+
+                <!-- POTION -->
+
                 <article class="produto">
 
-                    <h3>Potion</h3>
+                    <h3>
+                        Potion
+                    </h3>
 
-                    <p>Recupera 20 HP.</p>
+                    <p>
+                        Recupera 20 HP.
+                    </p>
 
-                    <strong>₽ 300</strong>
+                    <strong>
+                        ₽ 300
+                    </strong>
 
                     <button
                         type="button"
                         data-item="potion">
+
                         Comprar
+
                     </button>
 
                 </article>
 
 
+
+                <!-- SUPER POTION -->
+
                 <article class="produto">
 
-                    <h3>Super Potion</h3>
+                    <h3>
+                        Super Potion
+                    </h3>
 
-                    <p>Recupera 50 HP.</p>
+                    <p>
+                        Recupera 50 HP.
+                    </p>
 
-                    <strong>₽ 700</strong>
+                    <strong>
+                        ₽ 700
+                    </strong>
 
                     <button
                         type="button"
                         data-item="super-potion">
+
                         Comprar
+
                     </button>
 
                 </article>
 
 
+
+                <!-- HYPER POTION -->
+
                 <article class="produto">
 
-                    <h3>Hyper Potion</h3>
+                    <h3>
+                        Hyper Potion
+                    </h3>
 
-                    <p>Recupera 200 HP.</p>
+                    <p>
+                        Recupera 200 HP.
+                    </p>
 
-                    <strong>₽ 1200</strong>
+                    <strong>
+                        ₽ 1200
+                    </strong>
 
                     <button
                         type="button"
                         data-item="hyper-potion">
+
                         Comprar
+
                     </button>
 
                 </article>
 
 
+
+                <!-- MAX POTION -->
+
                 <article class="produto">
 
-                    <h3>Max Potion</h3>
+                    <h3>
+                        Max Potion
+                    </h3>
 
-                    <p>Recupera 100% do HP.</p>
+                    <p>
+                        Recupera 100% do HP.
+                    </p>
 
-                    <strong>₽ 2500</strong>
+                    <strong>
+                        ₽ 2500
+                    </strong>
 
                     <button
                         type="button"
                         data-item="max-potion">
+
                         Comprar
+
                     </button>
 
                 </article>
 
 
+
+                <!-- FULL RESTORE -->
+
                 <article class="produto">
 
-                    <h3>Full Restore</h3>
+                    <h3>
+                        Full Restore
+                    </h3>
 
                     <p>
                         Recupera 100% do HP
                         e cura condições de status.
                     </p>
 
-                    <strong>₽ 3000</strong>
+                    <strong>
+                        ₽ 3000
+                    </strong>
 
                     <button
                         type="button"
                         data-item="full-restore">
+
                         Comprar
+
                     </button>
 
                 </article>
 
 
+
+                <!-- REVIVE -->
+
                 <article class="produto">
 
-                    <h3>Revive</h3>
+                    <h3>
+                        Revive
+                    </h3>
 
                     <p>
                         Revive um Pokémon
                         com metade da vida.
                     </p>
 
-                    <strong>₽ 2000</strong>
+                    <strong>
+                        ₽ 2000
+                    </strong>
 
                     <button
                         type="button"
                         data-item="revive">
+
                         Comprar
+
                     </button>
 
                 </article>
@@ -349,41 +607,66 @@
         </section>
 
 
-        <!-- Perfil -->
 
-        <section id="tela-perfil" class="tela">
+        <!-- =========================
+             PERFIL
+        ========================== -->
 
-            <h2>Perfil</h2>
+        <section
+            id="tela-perfil"
+            class="tela">
+
+            <h2>
+                Perfil
+            </h2>
+
 
             <div class="perfil">
 
+
                 <p>
+
                     Usuário:
+
                     <strong id="perfilNome">
                         Visitante
                     </strong>
+
                 </p>
 
+
                 <p>
+
                     Pokédollars:
+
                     <strong id="perfilDinheiro">
                         0
                     </strong>
+
                 </p>
 
+
                 <p>
+
                     Vitórias:
+
                     <strong id="perfilVitorias">
                         0
                     </strong>
+
                 </p>
 
+
                 <p>
+
                     Derrotas:
+
                     <strong id="perfilDerrotas">
                         0
                     </strong>
+
                 </p>
+
 
             </div>
 
@@ -391,6 +674,11 @@
 
     </main>
 
+
+
+    <!-- =========================
+         RODAPÉ
+    ========================== -->
 
     <footer>
 
@@ -400,6 +688,11 @@
 
     </footer>
 
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
 
     <script src="java.js"></script>
 

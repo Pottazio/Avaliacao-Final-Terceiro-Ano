@@ -1,8 +1,12 @@
 class MonstroBolso {
 
     constructor() {
-        this.telas = document.querySelectorAll(".tela");
-        this.botoes = document.querySelectorAll("[data-tela]");
+
+        this.telas =
+            document.querySelectorAll(".tela, .tela-batalha");
+
+        this.botoes =
+            document.querySelectorAll("[data-tela]");
 
         this.inicializar();
     }

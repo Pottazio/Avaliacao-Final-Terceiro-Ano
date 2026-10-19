@@ -13,13 +13,99 @@
 
     <link
         rel="stylesheet"
-        href="style.css">
+        href="../CSS/style.css">
 
 </head>
 
 
 <body>
 
+    <!-- TELA DE LOGIN -->
+
+    <section id="tela-login" class="tela-login">
+    
+        <div class="caixa-login">
+    
+            <h1>MonstroBolso</h1>
+    
+            <p class="subtitulo-login">
+                Entre na sua aventura!
+            </p>
+    
+            <form id="formLogin">
+    
+                <label for="loginUsuario">Usuário</label>
+                <input
+                    type="text"
+                    id="loginUsuario"
+                    name="usuario"
+                    placeholder="Digite seu usuário"
+                    required
+                >
+    
+                <label for="loginSenha">Senha</label>
+                <input
+                    type="password"
+                    id="loginSenha"
+                    name="senha"
+                    placeholder="Digite sua senha"
+                    required
+                >
+    
+                <button type="submit">
+                    Entrar
+                </button>
+    
+            </form>
+    
+            <p class="texto-cadastro">
+                Ainda não tem conta?
+                <button type="button" id="mostrarCadastro">
+                    Cadastre-se
+                </button>
+            </p>
+    
+            <form id="formCadastro" class="form-cadastro">
+    
+                <h2>Criar conta</h2>
+    
+                <label for="cadastroUsuario">Usuário</label>
+                <input
+                    type="text"
+                    id="cadastroUsuario"
+                    name="usuario"
+                    placeholder="Escolha um usuário"
+                    required
+                >
+    
+                <label for="cadastroSenha">Senha</label>
+                <input
+                    type="password"
+                    id="cadastroSenha"
+                    name="senha"
+                    placeholder="Crie uma senha"
+                    required
+                >
+    
+                <button type="submit">
+                    Cadastrar
+                </button>
+    
+                <button
+                    type="button"
+                    id="voltarLogin"
+                    class="botao-secundario">
+                    Voltar ao login
+                </button>
+    
+            </form>
+    
+            <p id="mensagemLogin"></p>
+    
+        </div>
+    
+    </section>
+    
 
     <!-- =========================
          CABEÇALHO
@@ -694,7 +780,8 @@
          JAVASCRIPT
     ========================== -->
 
-    <script src="java.js"></script>
+    <script src="../JavaScript/java.js"></script>
+    <script src="../JavaScript/login.js"></script>
 
 </body>
 

@@ -688,6 +688,9 @@ footer {
     margin-top: 30px;
 }
 
+.caixa-login form.form-cadastro {
+    display: none;
+}
 
 /* ==================================================
    RESPONSIVIDADE

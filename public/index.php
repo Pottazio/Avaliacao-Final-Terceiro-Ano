@@ -1,33 +1,73 @@
-
 <?php
 
 session_start();
 
-require_once __DIR__ . "/../src/controller/LoginController.php";
+?>
 
-$controller = new LoginController();
+<!DOCTYPE html>
+<html lang="pt-BR">
 
-$acao = $_GET["acao"] ?? "login";
+<head>
 
-switch ($acao) {
-    case "login":
-        $controller->login();
-        break;
+    <meta charset="UTF-8">
 
-    case "autenticar":
-        $controller->autenticar();
-        break;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    case "painel":
-        $controller->painel();
-        break;
+    <title>MonstroBolso</title>
 
-    case "logout":
-        $controller->logout();
-        break;
+    <link rel="stylesheet" href="CSS/style.css">
 
-    default:
-        http_response_code(404);
-        echo "Página não encontrada.";
-        break;
-}
+</head>
+
+<body>
+
+    <header>
+
+        <h1>MonstroBolso</h1>
+
+        <nav>
+
+            <button onclick="navegar('index')">
+                Início
+            </button>
+
+            <button onclick="navegar('team')">
+                Team Builder
+            </button>
+
+            <button onclick="navegar('battle')">
+                Batalha
+            </button>
+
+            <button onclick="navegar('shop')">
+                Poké Mart
+            </button>
+
+            <button onclick="window.location.href='../login/login.php'">
+                Login
+            </button>
+
+        </nav>
+
+    </header>
+
+
+    <main id="conteudo">
+
+    </main>
+
+
+    <footer>
+
+        <p>
+            MonstroBolso © 2026
+        </p>
+
+    </footer>
+
+
+    <script src="JavaScript/java.js"></script>
+
+</body>
+
+</html>

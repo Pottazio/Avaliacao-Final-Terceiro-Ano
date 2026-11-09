@@ -1,60 +1,43 @@
 
 <?php
 session_start();
-
-// Após validar o usuário e a senha no LoginController:
-if ($loginValido) {
-    session_regenerate_id(true);
-
-    $_SESSION['usuario_id'] = $usuario['id'];
-
-    header("Location: ../public/index.php");
-    exit;
-}
 ?>
 
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MONSTROBOLSO | Login</title>
+    <link rel="stylesheet" href="../public/CSS/style.css">
 </head>
-<body>
+<body class="login-page">
+    <main class="login-shell">
+        <div class="login-brand">
+            <h1>MONSTROBOLSO</h1>
+            <p>Entrar no jogo</p>
+        </div>
 
-    <h1>MONSTROBOLSO</h1>
-    <h2>Entrar no jogo</h2>
+        <section class="login-card">
+            <h2>Acesse sua conta</h2>
 
-    <?php if (!empty($_SESSION["erro_login"])): ?>
-        <p>
-            <?= htmlspecialchars($_SESSION["erro_login"], ENT_QUOTES, "UTF-8") ?>
-        </p>
-        <?php unset($_SESSION["erro_login"]); ?>
-    <?php endif; ?>
+            <?php if (!empty($_SESSION["erro_login"])): ?>
+                <p class="login-error" role="alert">
+                    <?= htmlspecialchars($_SESSION["erro_login"], ENT_QUOTES, "UTF-8") ?>
+                </p>
+                <?php unset($_SESSION["erro_login"]); ?>
+            <?php endif; ?>
 
-    <form action="index.php?acao=autenticar" method="POST">
-        <label for="email">E-mail:</label>
-        <input
-            type="email"
-            id="email"
-            name="email"
-            required
-        >
+            <form class="login-form" action="../src/controller/LoginController.php" method="POST">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" autocomplete="email" required>
 
-        <br><br>
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" autocomplete="current-password" required>
 
-        <label for="senha">Senha:</label>
-        <input
-            type="password"
-            id="senha"
-            name="senha"
-            required
-        >
-
-        <br><br>
-
-        <button type="submit">Entrar</button>
-    </form>
-
+                <button type="submit">Entrar</button>
+            </form>
+        </section>
+    </main>
 </body>
 </html>

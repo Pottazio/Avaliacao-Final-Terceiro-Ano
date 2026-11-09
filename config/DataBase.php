@@ -4,7 +4,7 @@
     public static function conectar(): PDO
     {
         $host = "localhost";
-        $banco = "pokemon";
+        $banco = "Bancojogo";
         $usuario = "root";
         $senha = "";
 

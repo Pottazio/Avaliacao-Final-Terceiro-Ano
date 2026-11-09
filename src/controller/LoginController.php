@@ -3,17 +3,10 @@
 
 session_start();
 
-require_once __DIR__ . "/../dao/UsarioDAO.php";
+require_once __DIR__ . "/../dao/UsuarioDAO.php";
 
 class LoginController
 {
-    private $usuarioDAO;
-
-    public function __construct()
-    {
-        $this->usuarioDAO = new UsarioDAO();
-    }
-
     public function autenticar()
     {
         if ($_SERVER["REQUEST_METHOD"] !== "POST") {
@@ -33,8 +26,9 @@ class LoginController
         }
 
         try {
+            $usuarioDAO = new UsuarioDAO();
 
-            $usuario = $this->usuarioDAO->buscarPorEmail($email);
+            $usuario = $usuarioDAO->buscarPorEmail($email);
 
             if (!$usuario) {
 
@@ -56,7 +50,7 @@ class LoginController
 
             session_regenerate_id(true);
 
-            $_SESSION["usuario_id"] = $usuario["id"];
+            $_SESSION["usuario_id"] = $usuario["id_usuario"];
             $_SESSION["usuario_email"] = $usuario["email"];
 
             if (isset($usuario["nome"])) {
@@ -81,4 +75,3 @@ class LoginController
 $controller = new LoginController();
 
 $controller->autenticar();
-```

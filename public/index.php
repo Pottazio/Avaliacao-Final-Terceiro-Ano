@@ -2,10 +2,12 @@
 <?php
 session_start();
 
+/* A exigência de login fica temporariamente desativada.
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: ../login/login.php");
     exit;
 }
+*/
 ?>
 
 

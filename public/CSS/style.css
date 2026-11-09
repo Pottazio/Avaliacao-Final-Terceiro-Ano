@@ -240,6 +240,88 @@ form input:focus {
     box-shadow: 0 0 0 2px rgba(214, 40, 40, 0.1);
 }
 
+.login-page {
+    align-items: center;
+    justify-content: center;
+    padding: 32px 18px;
+    background-color: #f1f1f1;
+    background-image: radial-gradient(rgba(214, 40, 40, 0.12) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.login-shell {
+    width: min(100%, 420px);
+}
+
+.login-brand {
+    margin-bottom: 22px;
+    text-align: center;
+}
+
+.login-brand h1 {
+    color: #d62828;
+    font-size: 30px;
+}
+
+.login-brand p {
+    margin-top: 6px;
+    color: #555;
+}
+
+.login-card {
+    padding: 30px;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 8px 24px rgba(34, 34, 34, 0.1);
+}
+
+.login-card h2 {
+    color: #222;
+    font-size: 22px;
+}
+
+.login-form {
+    max-width: none;
+    margin: 22px 0 0;
+    gap: 8px;
+}
+
+.login-form label {
+    margin-top: 8px;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.login-form button {
+    margin-top: 14px;
+    padding: 12px;
+    border: 0;
+    border-radius: 7px;
+    background-color: #d62828;
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.login-form button:hover {
+    background-color: #b71c1c;
+    transform: translateY(-2px);
+}
+
+.login-error {
+    margin-top: 16px;
+    padding: 12px;
+    border: 1px solid #efb4b4;
+    border-radius: 7px;
+    background-color: #fff0f0;
+    color: #9f1d1d;
+    line-height: 1.5;
+}
+
 
 /* ================================
    CARTÕES

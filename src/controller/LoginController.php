@@ -1,77 +1,142 @@
-```php
 <?php
+declare(strict_types=1);
 
-session_start();
+namespace src\controller;
 
-require_once __DIR__ . "/../dao/UsuarioDAO.php";
+use PDOException;
+use config\Database;
+use models\Usuario;
+use models\CredenciaisInvalidasException;
+use models\DadosInvalidosException;
+use src\core\Auth;
 
+/**
+ * Controller de login e cadastro.
+ * Responde JSON quando a requisição é assíncrona (fetch do Login.js)
+ * e redireciona quando vem de um <form> tradicional.
+ */
 class LoginController
 {
-    public function autenticar()
+    private Usuario $usuarioModel;
+
+    public function __construct()
     {
-        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-            header("Location: ../../login/login.php");
-            exit;
-        }
+        $this->usuarioModel = new Usuario(Database::conectar());
+    }
 
-        $email = trim($_POST["email"] ?? "");
-        $senha = $_POST["senha"] ?? "";
-
-        if ($email === "" || $senha === "") {
-
-            $_SESSION["erro_login"] = "Preencha todos os campos.";
-
-            header("Location: ../../login/login.php");
-            exit;
-        }
+    /** POST email + senha -> abre a sessão */
+    public function entrar(): void
+    {
+        $email = (string) ($_POST['email'] ?? '');
+        $senha = (string) ($_POST['senha'] ?? '');
 
         try {
-            $usuarioDAO = new UsuarioDAO();
-
-            $usuario = $usuarioDAO->buscarPorEmail($email);
-
-            if (!$usuario) {
-
-                $_SESSION["erro_login"] =
-                    "E-mail ou senha incorretos.";
-
-                header("Location: ../../login/login.php");
-                exit;
+            if ($email === '' || $senha === '') {
+                throw new DadosInvalidosException('Informe e-mail e senha.');
             }
 
-            if (!password_verify($senha, $usuario["senha"])) {
+            $dados = $this->usuarioModel->autenticar($email, $senha);
 
-                $_SESSION["erro_login"] =
-                    "E-mail ou senha incorretos.";
+            Auth::logar($dados['id_usuario'], $dados['id_perfil'], $dados['nome']);
 
-                header("Location: ../../login/login.php");
-                exit;
-            }
-
-            session_regenerate_id(true);
-
-            $_SESSION["usuario_id"] = $usuario["id_usuario"];
-            $_SESSION["usuario_email"] = $usuario["email"];
-
-            if (isset($usuario["nome"])) {
-                $_SESSION["usuario_nome"] = $usuario["nome"];
-            }
-
-            header("Location: ../../public/index.php");
-            exit;
-
+            $this->responder(true, 'Login realizado com sucesso.', [
+                'nome' => $dados['nome'],
+                'rota' => '../public/index.php',
+            ]);
+        } catch (CredenciaisInvalidasException | DadosInvalidosException $e) {
+            $this->responder(false, $e->getMessage(), error: true);
         } catch (PDOException $e) {
-
-            $_SESSION["erro_login"] =
-                "Erro ao acessar o banco de dados.";
-
-            header("Location: ../../login/login.php");
-            exit;
+            $this->responder(false, 'Erro ao consultar o banco de dados.', error: true);
         }
     }
+
+    /** POST nome + email + senha -> cria usuário e perfil */
+    public function cadastrar(): void
+    {
+        $nome  = (string) ($_POST['nome'] ?? '');
+        $email = (string) ($_POST['email'] ?? '');
+        $senha = (string) ($_POST['senha'] ?? '');
+
+        try {
+            $this->usuarioModel
+                ->setNome($nome)
+                ->setEmail($email)
+                ->setSenha($senha);
+
+            $idPerfil = $this->usuarioModel->cadastrar();
+
+            Auth::logar(
+                (int) $this->usuarioModel->getIdUsuario(),
+                $idPerfil,
+                $this->usuarioModel->getNome()
+            );
+
+            $this->responder(true, 'Conta criada com sucesso.', [
+                'rota' => '../public/index.php',
+            ]);
+        } catch (DadosInvalidosException $e) {
+            $this->responder(false, $e->getMessage(), error: true);
+        } catch (PDOException $e) {
+            // 1062 = e-mail duplicado (constraint UQ_usuarios_email).
+            $msg = ((int) ($e->errorInfo[1] ?? 0) === 1062)
+                ? 'Este e-mail já está cadastrado.'
+                : 'Erro ao cadastrar. Tente novamente.';
+            $this->responder(false, $msg, error: true);
+        }
+    }
+
+    /** POST id_perfil -> troca o perfil ativo da sessão */
+    public function trocarPerfil(): void
+    {
+        $idPerfil = (int) ($_POST['id_perfil'] ?? 0);
+
+        foreach ($this->usuarioModel->listarPerfis() as $p) {
+            if ((int) $p['id_perfil'] === $idPerfil) {
+                Auth::trocarPerfil($idPerfil);
+                $this->responder(true, 'Perfil trocado.', ['rota' => '../public/index.php']);
+                return;
+            }
+        }
+
+        $this->responder(false, 'Perfil inválido.', error: true);
+    }
+
+    public function sair(): void
+    {
+        Auth::deslogar();
+        header('Location: ../../login/login.php');
+        exit;
+    }
+
+    // ---------- helpers ----------
+
+    private function ehAjax(): bool
+    {
+        return strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest'
+            || str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+    }
+
+    /** Transporte de dados via JSON (requisito do trabalho). */
+    private function responder(bool $sucesso, string $mensagem, array $extra = [], bool $error = false): void
+    {
+        if ($this->ehAjax()) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code($error ? 401 : 200);
+            echo json_encode(
+                ['sucesso' => $sucesso, 'mensagem' => $mensagem] + $extra,
+                JSON_UNESCAPED_UNICODE
+            );
+            return;
+        }
+
+        // Form tradicional (sem JS): mensagem pela sessão e volta.
+        if (!$sucesso) {
+            $_SESSION['erro_login'] = $mensagem;
+            header('Location: ../../login/login.php');
+            exit;
+        }
+
+        header('Location: ' . ($extra['rota'] ?? '../public/index.php'));
+        exit;
+    }
 }
-
-
-$controller = new LoginController();
-
-$controller->autenticar();

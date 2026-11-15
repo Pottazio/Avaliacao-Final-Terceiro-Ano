@@ -1,8 +1,23 @@
-
 <?php
-session_start();
-?>
+/**
+ * MONSTROBOLSO - Tela de login (View do MVC).
+ * View só apresenta; quem decide é o LoginController.
+ * Caminho do projeto: login/login.php
+ */
 
+require_once __DIR__ . '/../bootstrap.php';
+
+use src\core\Auth;
+
+// Já logado? Vai direto para o jogo.
+if (Auth::logado()) {
+    header('Location: ../public/index.php');
+    exit;
+}
+
+$erro = $_SESSION['erro_login'] ?? null;
+unset($_SESSION['erro_login']);
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -19,25 +34,64 @@ session_start();
         </div>
 
         <section class="login-card">
-            <h2>Acesse sua conta</h2>
+            <!-- ABA DE ENTRAR -->
+            <div id="telaLogin">
+                <h2>Acesse sua conta</h2>
 
-            <?php if (!empty($_SESSION["erro_login"])): ?>
-                <p class="login-error" role="alert">
-                    <?= htmlspecialchars($_SESSION["erro_login"], ENT_QUOTES, "UTF-8") ?>
+                <?php if ($erro): ?>
+                    <p class="login-error" role="alert">
+                        <?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?>
+                    </p>
+                <?php endif; ?>
+
+                <p id="mensagemLogin" class="login-msg"></p>
+
+                <form id="formLogin" class="login-form" method="POST">
+                    <label for="loginUsuario">E-mail</label>
+                    <input type="email" id="loginUsuario" name="email"
+                           autocomplete="email" required>
+
+                    <label for="loginSenha">Senha</label>
+                    <input type="password" id="loginSenha" name="senha"
+                           autocomplete="current-password" required>
+
+                    <button type="submit">Entrar</button>
+                </form>
+
+                <p class="texto-cadastro">
+                    Não tem conta?
+                    <a href="#" id="mostrarCadastro">Cadastre-se</a>
                 </p>
-                <?php unset($_SESSION["erro_login"]); ?>
-            <?php endif; ?>
+            </div>
 
-            <form class="login-form" action="../src/controller/LoginController.php" method="POST">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" autocomplete="email" required>
+            <!-- ABA DE CADASTRAR -->
+            <div id="telaCadastro" style="display:none">
+                <h2>Criar conta</h2>
 
-                <label for="senha">Senha</label>
-                <input type="password" id="senha" name="senha" autocomplete="current-password" required>
+                <form id="formCadastro" class="login-form" method="POST">
+                    <label for="cadNome">Nome</label>
+                    <input type="text" id="cadNome" name="nome"
+                           autocomplete="name" required>
 
-                <button type="submit">Entrar</button>
-            </form>
+                    <label for="cadEmail">E-mail</label>
+                    <input type="email" id="cadEmail" name="email"
+                           autocomplete="email" required>
+
+                    <label for="cadSenha">Senha (mín. 6 caracteres)</label>
+                    <input type="password" id="cadSenha" name="senha"
+                           autocomplete="new-password" minlength="6" required>
+
+                    <button type="submit">Cadastrar</button>
+                </form>
+
+                <p class="texto-cadastro">
+                    Já tem conta?
+                    <a href="#" id="voltarLogin">Voltar ao login</a>
+                </p>
+            </div>
         </section>
     </main>
+
+    <script src="../public/JavaScript/Login.js"></script>
 </body>
 </html>

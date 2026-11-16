@@ -4,7 +4,7 @@
  * View só apresenta; quem decide é o LoginController.
  * Caminho do projeto: login/login.php
  *
- * IMPORTANTE: os id/name dos campos abaixo são usados pelo Login.js.
+ * IMPORTANTE: os id/name dos campos abaixo são usados pelo login.js.
  * Ao mexer no visual, mude apenas classes e estrutura, nunca os id/name.
  */
 
@@ -20,6 +20,8 @@ if (Auth::logado()) {
 
 $erro = $_SESSION['erro_login'] ?? null;
 unset($_SESSION['erro_login']);
+$sucesso = $_SESSION['sucesso_cadastro'] ?? null;
+unset($_SESSION['sucesso_cadastro']);
 
 // Diagnóstico: avisa em tela se algum arquivo essencial não carregou.
 $avisos = [];
@@ -61,71 +63,44 @@ foreach ([
         <?php endif; ?>
 
         <section class="login-card">
-            <!-- ---------------- ABA DE ENTRAR ---------------- -->
-            <div id="telaLogin">
-                <h2>Acesse sua conta</h2>
+            <h2>Acesse sua conta</h2>
 
-                <?php if ($erro): ?>
-                    <p class="login-error" role="alert">
-                        <?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?>
-                    </p>
-                <?php endif; ?>
-
-                <p id="mensagemLogin" class="login-msg"></p>
-
-                <form id="formLogin" class="login-form" method="POST">
-                    <label for="loginUsuario">E-mail</label>
-                    <input type="email" id="loginUsuario" name="email"
-                           placeholder="treinador@pokenoas.com"
-                           autocomplete="email" required>
-
-                    <label for="loginSenha">Senha</label>
-                    <input type="password" id="loginSenha" name="senha"
-                           placeholder="••••••"
-                           autocomplete="current-password" required>
-
-                    <button type="submit">Entrar</button>
-                </form>
-
-                <p class="texto-cadastro">
-                    Não tem conta?
-                    <a href="#" id="mostrarCadastro">Cadastre-se</a>
+            <?php if ($sucesso): ?>
+                <p class="login-msg" data-tipo="ok" role="status">
+                    <?= htmlspecialchars($sucesso, ENT_QUOTES, 'UTF-8') ?>
                 </p>
-            </div>
+            <?php endif; ?>
 
-            <!-- ---------------- ABA DE CADASTRAR ---------------- -->
-            <div id="telaCadastro" style="display:none">
-                <h2>Criar conta</h2>
-
-                <p id="mensagemCadastro" class="login-msg"></p>
-
-                <form id="formCadastro" class="login-form" method="POST">
-                    <label for="cadNome">Nome do treinador</label>
-                    <input type="text" id="cadNome" name="nome"
-                           placeholder="Morais Zanferrari"
-                           autocomplete="name" required>
-
-                    <label for="cadEmail">E-mail</label>
-                    <input type="email" id="cadEmail" name="email"
-                           placeholder="treinador@pokenoas.com"
-                           autocomplete="email" required>
-
-                    <label for="cadSenha">Senha (mín. 6 caracteres)</label>
-                    <input type="password" id="cadSenha" name="senha"
-                           placeholder="••••••"
-                           autocomplete="new-password" minlength="6" required>
-
-                    <button type="submit">Cadastrar</button>
-                </form>
-
-                <p class="texto-cadastro">
-                    Já tem conta?
-                    <a href="#" id="voltarLogin">Voltar ao login</a>
+            <?php if ($erro): ?>
+                <p class="login-error" role="alert">
+                    <?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?>
                 </p>
-            </div>
+            <?php endif; ?>
+
+            <p id="mensagemLogin" class="login-msg" role="status"></p>
+
+            <form id="formLogin" class="login-form" method="POST"
+                  action="../src/controller/roteadorLogin.php?acao=entrar">
+                <label for="loginUsuario">E-mail</label>
+                <input type="email" id="loginUsuario" name="email"
+                       placeholder="treinador@pokenoas.com"
+                       autocomplete="email" required>
+
+                <label for="loginSenha">Senha</label>
+                <input type="password" id="loginSenha" name="senha"
+                       placeholder="••••••"
+                       autocomplete="current-password" required>
+
+                <button type="submit">Entrar</button>
+            </form>
+
+            <p class="texto-cadastro">
+                Não tem conta?
+                <a href="cadastro.php">Cadastre-se</a>
+            </p>
         </section>
     </main>
 
-    <script src="../public/JavaScript/Login.js"></script>
+    <script src="../public/JavaScript/login.js"></script>
 </body>
 </html>

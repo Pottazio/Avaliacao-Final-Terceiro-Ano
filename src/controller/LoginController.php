@@ -63,25 +63,32 @@ class LoginController
                 ->setEmail($email)
                 ->setSenha($senha);
 
-            $idPerfil = $this->usuarioModel->cadastrar();
-
-            Auth::logar(
-                (int) $this->usuarioModel->getIdUsuario(),
-                $idPerfil,
-                $this->usuarioModel->getNome()
-            );
+            $this->usuarioModel->cadastrar();
+            $_SESSION['sucesso_cadastro'] = 'Cadastro realizado com sucesso. Agora entre com seu e-mail e senha.';
 
             $this->responder(true, 'Conta criada com sucesso.', [
-                'rota' => '../public/index.php',
-            ]);
+                'rota' => 'login.php',
+            ], rotaTradicional: '../../login/login.php');
         } catch (DadosInvalidosException $e) {
-            $this->responder(false, $e->getMessage(), error: true);
+            $this->responder(
+                false,
+                $e->getMessage(),
+                error: true,
+                rotaErroTradicional: '../../login/cadastro.php',
+                chaveErro: 'erro_cadastro'
+            );
         } catch (PDOException $e) {
             // 1062 = e-mail duplicado (constraint UQ_usuarios_email).
             $msg = ((int) ($e->errorInfo[1] ?? 0) === 1062)
                 ? 'Este e-mail já está cadastrado.'
                 : 'Erro ao cadastrar. Tente novamente.';
-            $this->responder(false, $msg, error: true);
+            $this->responder(
+                false,
+                $msg,
+                error: true,
+                rotaErroTradicional: '../../login/cadastro.php',
+                chaveErro: 'erro_cadastro'
+            );
         }
     }
 
@@ -117,7 +124,15 @@ class LoginController
     }
 
     /** Transporte de dados via JSON (requisito do trabalho). */
-    private function responder(bool $sucesso, string $mensagem, array $extra = [], bool $error = false): void
+    private function responder(
+        bool $sucesso,
+        string $mensagem,
+        array $extra = [],
+        bool $error = false,
+        ?string $rotaTradicional = null,
+        ?string $rotaErroTradicional = null,
+        string $chaveErro = 'erro_login'
+    ): void
     {
         if ($this->ehAjax()) {
             header('Content-Type: application/json; charset=utf-8');
@@ -131,12 +146,12 @@ class LoginController
 
         // Form tradicional (sem JS): mensagem pela sessão e volta.
         if (!$sucesso) {
-            $_SESSION['erro_login'] = $mensagem;
-            header('Location: ../../login/login.php');
+            $_SESSION[$chaveErro] = $mensagem;
+            header('Location: ' . ($rotaErroTradicional ?? '../../login/login.php'));
             exit;
         }
 
-        header('Location: ' . ($extra['rota'] ?? '../public/index.php'));
+        header('Location: ' . ($rotaTradicional ?? '../../public/index.php'));
         exit;
     }
 }

@@ -1,6 +1,6 @@
 /**
  * MONSTROBOLSO - Login e cadastro (lado cliente).
- * Caminho do projeto: public/JavaScript/Login.js
+ * Caminho do projeto: public/JavaScript/login.js
  *
  * Orientação a Objetos em JavaScript (requisito do trabalho):
  * a classe LoginApp encapsula estado e comportamento e fala com o
@@ -12,24 +12,16 @@ class LoginApp {
     constructor(urlController) {
         this.urlController = urlController;
 
-        this.telaLogin = document.getElementById('telaLogin');
-        this.telaCadastro = document.getElementById('telaCadastro');
-
         this.formLogin = document.getElementById('formLogin');
         this.formCadastro = document.getElementById('formCadastro');
 
-        this.mensagem = document.getElementById('mensagemLogin');
-        this.linkCadastro = document.getElementById('mostrarCadastro');
-        this.linkVoltar = document.getElementById('voltarLogin');
+        this.mensagem = document.getElementById('mensagemLogin')
+            || document.getElementById('mensagemCadastro');
 
-        // Toda instância nasce sem handlers: registra só o que existe.
         if (this.formLogin) this.formLogin.addEventListener('submit', (e) => this.ligacao(e));
         if (this.formCadastro) this.formCadastro.addEventListener('submit', (e) => this.ligacao(e));
-        if (this.linkCadastro) this.linkCadastro.addEventListener('click', (e) => this.trocarAba(e, 'cadastro'));
-        if (this.linkVoltar) this.linkVoltar.addEventListener('click', (e) => this.trocarAba(e, 'login'));
     }
 
-    /** Um único ponto de escuta para os dois formulários. */
     ligacao(evento) {
         evento.preventDefault();
 
@@ -45,15 +37,6 @@ class LoginApp {
                 senha: document.getElementById('cadSenha').value,
             });
         }
-    }
-
-    trocarAba(evento, aba) {
-        evento.preventDefault();
-        this.limparMensagem();
-
-        const paraCadastro = aba === 'cadastro';
-        this.telaLogin.style.display = paraCadastro ? 'none' : 'block';
-        this.telaCadastro.style.display = paraCadastro ? 'block' : 'none';
     }
 
     /** Requisição assíncrona; o backend responde em JSON. */
@@ -74,8 +57,8 @@ class LoginApp {
             const json = await resposta.json();
 
             if (json.sucesso) {
-                this.mostrarMensagem('Entrando...', 'ok');
-                window.location.href = json.rota || '../public/index.php';
+                this.mostrarMensagem(json.mensagem, 'ok');
+                if (json.rota) window.location.href = json.rota;
                 return;
             }
 
@@ -100,16 +83,10 @@ class LoginApp {
     mostrarMensagem(texto, tipo = 'erro') {
         if (!this.mensagem) return;
         this.mensagem.textContent = texto;
-        this.mensagem.style.color =
-            tipo === 'erro' ? '#d62828' : tipo === 'ok' ? '#2a9d8f' : '#555';
-    }
-
-    limparMensagem() {
-        if (this.mensagem) this.mensagem.textContent = '';
+        this.mensagem.dataset.tipo = tipo;
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Caminho relativo ao login/login.php (é de lá que a página é aberta).
     window.appLogin = new LoginApp('../src/controller/roteadorLogin.php');
 });

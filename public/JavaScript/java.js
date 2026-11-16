@@ -101,12 +101,6 @@ class MonstroBolso {
                 break;
 
 
-            case "shop":
-
-                this.configurarLoja();
-
-                break;
-
         }
 
     }
@@ -399,14 +393,6 @@ class MonstroBolso {
     }
 
 
-    configurarLoja() {
-
-        console.log(
-            "Poké Mart carregado."
-        );
-
-    }
-
 }
 
 
@@ -417,27 +403,6 @@ const jogo =
 function navegar(pagina) {
 
     jogo.navegar(pagina);
-
-}
-
-
-function comprarItem(item) {
-
-    const mensagem =
-        document.getElementById(
-            "mensagemLoja"
-        );
-
-
-    if (!mensagem) {
-
-        return;
-
-    }
-
-
-    mensagem.textContent =
-        `Compra de ${item} será processada pelo backend.`;
 
 }
 

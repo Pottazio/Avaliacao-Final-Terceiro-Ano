@@ -1,718 +1,354 @@
-/* ================================
-   CONFIGURAÇÕES GERAIS
-================================ */
+/* =====================================================================
+   POKENOAS - folha de estilo principal
+   Caminho no projeto: public/CSS/style.css
 
-* {
+   Estilo: pixel art retro. Cantos retos, borda grossa, sombra "dura"
+   (sem blur), paleta quente puxada das artes de fundo.
+   ===================================================================== */
+
+/* ---------- 1. Fontes ---------- */
+/* Se a maquina estiver offline, cai na fonte monospace do sistema. */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+/* ---------- 2. Variaveis (tokens) ---------- */
+:root {
+    --vermelho:      #d62828;
+    --vermelho-esc:  #a01c1c;
+    --amarelo:       #f4a300;
+    --amarelo-claro: #ffd166;
+    --azul:          #1d3557;
+    --azul-claro:    #457b9d;
+    --verde:         #2a9d8f;
+    --creme:         #fdf6e3;
+    --branco:        #ffffff;
+    --cinza-texto:   #3a3a3a;
+    --preto:         #14110f;
+
+    --borda: 4px solid var(--preto);
+    --borda-fina: 3px solid var(--preto);
+    --sombra-dura: 6px 6px 0 var(--preto);
+    --sombra-dura-p: 4px 4px 0 var(--preto);
+
+    --fonte-titulo: 'Press Start 2P', 'Courier New', monospace;
+    --fonte-texto: 'VT323', 'Courier New', monospace;
+
+    --raio: 0px;                /* pixel art nao tem canto arredondado */
+    --espaco: 16px;
+}
+
+/* ---------- 3. Reset basico ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
 }
 
 html {
-    scroll-behavior: smooth;
+    font-size: 18px;             /* base um pouco maior: VT323 e pequena */
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    background-color: #f1f1f1;
-    color: #222;
+    font-family: var(--fonte-texto);
+    font-size: 1.15rem;
+    line-height: 1.5;
+    color: var(--cinza-texto);
+    background-color: var(--azul);
     min-height: 100vh;
 
-    display: flex;
-    flex-direction: column;
-}
-
-
-/* ================================
-   CABEÇALHO
-================================ */
-
-header {
-    background-color: #d62828;
-    color: white;
-    padding: 20px;
-    text-align: center;
-
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-}
-
-header h1 {
-    font-size: 32px;
-    margin-bottom: 18px;
-    letter-spacing: 1px;
-}
-
-
-/* ================================
-   MENU DE NAVEGAÇÃO
-================================ */
-
-nav {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-nav button {
-    background-color: white;
-    color: #d62828;
-
-    border: none;
-    border-radius: 6px;
-
-    padding: 10px 18px;
-
-    font-size: 15px;
-    font-weight: bold;
-
-    cursor: pointer;
-
-    transition: 0.2s;
-}
-
-nav button:hover {
-    background-color: #f5f5f5;
-    transform: translateY(-2px);
-}
-
-nav button:active {
-    transform: translateY(0);
-}
-
-
-/* ================================
-   CONTEÚDO PRINCIPAL
-================================ */
-
-main {
-    width: 100%;
-    max-width: 1100px;
-
-    margin: 30px auto;
-    padding: 0 20px;
-
-    flex: 1;
-}
-
-
-/* ================================
-   PÁGINAS
-================================ */
-
-.pagina {
-    background-color: white;
-
-    border-radius: 12px;
-
-    padding: 30px;
-
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
-
-    animation: aparecer 0.25s ease-in-out;
-}
-
-@keyframes aparecer {
-
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-}
-
-.pagina h2 {
-    font-size: 28px;
-    margin-bottom: 15px;
-
-    color: #d62828;
-}
-
-.pagina h3 {
-    margin-bottom: 10px;
-}
-
-.pagina p {
-    line-height: 1.6;
-}
-
-
-/* ================================
-   BOTÕES
-================================ */
-
-button {
-    font-family: inherit;
-}
-
-.pagina button {
-    background-color: #d62828;
-    color: white;
-
-    border: none;
-    border-radius: 7px;
-
-    padding: 11px 18px;
-
-    font-size: 15px;
-    font-weight: bold;
-
-    cursor: pointer;
-
-    transition: 0.2s;
-}
-
-.pagina button:hover {
-    background-color: #b71c1c;
-    transform: translateY(-2px);
-}
-
-.pagina button:active {
-    transform: translateY(0);
-}
-
-.pagina button:disabled {
-    background-color: #aaa;
-    cursor: not-allowed;
-    transform: none;
-}
-
-
-/* ================================
-   MENU DA PÁGINA INICIAL
-================================ */
-
-.menu-jogo {
-    display: flex;
-
-    flex-wrap: wrap;
-
-    gap: 15px;
-
-    margin-top: 25px;
-}
-
-.menu-jogo button {
-    min-width: 170px;
-}
-
-
-/* ================================
-   FORMULÁRIOS
-================================ */
-
-form {
-    width: 100%;
-    max-width: 500px;
-
-    margin: 25px 0;
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 10px;
-}
-
-form input {
-    width: 100%;
-
-    padding: 12px 14px;
-
-    border: 1px solid #ccc;
-    border-radius: 7px;
-
-    font-size: 15px;
-
-    outline: none;
-
-    transition: 0.2s;
-}
-
-form input:focus {
-    border-color: #d62828;
-
-    box-shadow: 0 0 0 2px rgba(214, 40, 40, 0.1);
-}
-
-.login-page {
-    align-items: center;
-    justify-content: center;
-    padding: 32px 18px;
-    background-color: #f1f1f1;
-    background-image: radial-gradient(rgba(214, 40, 40, 0.12) 1px, transparent 1px);
-    background-size: 22px 22px;
-}
-
-.login-shell {
-    width: min(100%, 420px);
-}
-
-.login-brand {
-    margin-bottom: 22px;
-    text-align: center;
-}
-
-.login-brand h1 {
-    color: #d62828;
-    font-size: 30px;
-}
-
-.login-brand p {
-    margin-top: 6px;
-    color: #555;
-}
-
-.login-card {
-    padding: 30px;
-    border: 1px solid #e1e1e1;
-    border-radius: 8px;
-    background-color: #fff;
-    box-shadow: 0 8px 24px rgba(34, 34, 34, 0.1);
-}
-
-.login-card h2 {
-    color: #222;
-    font-size: 22px;
-}
-
-.login-form {
-    max-width: none;
-    margin: 22px 0 0;
-    gap: 8px;
-}
-
-.login-form label {
-    margin-top: 8px;
-    color: #333;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.login-form button {
-    margin-top: 14px;
-    padding: 12px;
-    border: 0;
-    border-radius: 7px;
-    background-color: #d62828;
-    color: #fff;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
-}
-
-.login-form button:hover {
-    background-color: #b71c1c;
-    transform: translateY(-2px);
-}
-
-.login-error {
-    margin-top: 16px;
-    padding: 12px;
-    border: 1px solid #efb4b4;
-    border-radius: 7px;
-    background-color: #fff0f0;
-    color: #9f1d1d;
-    line-height: 1.5;
-}
-
-
-/* ================================
-   CARTÕES
-================================ */
-
-.cartoes {
-    display: grid;
-
-    grid-template-columns:
-        repeat(auto-fit, minmax(180px, 1fr));
-
-    gap: 18px;
-
-    margin-top: 20px;
-}
-
-
-/* ================================
-   CARD DE POKÉMON
-================================ */
-
-.pokemon-card {
-    background-color: #fafafa;
-
-    border: 1px solid #ddd;
-
-    border-radius: 10px;
-
-    padding: 18px;
-
-    text-align: center;
-
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-
-    transition: 0.2s;
-}
-
-.pokemon-card:hover {
-    transform: translateY(-4px);
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, 0.14);
-}
-
-.pokemon-card img {
-    width: 120px;
-    height: 120px;
-
-    object-fit: contain;
-
+    /* Deixa as bordas pixeladas ao ampliar as imagens. */
     image-rendering: pixelated;
 }
 
-.pokemon-card h3 {
-    text-transform: capitalize;
-
-    margin: 8px 0;
-}
-
-.pokemon-card p {
-    font-size: 14px;
-    margin: 5px 0;
-}
-
-
-/* ================================
-   RESULTADO DA PESQUISA
-================================ */
-
-#pokemonResultado {
-    margin-top: 20px;
-    margin-bottom: 30px;
-}
-
-#pokemonResultado:empty {
-    display: none;
-}
-
-
-/* ================================
-   TIME POKÉMON
-================================ */
-
-#timePokemon {
-    margin-top: 15px;
-}
-
-#timePokemon:empty::after {
-    content: "Nenhum Pokémon adicionado ao time.";
-    display: block;
-
-    padding: 25px;
-
-    background-color: #f7f7f7;
-
-    border: 1px dashed #ccc;
-
-    border-radius: 8px;
-
-    text-align: center;
-
-    color: #777;
-}
-
-
-/* ================================
-   BATALHA
-================================ */
-
-.arena {
-    display: grid;
-
-    grid-template-columns:
-        1fr 100px 1fr;
-
+/* ---------- 4. Tela de LOGIN ---------- */
+/* Imagem de fundo: a praca com o jato e os Pokemon. */
+body.login-page {
+    display: flex;
     align-items: center;
-
-    gap: 20px;
-
-    margin: 30px 0;
-}
-
-.pokemon-batalha {
-    min-height: 220px;
-
-    background-color: #fafafa;
-
-    border: 2px solid #ddd;
-
-    border-radius: 12px;
-
-    padding: 20px;
-
-    text-align: center;
-
-    display: flex;
-
-    flex-direction: column;
-
     justify-content: center;
+    padding: 32px 16px;
 
-    align-items: center;
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.45), rgba(10, 20, 40, 0.45)),
+        url('../assets/login-praca.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
-.pokemon-batalha h3 {
-    color: #d62828;
-    margin-bottom: 20px;
-}
-
-.versus {
-    text-align: center;
-}
-
-.versus h2 {
-    color: #333;
-    font-size: 30px;
-}
-
-
-/* ================================
-   CONTROLES DA BATALHA
-================================ */
-
-.controles-batalha {
-    display: flex;
-
-    justify-content: center;
-
-    flex-wrap: wrap;
-
-    gap: 12px;
-
-    margin: 20px 0;
-}
-
-#resultadoBatalha {
-    margin-top: 20px;
-
-    padding: 15px;
-
-    border-radius: 8px;
-
-    background-color: #f5f5f5;
-
-    text-align: center;
-
-    min-height: 20px;
-}
-
-
-/* ================================
-   POKÉ MART
-================================ */
-
-.saldo {
-    background-color: #fff3cd;
-
-    border: 1px solid #ffe69c;
-
-    border-radius: 8px;
-
-    padding: 15px;
-
-    margin: 20px 0;
-}
-
-.saldo h3 {
-    color: #856404;
-}
-
-#saldoPokemon {
-    font-weight: bold;
-}
-
-
-/* ================================
-   PRODUTOS DA LOJA
-================================ */
-
-.produto {
-    background-color: #fafafa;
-
-    border: 1px solid #ddd;
-
-    border-radius: 10px;
-
-    padding: 20px;
-
-    min-height: 180px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: space-between;
-
-    transition: 0.2s;
-}
-
-.produto:hover {
-    transform: translateY(-3px);
-
-    box-shadow:
-        0 4px 10px rgba(0, 0, 0, 0.12);
-}
-
-.produto h3 {
-    color: #d62828;
-}
-
-.produto p {
-    color: #555;
-
-    font-size: 14px;
-
-    margin-bottom: 15px;
-}
-
-.produto button {
+.login-shell {
     width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-
-/* ================================
-   MENSAGENS
-================================ */
-
-#mensagemLoja,
-#mensagemLogin,
-#resultadoBatalha {
-    margin-top: 20px;
-
-    padding: 12px;
-
-    border-radius: 7px;
-
-    background-color: #f5f5f5;
-}
-
-
-/* ================================
-   RODAPÉ
-================================ */
-
-footer {
-    background-color: #222;
-
-    color: white;
-
+/* Marca: POKENOAS */
+.login-brand {
     text-align: center;
-
-    padding: 20px;
-
-    margin-top: auto;
+    color: var(--branco);
 }
 
-footer p {
-    font-size: 14px;
+.login-brand h1 {
+    font-family: var(--fonte-titulo);
+    font-size: 2rem;
+    letter-spacing: 2px;
+    color: var(--amarelo-claro);
+    text-shadow:
+        4px 4px 0 var(--preto),
+        -2px -2px 0 var(--preto),
+        2px -2px 0 var(--preto),
+        -2px 2px 0 var(--preto);
+    margin-bottom: 10px;
 }
 
-
-/* ================================
-   RESPONSIVIDADE
-================================ */
-
-@media (max-width: 800px) {
-
-    main {
-        margin: 20px auto;
-        padding: 0 15px;
-    }
-
-    .pagina {
-        padding: 20px;
-    }
-
-    .arena {
-        grid-template-columns: 1fr;
-    }
-
-    .versus {
-        order: 2;
-    }
-
-    .pokemon-batalha {
-        min-height: 180px;
-    }
-
+.login-brand p {
+    font-size: 1.25rem;
+    color: var(--creme);
+    text-shadow: 2px 2px 0 var(--preto);
 }
 
-
-@media (max-width: 600px) {
-
-    header {
-        padding: 15px;
-    }
-
-    header h1 {
-        font-size: 26px;
-    }
-
-    nav {
-        flex-direction: column;
-    }
-
-    nav button {
-        width: 100%;
-        max-width: 300px;
-    }
-
-    main {
-        margin: 15px auto;
-        padding: 0 10px;
-    }
-
-    .pagina {
-        padding: 18px;
-    }
-
-    .pagina h2 {
-        font-size: 23px;
-    }
-
-    .menu-jogo {
-        flex-direction: column;
-    }
-
-    .menu-jogo button {
-        width: 100%;
-    }
-
-    .cartoes {
-        grid-template-columns: 1fr;
-    }
-
-    .controles-batalha {
-        flex-direction: column;
-    }
-
-    .controles-batalha button {
-        width: 100%;
-    }
-
+/* Card do formulario */
+.login-card {
+    background-color: var(--creme);
+    border: var(--borda);
+    box-shadow: var(--sombra-dura);
+    padding: 28px 24px;
 }
 
+.login-card h2 {
+    font-family: var(--fonte-titulo);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--azul);
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: var(--borda-fina);
+}
 
-/* ================================
-   SELEÇÃO
-================================ */
+/* ---------- 5. Formularios ---------- */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-::selection {
-    background-color: #d62828;
-    color: white;
+.login-form label {
+    font-family: var(--fonte-titulo);
+    font-size: 0.7rem;
+    color: var(--azul);
+    margin-top: 6px;
+}
+
+.login-form input {
+    font-family: var(--fonte-texto);
+    font-size: 1.3rem;
+    color: var(--preto);
+    background-color: var(--branco);
+    border: var(--borda-fina);
+    border-radius: var(--raio);
+    padding: 12px 14px;
+    width: 100%;
+    transition: box-shadow 0.08s steps(2), transform 0.08s steps(2);
+}
+
+.login-form input::placeholder {
+    color: #a8a29a;
+}
+
+.login-form input:focus {
+    outline: none;
+    border-color: var(--vermelho);
+    box-shadow: var(--sombra-dura-p);
+    transform: translate(-2px, -2px);
+}
+
+.login-form input:disabled {
+    background-color: #eee7d6;
+    cursor: not-allowed;
+}
+
+/* ---------- 6. Botoes ---------- */
+.login-form button,
+.btn {
+    font-family: var(--fonte-titulo);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: var(--branco);
+    background-color: var(--vermelho);
+    border: var(--borda-fina);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra-dura-p);
+    padding: 14px 18px;
+    margin-top: 14px;
+    cursor: pointer;
+    transition: transform 0.08s steps(2), box-shadow 0.08s steps(2),
+                background-color 0.08s steps(2);
+}
+
+.login-form button:hover,
+.btn:hover {
+    background-color: var(--vermelho-esc);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--preto);
+}
+
+.login-form button:active,
+.btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--preto);
+}
+
+.login-form button:disabled {
+    background-color: #b0a89c;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+}
+
+/* ---------- 7. Mensagens ---------- */
+.login-msg,
+.login-error {
+    font-size: 1.2rem;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    border: var(--borda-fina);
+    background-color: #ffe9e9;
+    color: var(--vermelho-esc);
+    border-radius: var(--raio);
+    word-break: break-word;
+}
+
+.login-msg:empty,
+.login-error:empty {
+    display: none;               /* nao ocupa espaco quando vazia */
+}
+
+.login-msg[data-tipo="ok"] {
+    background-color: #e2f5f0;
+    color: #1b6b60;
+}
+
+.login-msg[data-tipo="info"] {
+    background-color: #fff6dc;
+    color: #8a6100;
+}
+
+/* ---------- 8. Troca entre entrar / cadastrar ---------- */
+.texto-cadastro {
+    font-size: 1.2rem;
+    text-align: center;
+    margin-top: 18px;
+    color: var(--cinza-texto);
+}
+
+.texto-cadastro a {
+    color: var(--azul-claro);
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.texto-cadastro a:hover {
+    color: var(--vermelho);
+}
+
+/* ---------- 9. Area logada (index, team, battle, shop) ---------- */
+body.jogo {
+    background-color: #1b2a4a;
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.55), rgba(10, 20, 40, 0.75)),
+        url('../assets/estacao.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: 24px 16px 48px;
+}
+
+.topo {
+    max-width: 960px;
+    margin: 0 auto 20px;
+    background-color: var(--creme);
+    border: var(--borda);
+    box-shadow: var(--sombra-dura);
+    padding: 20px 24px;
+}
+
+.topo h1 {
+    font-family: var(--fonte-titulo);
+    font-size: 1.4rem;
+    color: var(--vermelho);
+    margin-bottom: 12px;
+}
+
+.topo p {
+    font-size: 1.25rem;
+    margin-bottom: 4px;
+}
+
+.topo a {
+    display: inline-block;
+    font-family: var(--fonte-titulo);
+    font-size: 0.7rem;
+    color: var(--branco);
+    background-color: var(--azul);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    padding: 10px 14px;
+    margin-top: 12px;
+    text-decoration: none;
+}
+
+.topo a:hover {
+    background-color: var(--vermelho);
+}
+
+.menu {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.menu a {
+    flex: 1 1 200px;
+    text-align: center;
+    font-family: var(--fonte-titulo);
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--preto);
+    background-color: var(--amarelo-claro);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    padding: 20px 14px;
+    text-decoration: none;
+}
+
+.menu a:hover {
+    background-color: var(--amarelo);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--preto);
+}
+
+/* ---------- 10. Responsivo ---------- */
+@media (max-width: 520px) {
+    html {
+        font-size: 16px;
+    }
+
+    .login-brand h1 {
+        font-size: 1.4rem;
+    }
+
+    .login-card {
+        padding: 22px 16px;
+    }
+
+    .menu a {
+        flex: 1 1 100%;
+    }
 }

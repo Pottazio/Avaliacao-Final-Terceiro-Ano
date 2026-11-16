@@ -27,7 +27,7 @@ foreach ([
     'bootstrap.php'                    => __DIR__ . '/../bootstrap.php',
     'src/core/Autoload.php'            => __DIR__ . '/../src/core/Autoload.php',
     'src/core/Auth.php'                => __DIR__ . '/../src/core/Auth.php',
-    'models/Usuario.php'               => __DIR__ . '/../models/Usuario.php',
+    'models/Usuario.php'               => __DIR__ . '/../src/models/Usuario.php',
     'src/controller/roteadorLogin.php' => __DIR__ . '/../src/controller/roteadorLogin.php',
     'config/DataBase.php'              => __DIR__ . '/../config/DataBase.php',
 ] as $rotulo => $caminho) {

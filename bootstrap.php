@@ -14,7 +14,7 @@ use src\core\Autoload;
 Autoload::registrar([
     'config\\'       => __DIR__ . '/config/',
     'src\\core\\'    => __DIR__ . '/src/core/',
-    'models\\'       => __DIR__ . '/models/',
+    'models\\'       => __DIR__ . '/src/models/',
     'src\\controller\\' => __DIR__ . '/src/controller/',
 ]);
 

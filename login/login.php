@@ -12,7 +12,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
 use src\core\Auth;
 
-// Já logado? Vai direto para o jogo.
+
 if (Auth::logado()) {
     header('Location: ../public/index.php');
     exit;

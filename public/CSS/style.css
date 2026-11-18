@@ -334,6 +334,68 @@ body.jogo {
     box-shadow: 6px 6px 0 var(--preto);
 }
 
+.pagina {
+    max-width: 960px;
+    margin: 24px auto 0;
+    background-color: var(--creme);
+    border: var(--borda);
+    box-shadow: var(--sombra-dura);
+    padding: 24px;
+}
+
+.pagina > h2 {
+    font-family: var(--fonte-titulo);
+    color: var(--azul);
+    margin-bottom: 18px;
+}
+
+.saldo {
+    margin-bottom: 18px;
+}
+
+.cartoes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+}
+
+.produto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 250px;
+    text-align: center;
+    background-color: var(--branco);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    padding: 16px;
+}
+
+.produto h3 {
+    margin: 8px 0;
+}
+
+.produto p {
+    flex: 1;
+}
+
+.produto .precoItem {
+    flex: 0;
+    color: var(--vermelho-esc);
+}
+
+.produto button {
+    font-family: var(--fonte-titulo);
+    font-size: 0.7rem;
+    color: var(--branco);
+    background-color: var(--vermelho);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    padding: 10px;
+    margin-top: 12px;
+    cursor: pointer;
+}
+
 /* ---------- 10. Responsivo ---------- */
 @media (max-width: 520px) {
     html {

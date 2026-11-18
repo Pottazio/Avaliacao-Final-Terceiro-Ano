@@ -29,7 +29,7 @@ class MonstroBolso {
         try {
 
             const resposta = await fetch(
-                `html/${pagina}.html`
+                `html/${pagina}.html?v=20261118`
             );
 
 
@@ -400,10 +400,247 @@ class MonstroBolso {
 
 
     configurarLoja() {
+        this.carregarItensLoja();
+    }
 
-        console.log(
-            "Poké Mart carregado."
-        );
+
+    async carregarItensLoja() {
+
+        const lista =
+            document.getElementById(
+                "listaItensLoja"
+            );
+
+
+        if (!lista) {
+
+            return;
+
+        }
+
+
+        const nomes = [
+            "potion",
+            "super-potion",
+            "hyper-potion",
+            "max-potion",
+            "full-restore",
+            "antidote",
+            "burn-heal",
+            "ice-heal",
+            "awakening",
+            "paralyze-heal",
+            "full-heal",
+            "revive"
+        ];
+
+
+        try {
+
+            let dadosLoja =
+                await requisicaoLoja("listar");
+            this.csrfToken = dadosLoja.csrfToken;
+
+
+            try {
+
+                const itensApi =
+                    await Promise.all(
+                    nomes.map(
+                        async (slug) => {
+
+                            try {
+
+                                const resposta =
+                                    await fetch(
+                                        `https://pokeapi.co/api/v2/item/${slug}`
+                                    );
+
+
+                                if (!resposta.ok) {
+
+                                    throw new Error(
+                                        `Falha ao buscar ${slug} na PokeAPI.`
+                                    );
+
+                                }
+
+
+                                const item =
+                                    await resposta.json();
+
+
+                                const efeito =
+                                    item.effect_entries.find(
+                                        (entrada) =>
+                                            entrada.language.name === "en"
+                                    );
+
+
+                                return {
+                                    slug,
+                                    descricao: efeito
+                                        ? efeito.short_effect
+                                        : "Item curativo."
+                                };
+
+                            }
+
+                            catch (erro) {
+
+                                console.error(erro);
+                                return null;
+
+                            }
+
+                        }
+                    )
+                );
+
+
+                const itensValidos =
+                    itensApi.filter(
+                        (item) => item !== null
+                    );
+
+
+                if (itensValidos.length > 0) {
+
+                    await requisicaoLoja(
+                        "sincronizar",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-Token": dadosLoja.csrfToken
+                            },
+                            body: JSON.stringify({
+                                itens: itensValidos
+                            })
+                        }
+                    );
+
+                }
+
+                const mensagem =
+                    document.getElementById(
+                        "mensagemLoja"
+                    );
+
+                if (mensagem && itensValidos.length < nomes.length) {
+
+                    mensagem.textContent =
+                        itensValidos.length === 0
+                            ? "PokeAPI indisponível. Exibindo os itens já salvos no banco."
+                            : "A PokeAPI retornou apenas parte dos itens; o catálogo foi sincronizado parcialmente.";
+                }
+
+
+                dadosLoja =
+                    await requisicaoLoja("listar");
+                this.csrfToken = dadosLoja.csrfToken;
+
+            }
+
+
+            catch (erroApi) {
+
+                console.error(erroApi);
+
+                const mensagem =
+                    document.getElementById(
+                        "mensagemLoja"
+                    );
+
+
+                if (mensagem) {
+
+                    mensagem.textContent =
+                        "Não foi possível atualizar os itens pela PokeAPI. Exibindo os itens já salvos no banco.";
+
+                }
+
+            }
+
+
+            if (dadosLoja.itens.length === 0) {
+
+                throw new Error(
+                    "A loja ainda não tem itens salvos. Verifique a conexão com a PokeAPI e tente novamente."
+                );
+
+            }
+
+
+            const saldo =
+                document.getElementById(
+                    "saldoPokemon"
+                );
+
+
+            if (saldo) {
+
+                saldo.textContent =
+                    dadosLoja.saldo;
+
+            }
+
+
+            const saldoHeader =
+                document.getElementById(
+                    "saldoHeader"
+                );
+
+
+            if (saldoHeader) {
+
+                saldoHeader.textContent =
+                    dadosLoja.saldo;
+
+            }
+
+
+            lista.innerHTML =
+                dadosLoja.itens.map(
+                    (item) => {
+
+                        const nomeSeguro =
+                            escaparHtml(item.nome);
+                        const descricaoSegura =
+                            escaparHtml(item.descricao || "Item curativo.");
+                        return `
+                            <article class="produto">
+                                <h3>${nomeSeguro}</h3>
+                                <p>${descricaoSegura}</p>
+                                <p class="precoItem">
+                                    <strong>${item.preco} Pokédollars</strong>
+                                </p>
+                                <p>
+                                    No inventário:
+                                    <span id="quantidade-item-${item.id_item}">${item.quantidade}</span>
+                                </p>
+                                <button
+                                    onclick="comprarItem(${Number(item.id_item)})"
+                                >
+                                    Comprar
+                                </button>
+                            </article>
+                        `;
+
+                    }
+                ).join("");
+
+        }
+
+
+        catch (erro) {
+
+            lista.innerHTML =
+                `<p>${escaparHtml(erro.message || "Não foi possível carregar a loja.")}</p>`;
+
+            console.error(erro);
+
+        }
 
     }
 
@@ -421,7 +658,7 @@ function navegar(pagina) {
 }
 
 
-function comprarItem(item) {
+async function comprarItem(idItem) {
 
     const mensagem =
         document.getElementById(
@@ -437,7 +674,162 @@ function comprarItem(item) {
 
 
     mensagem.textContent =
-        `Compra de ${item} será processada pelo backend.`;
+        "Processando compra...";
+
+
+    try {
+
+        const resultado =
+            await requisicaoLoja(
+                "comprar",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-Token": jogo.csrfToken
+                    },
+                    body: JSON.stringify({
+                        id_item: idItem,
+                        quantidade: 1
+                    })
+                }
+            );
+
+
+        const saldo =
+            document.getElementById(
+                "saldoPokemon"
+            );
+
+
+        if (saldo) {
+
+            saldo.textContent =
+                resultado.saldo;
+
+        }
+
+
+        const saldoHeader =
+            document.getElementById(
+                "saldoHeader"
+            );
+
+
+        if (saldoHeader) {
+
+            saldoHeader.textContent =
+                resultado.saldo;
+
+        }
+
+
+        const quantidade =
+            document.getElementById(
+                `quantidade-item-${resultado.id_item}`
+            );
+
+
+        if (quantidade) {
+
+            quantidade.textContent =
+                resultado.quantidade;
+
+        }
+
+
+        mensagem.textContent =
+            resultado.mensagem;
+
+    }
+
+
+    catch (erro) {
+
+        if (erro.dados && erro.dados.saldo !== undefined) {
+
+            const saldo =
+                document.getElementById(
+                    "saldoPokemon"
+                );
+
+
+            if (saldo) {
+
+                saldo.textContent =
+                    erro.dados.saldo;
+
+            }
+
+
+            const saldoHeader =
+                document.getElementById(
+                    "saldoHeader"
+                );
+
+
+            if (saldoHeader) {
+
+                saldoHeader.textContent =
+                    erro.dados.saldo;
+
+            }
+
+        }
+
+
+        mensagem.textContent =
+            erro.message;
+
+    }
+
+}
+
+
+async function requisicaoLoja(acao, opcoes = {}) {
+
+    const resposta =
+        await fetch(
+            `../src/controller/roteadorLoja.php?acao=${encodeURIComponent(acao)}`,
+            {
+                cache: "no-store",
+                ...opcoes
+            }
+        );
+
+
+    const dados =
+        await resposta.json();
+
+
+    if (!resposta.ok || !dados.sucesso) {
+
+        const erro =
+            new Error(
+                dados.mensagem || "Falha na comunicação com a loja."
+            );
+
+
+        erro.dados = dados;
+
+        throw erro;
+
+    }
+
+
+    return dados;
+
+}
+
+
+function escaparHtml(valor) {
+
+    return String(valor)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 
 }
 

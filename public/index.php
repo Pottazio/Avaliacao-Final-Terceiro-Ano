@@ -36,22 +36,26 @@ if ($perfil === false) {
 <head>
     <meta charset="UTF-8">
     <title>MONSTROBOLSO | Início</title>
-    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="CSS/style.css?v=20261118">
 </head>
-<body>
+<body class="jogo">
     <header class="topo">
         <h1>MONSTROBOLSO</h1>
         <p>Olá, <strong><?= htmlspecialchars($perfil['nome_usuario'], ENT_QUOTES, 'UTF-8') ?></strong>
            — perfil: <?= htmlspecialchars($perfil['nome_perfil'], ENT_QUOTES, 'UTF-8') ?></p>
-        <p>Pokédollars: <strong><?= (int) $perfil['pokedollar'] ?></strong></p>
+        <p>Pokédollars: <strong id="saldoHeader"><?= (int) $perfil['pokedollar'] ?></strong></p>
         <a href="../src/controller/roteadorLogin.php?acao=sair">Sair</a>
     </header>
 
     <nav class="menu">
-        <a href="team.php">Montar meu time</a>
-        <a href="battle.php">Ir para batalha</a>
-        <a href="shop.php">Visitar Poké Mart</a>
+        <a href="#" onclick="navegar('team'); return false;">Montar meu time</a>
+        <a href="#" onclick="navegar('battle'); return false;">Ir para batalha</a>
+        <a href="#" onclick="navegar('shop'); return false;">Visitar Poké Mart</a>
     </nav>
+
+    <main id="conteudo"></main>
+
+    <script src="JavaScript/java.js?v=shop-db-20261118"></script>
 </body>
 </html>
 

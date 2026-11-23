@@ -17,6 +17,42 @@ class PokeApiClient {
         this.cache = new Map();          // evita repetir a mesma busca
     }
 
+    spriteUrl(id) {
+        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+    }
+
+    async listarPrimeiraGeracao(quantidade) {
+        const limite = Math.max(1, Math.min(151, Number(quantidade) || 1));
+        const controlador = new AbortController();
+        const timeout = setTimeout(() => controlador.abort(), 12000);
+        let resposta;
+
+        try {
+            resposta = await fetch(
+                `${this.base}/pokemon?limit=${limite}&offset=0`,
+                { signal: controlador.signal }
+            );
+        } catch (erro) {
+            if (erro.name === 'AbortError') {
+                throw new Error('A PokeAPI demorou para responder. Verifique sua conexão e tente novamente.');
+            }
+            throw erro;
+        } finally {
+            clearTimeout(timeout);
+        }
+
+        if (!resposta.ok) {
+            throw new Error('Não foi possível carregar a Pokédex.');
+        }
+
+        const dados = await resposta.json();
+        return dados.results.map((pokemon, indice) => ({
+            id: indice + 1,
+            nome: pokemon.name,
+            sprite: this.spriteUrl(indice + 1),
+        }));
+    }
+
     /** Busca um Pokemon por nome ou numero e devolve dados normalizados. */
     async buscar(termo) {
         const chave = String(termo).trim().toLowerCase();
@@ -77,36 +113,140 @@ class TimeApp {
         this.urlRoteador = urlRoteador;
         this.api = api;
 
-        this.form = document.getElementById('formBusca');
-        this.campo = document.getElementById('campoPokemon');
         this.painel = document.getElementById('resultadoBusca');
         this.listaTime = document.getElementById('listaTime');
         this.contador = document.getElementById('contadorTime');
         this.mensagem = document.getElementById('mensagemTime');
+        this.galeriaPokemon = document.getElementById('galeriaPokemon');
+        this.resumoProgresso = document.getElementById('resumoProgresso');
 
         this.maximo = 6;
         this.time = [];
-
-        if (this.form) this.form.addEventListener('submit', (e) => this.buscar(e));
+        this.progresso = null;
 
         this.carregarTime();
+        this.carregarGaleria();
     }
 
-    /** Busca na PokeAPI e mostra o cartao de confirmação. */
-    async buscar(evento) {
-        evento.preventDefault();
+    async mostrarPokemon(termo) {
         this.limparMensagem();
         this.painel.innerHTML = '';
         this.painel.appendChild(this.criarCarregando());
 
         try {
-            const pokemon = await this.api.buscar(this.campo.value);
+            const progresso = await this.carregarProgresso();
+            const pokemon = await this.api.buscar(termo);
+
+            if (pokemon.id_pokedex > progresso.pokedex_maximo) {
+                throw new Error(
+                    `Este Pokémon ainda está bloqueado. Sua Pokédex vai até #${String(progresso.pokedex_maximo).padStart(3, '0')}.`
+                );
+            }
+
             this.painel.innerHTML = '';
             this.painel.appendChild(this.criarCartao(pokemon));
         } catch (erro) {
             this.painel.innerHTML = '';
             this.mostrarMensagem(erro.message, 'erro');
         }
+    }
+
+    async carregarProgresso() {
+        if (this.progresso) return this.progresso;
+
+        const controlador = new AbortController();
+        const timeout = setTimeout(() => controlador.abort(), 12000);
+        let resposta;
+
+        try {
+            resposta = await fetch(`${this.urlRoteador}?acao=progresso`, {
+                signal: controlador.signal,
+            });
+        } catch (erro) {
+            if (erro.name === 'AbortError') {
+                throw new Error('O servidor demorou para carregar o progresso. Atualize a página e tente novamente.');
+            }
+            throw erro;
+        } finally {
+            clearTimeout(timeout);
+        }
+
+        const json = await resposta.json();
+
+        if (!resposta.ok || !json.sucesso) {
+            throw new Error(json.mensagem || 'Não foi possível carregar o progresso.');
+        }
+
+        this.progresso = json.progresso;
+        return this.progresso;
+    }
+
+    async carregarGaleria() {
+        if (!this.galeriaPokemon) return;
+
+        try {
+            const progresso = await this.carregarProgresso();
+            if (this.resumoProgresso) {
+                this.resumoProgresso.textContent =
+                    `Pokémon liberados: #001–#${String(progresso.pokedex_maximo).padStart(3, '0')} de 151 `
+                    + `(${progresso.vitorias} vitórias). Selecione um para adicionar ao time.`;
+            }
+
+            this.galeriaPokemon.innerHTML = '';
+            const carregando = document.createElement('p');
+            carregando.className = 'time-vazio';
+            carregando.textContent = 'Buscando imagens na PokéAPI...';
+            this.galeriaPokemon.appendChild(carregando);
+
+            const pokemons = await this.api.listarPrimeiraGeracao(progresso.pokedex_maximo);
+
+            this.galeriaPokemon.innerHTML = '';
+            pokemons.forEach((pokemon) => {
+                this.galeriaPokemon.appendChild(this.criarCartaoGaleria(pokemon));
+            });
+        } catch (erro) {
+            this.galeriaPokemon.innerHTML = '';
+            const mensagem = document.createElement('p');
+            mensagem.className = 'time-vazio';
+            mensagem.textContent = erro.message || 'Não foi possível carregar os Pokémon liberados.';
+            this.galeriaPokemon.appendChild(mensagem);
+            this.mostrarMensagem(erro.message, 'erro');
+            console.error(erro);
+        }
+    }
+
+    criarCartaoGaleria(pokemon) {
+        const cartao = document.createElement('button');
+        cartao.type = 'button';
+        cartao.className = 'cartao-pokedex';
+        cartao.setAttribute(
+            'aria-label',
+            `Selecionar ${pokemon.nome}, número ${pokemon.id} da Pokédex`
+        );
+
+        const imagem = document.createElement('img');
+        imagem.src = pokemon.sprite;
+        imagem.alt = pokemon.nome;
+        imagem.loading = 'lazy';
+        cartao.appendChild(imagem);
+
+        const numero = document.createElement('span');
+        numero.className = 'pokedex-numero';
+        numero.textContent = `#${String(pokemon.id).padStart(3, '0')}`;
+        cartao.appendChild(numero);
+
+        const nome = document.createElement('span');
+        nome.className = 'pokedex-nome';
+        nome.textContent = pokemon.nome;
+        cartao.appendChild(nome);
+
+        cartao.addEventListener('click', () => this.selecionarPokemon(pokemon.id));
+        return cartao;
+    }
+
+    async selecionarPokemon(idPokedex) {
+        await this.mostrarPokemon(idPokedex);
+        this.painel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     /** Cartao do Pokemon encontrado, com botao de adicionar. */
@@ -272,6 +412,15 @@ class TimeApp {
     criarSlot(p) {
         const slot = document.createElement('div');
         slot.className = 'slot-pokemon';
+
+        if (p.id_pokedex) {
+            const imagem = document.createElement('img');
+            imagem.className = 'slot-sprite';
+            imagem.src = this.api.spriteUrl(Number(p.id_pokedex));
+            imagem.alt = p.nome;
+            imagem.loading = 'lazy';
+            slot.appendChild(imagem);
+        }
 
         const nome = document.createElement('p');
         nome.className = 'slot-nome';

@@ -1,0 +1,290 @@
+/* =====================================================================
+   POKENOAS - estilos do Team Builder
+   Caminho no projeto: public/CSS/time.css
+   Carregado depois de style.css, na tela team.php.
+   ===================================================================== */
+
+/* Fundo proprio: a rua tranquila, mais calma que a estacao. */
+body.time-page {
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.62), rgba(10, 20, 40, 0.86)),
+        url('../assets/rua-tranquila.png');
+}
+
+/* ---------- Blocos da pagina ---------- */
+.bloco {
+    background-color: var(--creme);
+    border: var(--borda);
+    box-shadow: var(--sombra-dura);
+    padding: 24px 26px;
+}
+
+.bloco-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 0.95rem;
+    color: var(--azul);
+    margin-bottom: 10px;
+    padding-bottom: 12px;
+    border-bottom: var(--borda-fina);
+}
+
+.bloco-desc {
+    font-size: 1.15rem;
+    color: #6b6b6b;
+    margin-bottom: 18px;
+}
+
+/* ---------- Formulario de busca ---------- */
+.busca-form {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.busca-form input {
+    flex: 1 1 260px;
+    font-family: var(--fonte-texto);
+    font-size: 1.3rem;
+    color: var(--preto);
+    background-color: var(--branco);
+    border: var(--borda-fina);
+    padding: 12px 14px;
+}
+
+.busca-form input:focus {
+    outline: none;
+    border-color: var(--vermelho);
+    box-shadow: var(--sombra-dura-p);
+    transform: translate(-2px, -2px);
+}
+
+.busca-form button {
+    flex: 0 0 auto;
+    font-family: var(--fonte-titulo);
+    font-size: 0.8rem;
+    color: var(--branco);
+    background-color: var(--vermelho);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    padding: 12px 22px;
+    cursor: pointer;
+    transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+}
+
+.busca-form button:hover {
+    background-color: var(--vermelho-esc);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--preto);
+}
+
+.busca-form button:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--preto);
+}
+
+/* ---------- Cartao do Pokemon encontrado ---------- */
+.resultado-busca {
+    margin-top: 20px;
+}
+
+.minha-carta {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 8px 22px;
+    align-items: start;
+
+    background-color: var(--branco);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    padding: 20px 22px;
+}
+
+.carta-sprite {
+    grid-row: span 4;
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    background-color: #f2ece0;
+    border: var(--borda-fina);
+}
+
+.carta-nome {
+    font-family: var(--fonte-titulo);
+    font-size: 0.9rem;
+    color: var(--azul);
+    text-transform: capitalize;
+}
+
+/* ---------- Etiquetas de tipo ---------- */
+.carta-tipos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tipo {
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--branco);
+    background-color: #777;
+    border: 3px solid var(--preto);
+    padding: 2px 10px;
+    text-shadow: 1px 1px 0 var(--preto);
+}
+
+/* Cores por tipo (a API devolve nomes em ingles) */
+.tipo-fire     { background-color: #e25822; }
+.tipo-water    { background-color: #2a7fd4; }
+.tipo-grass    { background-color: #4a9d3f; }
+.tipo-electric { background-color: #e0b400; color: var(--preto); text-shadow: none; }
+.tipo-ice      { background-color: #66c2d6; color: var(--preto); text-shadow: none; }
+.tipo-fighting { background-color: #a3302b; }
+.tipo-poison   { background-color: #8a4a9c; }
+.tipo-ground   { background-color: #b09551; }
+.tipo-flying   { background-color: #7d9fd6; }
+.tipo-psychic  { background-color: #d1427c; }
+.tipo-bug      { background-color: #7a9c22; }
+.tipo-rock     { background-color: #9c8a4a; }
+.tipo-ghost    { background-color: #5c5a9c; }
+.tipo-dragon   { background-color: #5a3fc0; }
+.tipo-dark     { background-color: #5a4636; }
+.tipo-steel    { background-color: #9aa5ad; color: var(--preto); text-shadow: none; }
+.tipo-fairy    { background-color: #dc8fb0; }
+.tipo-normal   { background-color: #9c9c8a; }
+
+/* ---------- Atributos ---------- */
+.carta-atributos {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px 12px;
+    margin: 6px 0 4px;
+}
+
+.carta-atributos dt {
+    font-family: var(--fonte-titulo);
+    font-size: 0.6rem;
+    color: #7a7a7a;
+}
+
+.carta-atributos dd {
+    font-family: var(--fonte-titulo);
+    font-size: 0.85rem;
+    color: var(--vermelho);
+}
+
+.minha-carta .btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 12px;
+}
+
+.minha-carta .btn:disabled {
+    background-color: #b0a89c;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.carregando {
+    font-size: 1.2rem;
+    color: #6b6b6b;
+    padding: 12px 0;
+}
+
+/* ---------- Grade do time ---------- */
+.grade-time {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.time-vazio {
+    grid-column: 1 / -1;
+    font-size: 1.2rem;
+    color: #6b6b6b;
+    text-align: center;
+    padding: 24px 0;
+}
+
+.slot-pokemon {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    background-color: var(--branco);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    padding: 14px 16px;
+}
+
+.slot-nome {
+    font-family: var(--fonte-titulo);
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--azul);
+    text-transform: capitalize;
+    word-break: break-word;
+}
+
+.slot-tipos {
+    font-size: 1.05rem;
+    color: #6b6b6b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.slot-vel {
+    font-family: var(--fonte-titulo);
+    font-size: 0.65rem;
+    color: var(--vermelho);
+}
+
+.btn-remover {
+    align-self: flex-start;
+    font-family: var(--fonte-titulo);
+    font-size: 0.6rem;
+    color: var(--branco);
+    background-color: var(--azul);
+    border: 3px solid var(--preto);
+    padding: 8px 12px;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: transform 0.08s steps(2);
+}
+
+.btn-remover:hover {
+    background-color: var(--vermelho);
+    transform: translate(-2px, -2px);
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 760px) {
+    .grade-time {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .minha-carta {
+        grid-template-columns: 1fr;
+    }
+
+    .carta-sprite {
+        grid-row: auto;
+        justify-self: center;
+    }
+
+    .carta-atributos {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 520px) {
+    .grade-time {
+        grid-template-columns: 1fr;
+    }
+
+    .busca-form input,
+    .busca-form button {
+        flex: 1 1 100%;
+    }
+}

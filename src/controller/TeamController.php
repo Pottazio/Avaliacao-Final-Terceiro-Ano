@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 namespace src\controller;
-
+use src\dao\ProgressaoDAO;
 use PDOException;
 use RuntimeException;
 use config\Database;
@@ -22,6 +22,7 @@ use src\core\Auth;
  */
 class TeamController
 {
+    private ProgressaoDAO $progressaoDAO;
     private Pokemon $pokemonModel;
     private Time $timeModel;
 
@@ -30,6 +31,7 @@ class TeamController
         $pdo = Database::conectar();
         $this->pokemonModel = new Pokemon($pdo);
         $this->timeModel    = new Time($pdo);
+        $this->progressaoDAO = new ProgressaoDAO($pdo);
     }
 
     /**
@@ -85,6 +87,18 @@ class TeamController
         }
 
         try {
+            $progresso = $this->progressaoDAO->calcular($idPerfil);
+
+            if ($idPokedex < 1 || $idPokedex > $progresso['pokedex_maximo']) {
+                $this->responder(
+                    false,
+                    'Este Pokémon ainda não foi liberado. Sua Pokédex vai até #'
+                        . str_pad((string) $progresso['pokedex_maximo'], 3, '0', STR_PAD_LEFT) . '.',
+                    error: true
+                );
+                return;
+            }
+
             // 1) Grava os atributos na pokedex (fonte: PokeAPI)
             $this->pokemonModel->salvarNaPokedex($idPokedex, $especie, [
                 'HP'   => (int) ($_POST['HP'] ?? 0),
@@ -107,7 +121,6 @@ class TeamController
                     ->setStatus('NORMAL');
 
                 $this->pokemonModel->setTipos(array_values((array) $tipos));
-
                 $idPokemon = $this->pokemonModel->salvar();
             }
 
@@ -165,6 +178,18 @@ class TeamController
             ]);
         } catch (PDOException $e) {
             $this->responder(false, 'Erro ao carregar o time.', error: true);
+        }
+    }
+
+    /** GET ?acao=progresso -> devolve vitórias e o limite da Pokédex liberada. */
+    public function progresso(): void
+    {
+        try {
+            $this->responder(true, 'Progresso carregado.', [
+                'progresso' => $this->progressaoDAO->calcular(Auth::idPerfil()),
+            ]);
+        } catch (PDOException $e) {
+            $this->responder(false, 'Não foi possível carregar a progressão de batalhas.', error: true);
         }
     }
 

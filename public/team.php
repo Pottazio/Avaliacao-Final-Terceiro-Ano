@@ -50,8 +50,8 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POKENOAS | Team Builder</title>
-    <link rel="stylesheet" href="CSS/style.css?v=team-styles-20261123">
-    <link rel="stylesheet" href="CSS/time.css?v=team-styles-20261123">
+    <link rel="stylesheet" href="CSS/style.css?v=<?= (int) filemtime(__DIR__ . '/CSS/style.css') ?>?v=team-styles-20261123">
+    <link rel="stylesheet" href="CSS/time.css?v=<?= (int) filemtime(__DIR__ . '/CSS/time.css') ?>?v=team-styles-20261123">
 </head>
 <body class="jogo time-page">
 
@@ -86,19 +86,19 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
 
         <p id="mensagemTime" class="login-msg"></p>
 
-        <!-- ---------------- BUSCA NA POKEAPI ---------------- -->
+        <!-- ---------------- ESCOLHA DE POKÉMON ---------------- -->
         <section class="bloco">
-            <h2 class="bloco-titulo">Buscar na Pokédex</h2>
+            <h2 class="bloco-titulo">Escolher time</h2>
             <p class="bloco-desc">
-                Digite o nome ou o número do Pokémon. Os atributos vêm da PokeAPI.
+                Selecione um Pokémon liberado para ver os detalhes e adicioná-lo ao time.
             </p>
 
-            <form id="formBusca" class="busca-form">
-                <input type="text" id="campoPokemon" name="nome"
-                       placeholder="pikachu, charmander, 25..."
-                       autocomplete="off" required>
-                <button type="submit">Pesquisar</button>
-            </form>
+            <div class="pokedex-desbloqueada">
+                <p id="resumoProgresso" class="bloco-desc">Carregando Pokédex liberada...</p>
+                <div id="galeriaPokemon" class="grade-pokedex" aria-live="polite">
+                    <p class="time-vazio">Carregando Pokémon...</p>
+                </div>
+            </div>
 
             <div id="resultadoBusca" class="resultado-busca"></div>
         </section>
@@ -114,6 +114,6 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
 
     </main>
 
-    <script src="JavaScript/Time.js"></script>
+    <script src="JavaScript/Time.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/Time.js') ?>"></script>
 </body>
 </html>

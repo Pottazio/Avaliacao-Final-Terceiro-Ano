@@ -1,4 +1,4 @@
-class MonstroBolso {
+class Pokenoas{
 
     constructor() {
 
@@ -877,4 +877,5 @@ document.addEventListener(
         jogo.navegar("index");
 
     }
+    
 );

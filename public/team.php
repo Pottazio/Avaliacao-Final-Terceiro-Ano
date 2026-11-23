@@ -50,8 +50,8 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POKENOAS | Team Builder</title>
-    <link rel="stylesheet" href="CSS/style.css">
-    <link rel="stylesheet" href="CSS/time.css">
+    <link rel="stylesheet" href="CSS/style.css?v=team-styles-20261123">
+    <link rel="stylesheet" href="CSS/time.css?v=team-styles-20261123">
 </head>
 <body class="jogo time-page">
 

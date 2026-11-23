@@ -11,6 +11,14 @@ class MonstroBolso {
 
     async navegar(pagina) {
 
+        if (pagina === "team") {
+
+            window.location.href = "team.php";
+            return;
+
+        }
+
+
         const paginas = [
             "index",
             "team",
@@ -314,27 +322,55 @@ class MonstroBolso {
         area.innerHTML =
             this.time
                 .map(
-                    (pokemon, indice) => `
+                    (pokemon, indice) => {
 
-                    <div class="pokemon-card">
+                        const atributos = {};
 
-                        <img
-                            src="${pokemon.sprites.front_default}"
-                            alt="${pokemon.name}"
-                        >
+                        pokemon.stats.forEach(
+                            (item) => {
 
-                        <h3>
-                            ${pokemon.name}
-                        </h3>
+                                atributos[item.stat.name] =
+                                    item.base_stat;
 
-                        <p>
-                            Posição:
-                            ${indice + 1}
-                        </p>
+                            }
+                        );
 
-                    </div>
 
-                `
+                        return `
+
+                            <div class="pokemon-card pokemon-time-card">
+
+                                <img
+                                    src="${pokemon.sprites.front_default}"
+                                    alt="${pokemon.name}"
+                                >
+
+                                <h3>
+                                    ${pokemon.name}
+                                </h3>
+
+                                <p class="posicao-time">
+                                    Posição: ${indice + 1}
+                                </p>
+
+                                <div class="pokemon-atributos pokemon-atributos-time">
+                                    <div class="pokemon-resumo-lado">
+                                        <p><strong>HP:</strong> ${atributos.hp}</p>
+                                        <p><strong>Ataque:</strong> ${atributos.attack}</p>
+                                        <p><strong>Defesa:</strong> ${atributos.defense}</p>
+                                    </div>
+                                    <div class="pokemon-resumo-lado">
+                                        <p><strong>Velocidade:</strong> ${atributos.speed}</p>
+                                        <p><strong>Ataque Especial:</strong> ${atributos["special-attack"]}</p>
+                                        <p><strong>Defesa Especial:</strong> ${atributos["special-defense"]}</p>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        `;
+
+                    }
                 )
                 .join("");
 

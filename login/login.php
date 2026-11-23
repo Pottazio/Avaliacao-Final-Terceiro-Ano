@@ -4,11 +4,11 @@
  * View só apresenta; quem decide é o LoginController.
  * Caminho do projeto: login/login.php
  *
- * IMPORTANTE: os id/name dos campos abaixo são usados pelo Login.js.
+ * IMPORTANTE: os id/name dos campos abaixo são usados pelo login.js.
  * Ao mexer no visual, mude apenas classes e estrutura, nunca os id/name.
  */
 
-require_once __DIR__ . '/../bootstrap.php';
+require __DIR__ . '/../bootstrap.php';
 
 use src\core\Auth;
 
@@ -20,6 +20,8 @@ if (Auth::logado()) {
 
 $erro = $_SESSION['erro_login'] ?? null;
 unset($_SESSION['erro_login']);
+$sucessoCadastro = $_SESSION['sucesso_cadastro'] ?? null;
+unset($_SESSION['sucesso_cadastro']);
 
 // Diagnóstico: avisa em tela se algum arquivo essencial não carregou.
 $avisos = [];
@@ -71,9 +73,13 @@ foreach ([
                     </p>
                 <?php endif; ?>
 
-                <p id="mensagemLogin" class="login-msg"></p>
+                <p id="mensagemLogin" class="login-msg"
+                   data-tipo="<?= $sucessoCadastro ? 'ok' : '' ?>">
+                    <?= htmlspecialchars((string) $sucessoCadastro, ENT_QUOTES, 'UTF-8') ?>
+                </p>
 
-                <form id="formLogin" class="login-form" method="POST">
+                <form id="formLogin" class="login-form" method="POST"
+                      action="../src/controller/roteadorLogin.php?acao=entrar">
                     <label for="loginUsuario">E-mail</label>
                     <input type="email" id="loginUsuario" name="email"
                            placeholder="treinador@pokenoas.com"
@@ -99,16 +105,17 @@ foreach ([
 
                 <p id="mensagemCadastro" class="login-msg"></p>
 
-                <form id="formCadastro" class="login-form" method="POST">
+                <form id="formCadastro" class="login-form" method="POST"
+                      action="../src/controller/roteadorLogin.php?acao=cadastrar">
                     <label for="cadNome">Nome do treinador</label>
                     <input type="text" id="cadNome" name="nome"
                            placeholder="Morais Zanferrari"
-                           autocomplete="name" required>
+                           autocomplete="name" maxlength="100" required>
 
                     <label for="cadEmail">E-mail</label>
                     <input type="email" id="cadEmail" name="email"
                            placeholder="treinador@pokenoas.com"
-                           autocomplete="email" required>
+                           autocomplete="email" maxlength="150" required>
 
                     <label for="cadSenha">Senha (mín. 6 caracteres)</label>
                     <input type="password" id="cadSenha" name="senha"
@@ -126,6 +133,6 @@ foreach ([
         </section>
     </main>
 
-    <script src="../public/JavaScript/Login.js"></script>
+    <script src="../public/JavaScript/login.js"></script>
 </body>
 </html>

@@ -18,7 +18,8 @@ class LoginApp {
         this.formLogin = document.getElementById('formLogin');
         this.formCadastro = document.getElementById('formCadastro');
 
-        this.mensagem = document.getElementById('mensagemLogin');
+        this.mensagemLogin = document.getElementById('mensagemLogin');
+        this.mensagemCadastro = document.getElementById('mensagemCadastro');
         this.linkCadastro = document.getElementById('mostrarCadastro');
         this.linkVoltar = document.getElementById('voltarLogin');
 
@@ -49,7 +50,7 @@ class LoginApp {
 
     trocarAba(evento, aba) {
         evento.preventDefault();
-        this.limparMensagem();
+        this.limparMensagens();
 
         const paraCadastro = aba === 'cadastro';
         this.telaLogin.style.display = paraCadastro ? 'none' : 'block';
@@ -58,7 +59,7 @@ class LoginApp {
 
     /** Requisição assíncrona; o backend responde em JSON. */
     async enviar(acao, dados) {
-        this.mostrarMensagem('Enviando...', 'info');
+        this.mostrarMensagem(acao, 'Enviando...', 'info');
         this.bloquear(true);
 
         try {
@@ -71,17 +72,36 @@ class LoginApp {
                 body: new URLSearchParams(dados),
             });
 
-            const json = await resposta.json();
+            const corpo = await resposta.text();
+            let json;
+            try {
+                json = JSON.parse(corpo);
+            } catch {
+                throw new Error(`O servidor respondeu HTTP ${resposta.status} sem JSON válido. Confira o log do PHP.`);
+            }
 
-            if (json.sucesso) {
-                this.mostrarMensagem('Entrando...', 'ok');
-                window.location.href = json.rota || '../public/index.php';
+            if (resposta.ok && json.sucesso) {
+                this.mostrarMensagem(
+                    acao,
+                    acao === 'cadastrar' ? 'Conta criada! Redirecionando para o login...' : 'Entrando...',
+                    'ok'
+                );
+                window.location.href = json.rota
+                    || (acao === 'cadastrar' ? '../login/login.php' : '../public/index.php');
                 return;
             }
 
-            this.mostrarMensagem(json.mensagem || 'Não foi possível entrar.', 'erro');
+            this.mostrarMensagem(
+                acao,
+                json.mensagem || 'Não foi possível concluir a operação.',
+                'erro'
+            );
         } catch (erro) {
-            this.mostrarMensagem('Falha de conexão com o servidor.', 'erro');
+            this.mostrarMensagem(
+                acao,
+                erro instanceof TypeError ? 'Falha de conexão com o servidor.' : erro.message,
+                'erro'
+            );
             console.error(erro);
         } finally {
             this.bloquear(false);
@@ -97,15 +117,19 @@ class LoginApp {
         });
     }
 
-    mostrarMensagem(texto, tipo = 'erro') {
-        if (!this.mensagem) return;
-        this.mensagem.textContent = texto;
-        this.mensagem.style.color =
-            tipo === 'erro' ? '#d62828' : tipo === 'ok' ? '#2a9d8f' : '#555';
+    mostrarMensagem(acao, texto, tipo = 'erro') {
+        const mensagem = acao === 'cadastrar' ? this.mensagemCadastro : this.mensagemLogin;
+        if (!mensagem) return;
+        mensagem.textContent = texto;
+        mensagem.dataset.tipo = tipo;
     }
 
-    limparMensagem() {
-        if (this.mensagem) this.mensagem.textContent = '';
+    limparMensagens() {
+        [this.mensagemLogin, this.mensagemCadastro].forEach((mensagem) => {
+            if (!mensagem) return;
+            mensagem.textContent = '';
+            delete mensagem.dataset.tipo;
+        });
     }
 }
 

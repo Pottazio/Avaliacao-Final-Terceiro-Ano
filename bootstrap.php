@@ -7,13 +7,14 @@ declare(strict_types=1);
  * Fica na RAIZ do projeto (Avaliacao-Final-Terceiro-Ano/bootstrap.php).
  */
 
-require_once __DIR__ . '/src/core/Autoload.php';
+require __DIR__ . '/src/core/Autoload.php';
 
 use src\core\Autoload;
 
 Autoload::registrar([
     'config\\'       => __DIR__ . '/config/',
     'src\\core\\'    => __DIR__ . '/src/core/',
+    'src\\dao\\'     => __DIR__ . '/src/dao/',
     'models\\'       => __DIR__ . '/models/',
     'src\\controller\\' => __DIR__ . '/src/controller/',
 ]);

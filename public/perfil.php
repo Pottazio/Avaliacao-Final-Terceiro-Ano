@@ -6,7 +6,7 @@
  * Requisito "Controle de Usuário (troca de perfis)".
  */
 
-require_once __DIR__ . '/../bootstrap.php';
+require __DIR__ . '/../bootstrap.php';
 
 use src\core\Auth;
 use config\Database;

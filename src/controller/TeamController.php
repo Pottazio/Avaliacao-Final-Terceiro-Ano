@@ -8,6 +8,7 @@ use RuntimeException;
 use config\Database;
 use models\Pokemon;
 use models\Time;
+use models\ProgressaoJogo;
 use models\DadosPokemonInvalidosException;
 use models\TimeInvalidoException;
 use src\core\Auth;
@@ -67,7 +68,7 @@ class TeamController
 
     /**
      * POST ?acao=adicionar
-     * Campos: nome, id_pokedex, especie, HP, ATQ, ATQE, DEF, DEFE, SPE, tipos[]
+     * Campos: nome, id_pokedex, especie, HP, ATQ, ATQE, DEF, DEFE, SPE, nivel, tipos[]
      * Grava na pokedex, cria o Pokemon, associa os tipos e insere no time.
      */
     public function adicionar(): void
@@ -77,6 +78,12 @@ class TeamController
         $nome      = trim((string) ($_POST['nome'] ?? ''));
         $idPokedex = (int) ($_POST['id_pokedex'] ?? 0);
         $especie   = trim((string) ($_POST['especie'] ?? $nome));
+        $nivel     = filter_var($_POST['nivel'] ?? 1, FILTER_VALIDATE_INT);
+
+        if ($idPokedex < 1 || $idPokedex > Pokemon::MAX_PRIMEIRA_GERACAO) {
+            $this->responder(false, 'Só é possível escolher Pokémon da primeira geração (#001–#151).', error: true);
+            return;
+        }
 
         // tipos[] pode chegar como array ou como lista separada por virgula.
         $tipos = $_POST['tipos'] ?? [];
@@ -85,6 +92,16 @@ class TeamController
         }
 
         try {
+            $progresso = ProgressaoJogo::carregar(Database::conectar(), $idPerfil);
+            if ($nivel === false || $nivel < 1 || $nivel > $progresso['nivel_maximo']) {
+                $this->responder(
+                    false,
+                    "Escolha um nível entre 1 e {$progresso['nivel_maximo']}.",
+                    error: true
+                );
+                return;
+            }
+
             // 1) Grava os atributos na pokedex (fonte: PokeAPI)
             $this->pokemonModel->salvarNaPokedex($idPokedex, $especie, [
                 'HP'   => (int) ($_POST['HP'] ?? 0),
@@ -113,7 +130,7 @@ class TeamController
 
             // 3) Carrega o time do perfil e insere (AGREGACAO)
             $this->timeModel->doPerfil($idPerfil);
-            $posicao = $this->timeModel->inserirPokemon($idPokemon);
+            $posicao = $this->timeModel->inserirPokemon($idPokemon, $nivel);
 
             $this->responder(true, "{$nome} entrou no time!", [
                 'id_pokemon' => $idPokemon,
@@ -148,6 +165,41 @@ class TeamController
             $this->responder(false, $e->getMessage(), error: true);
         } catch (PDOException $e) {
             $this->responder(false, 'Erro ao remover o Pokémon.', error: true);
+        }
+    }
+
+    /** POST ?acao=atualizarNivel&id_pokemon=12&nivel=5 */
+    public function atualizarNivel(): void
+    {
+        $idPokemon = filter_var($_POST['id_pokemon'] ?? 0, FILTER_VALIDATE_INT);
+        $nivel = filter_var($_POST['nivel'] ?? 0, FILTER_VALIDATE_INT);
+        if ($idPokemon === false || $idPokemon <= 0 || $nivel === false || $nivel <= 0) {
+            $this->responder(false, 'Informe um Pokémon e um nível válidos.', error: true);
+            return;
+        }
+
+        try {
+            $progresso = ProgressaoJogo::carregar(Database::conectar(), Auth::idPerfil());
+            if ($nivel > $progresso['nivel_maximo']) {
+                $this->responder(
+                    false,
+                    "O limite atual é nível {$progresso['nivel_maximo']}.",
+                    error: true
+                );
+                return;
+            }
+
+            $this->timeModel->doPerfil(Auth::idPerfil());
+            $atualizado = $this->timeModel->atualizarNivel($idPokemon, $nivel);
+            $this->responder(
+                $atualizado,
+                $atualizado ? 'Nível atualizado.' : 'Esse Pokémon não está no seu time.',
+                error: !$atualizado
+            );
+        } catch (TimeInvalidoException $e) {
+            $this->responder(false, $e->getMessage(), error: true);
+        } catch (PDOException $e) {
+            $this->responder(false, 'Erro ao atualizar o nível do Pokémon.', error: true);
         }
     }
 

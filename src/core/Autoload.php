@@ -23,7 +23,7 @@ class Autoload
                     $arquivo  = $diretorio . str_replace('\\', '/', $relativo) . '.php';
 
                     if (is_file($arquivo)) {
-                        require_once $arquivo;
+                        require $arquivo;
                         return;
                     }
                 }

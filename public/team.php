@@ -7,14 +7,17 @@
  * o PHP so recebe os atributos ja normalizados e grava no banco.
  */
 
-require_once __DIR__ . '/../bootstrap.php';
+require __DIR__ . '/../bootstrap.php';
 
 use src\core\Auth;
 use config\Database;
+use models\ProgressaoJogo;
 
 Auth::exigirLogin('../login/login.php');
 
 $pdo = Database::conectar();
+$progresso = ProgressaoJogo::carregar($pdo, Auth::idPerfil());
+$nivelMaximo = $progresso['nivel_maximo'];
 
 // Time do perfil (cria se ainda nao existir)
 $stmt = $pdo->prepare('SELECT id_time, nome FROM times WHERE id_perfil = :id_perfil ORDER BY id_time LIMIT 1');
@@ -53,7 +56,7 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
     <link rel="stylesheet" href="CSS/style.css">
     <link rel="stylesheet" href="CSS/time.css">
 </head>
-<body class="jogo time-page">
+<body class="jogo time-page" data-nivel-maximo="<?= $nivelMaximo ?>">
 
     <main class="painel">
 
@@ -91,13 +94,18 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
             <h2 class="bloco-titulo">Buscar na Pokédex</h2>
             <p class="bloco-desc">
                 Digite o nome ou o número do Pokémon. Os atributos vêm da PokeAPI.
+                Seu limite atual é nível <?= $nivelMaximo ?>.
             </p>
 
-            <form id="formBusca" class="busca-form">
+            <form id="formBusca" class="busca-form" autocomplete="off">
                 <input type="text" id="campoPokemon" name="nome"
                        placeholder="pikachu, charmander, 25..."
-                       autocomplete="off" required>
+                       autocomplete="off" required
+                       role="combobox" aria-autocomplete="list"
+                       aria-controls="sugestoesPokemon" aria-expanded="false">
                 <button type="submit">Pesquisar</button>
+                <div id="sugestoesPokemon" class="sugestoes-pokemon"
+                     role="listbox" aria-label="Sugestões da primeira geração" hidden></div>
             </form>
 
             <div id="resultadoBusca" class="resultado-busca"></div>

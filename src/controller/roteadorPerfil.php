@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Caminho do projeto: src/controller/roteadorPerfil.php
  */
 
-require_once __DIR__ . '/../../bootstrap.php';
+require __DIR__ . '/../../bootstrap.php';
 
 use src\core\Auth;
 use config\Database;

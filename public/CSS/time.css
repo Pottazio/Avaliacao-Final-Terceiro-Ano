@@ -39,6 +39,7 @@ body.time-page {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    position: relative;
 }
 
 .busca-form input {
@@ -80,6 +81,63 @@ body.time-page {
 .busca-form button:active {
     transform: translate(2px, 2px);
     box-shadow: 1px 1px 0 var(--preto);
+}
+
+.sugestoes-pokemon[hidden] {
+    display: none !important;
+}
+
+.sugestoes-pokemon {
+    background: var(--branco);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    position: absolute;
+    top: calc(100% + 8px);
+    width: min(460px, 100%);
+    z-index: 5;
+}
+
+.sugestao-pokemon {
+    align-items: center;
+    background: var(--branco);
+    border: 0;
+    border-bottom: 1px solid #ded7ca;
+    color: var(--azul);
+    cursor: pointer;
+    display: flex;
+    font: 1.15rem var(--fonte-texto);
+    gap: 10px;
+    min-height: 54px;
+    padding: 5px 12px;
+    text-align: left;
+}
+
+.sugestao-pokemon:hover,
+.sugestao-pokemon[aria-selected="true"],
+.sugestao-pokemon:focus-visible {
+    background: #e4f0f3;
+    outline: 2px solid var(--azul-claro);
+    outline-offset: -2px;
+}
+
+.busca-form .sugestao-pokemon:hover {
+    background: #e4f0f3;
+    box-shadow: none;
+    transform: none;
+}
+
+.busca-form .sugestao-pokemon {
+    transition: none;
+}
+
+.sugestao-pokemon img {
+    object-fit: contain;
+    image-rendering: pixelated;
 }
 
 /* ---------- Cartao do Pokemon encontrado ---------- */
@@ -157,21 +215,37 @@ body.time-page {
 /* ---------- Atributos ---------- */
 .carta-atributos {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px 12px;
-    margin: 6px 0 4px;
+    gap: 10px 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 10px 0;
+    width: 100%;
 }
 
-.carta-atributos dt {
+.atributo-cabecalho {
+    align-items: baseline;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.atributo-cabecalho dt {
     font-family: var(--fonte-titulo);
-    font-size: 0.6rem;
+    font-size: 0.52rem;
     color: #7a7a7a;
 }
 
-.carta-atributos dd {
+.atributo-cabecalho dd {
     font-family: var(--fonte-titulo);
-    font-size: 0.85rem;
+    font-size: 0.68rem;
     color: var(--vermelho);
+}
+
+.atributo-pokemon progress {
+    accent-color: var(--verde);
+    display: block;
+    height: 10px;
+    margin-top: 4px;
+    width: 100%;
 }
 
 .minha-carta .btn {
@@ -180,10 +254,34 @@ body.time-page {
     margin-top: 12px;
 }
 
+.minha-carta .carta-atributos {
+    grid-column: 2;
+}
+
 .minha-carta .btn:disabled {
     background-color: #b0a89c;
     box-shadow: none;
     cursor: not-allowed;
+}
+
+.minha-carta label,
+.slot-nivel-label {
+    color: var(--azul);
+    display: flex;
+    flex-direction: column;
+    font-size: 1rem;
+    gap: 5px;
+}
+
+.pokemon-nivel {
+    background: var(--branco);
+    border: var(--borda-fina);
+    font: 1rem var(--fonte-texto);
+    padding: 7px;
+}
+
+.slot-nivel-label {
+    margin-top: 8px;
 }
 
 .carregando {
@@ -218,6 +316,12 @@ body.time-page {
     padding: 14px 16px;
 }
 
+.slot-sprite {
+    align-self: center;
+    image-rendering: pixelated;
+    object-fit: contain;
+}
+
 .slot-nome {
     font-family: var(--fonte-titulo);
     font-size: 0.72rem;
@@ -238,6 +342,10 @@ body.time-page {
     font-family: var(--fonte-titulo);
     font-size: 0.65rem;
     color: var(--vermelho);
+}
+
+.slot-pokemon .carta-atributos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .btn-remover {
@@ -273,8 +381,12 @@ body.time-page {
         justify-self: center;
     }
 
+    .minha-carta .carta-atributos {
+        grid-column: 1;
+    }
+
     .carta-atributos {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -286,5 +398,9 @@ body.time-page {
     .busca-form input,
     .busca-form button {
         flex: 1 1 100%;
+    }
+
+    .sugestoes-pokemon {
+        width: 100%;
     }
 }

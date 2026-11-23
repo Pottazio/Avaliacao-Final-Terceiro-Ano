@@ -58,6 +58,9 @@ class Usuario
         if ($nome === '') {
             throw new DadosInvalidosException('O nome é obrigatório.');
         }
+        if (mb_strlen($nome) > 100) {
+            throw new DadosInvalidosException('O nome deve ter no máximo 100 caracteres.');
+        }
         $this->nome = $nome;
         return $this;
     }
@@ -67,6 +70,9 @@ class Usuario
         $email = trim($email);
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new DadosInvalidosException('E-mail inválido.');
+        }
+        if (mb_strlen($email) > 150) {
+            throw new DadosInvalidosException('O e-mail deve ter no máximo 150 caracteres.');
         }
         $this->email = $email;
         return $this;

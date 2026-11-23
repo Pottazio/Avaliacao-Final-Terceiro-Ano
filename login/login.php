@@ -89,43 +89,12 @@ foreach ([
 
                 <p class="texto-cadastro">
                     Não tem conta?
-                    <a href="#" id="mostrarCadastro">Cadastre-se</a>
-                </p>
-            </div>
-
-            <!-- ---------------- ABA DE CADASTRAR ---------------- -->
-            <div id="telaCadastro" style="display:none">
-                <h2>Criar conta</h2>
-
-                <p id="mensagemCadastro" class="login-msg"></p>
-
-                <form id="formCadastro" class="login-form" method="POST">
-                    <label for="cadNome">Nome do treinador</label>
-                    <input type="text" id="cadNome" name="nome"
-                           placeholder="Morais Zanferrari"
-                           autocomplete="name" required>
-
-                    <label for="cadEmail">E-mail</label>
-                    <input type="email" id="cadEmail" name="email"
-                           placeholder="treinador@pokenoas.com"
-                           autocomplete="email" required>
-
-                    <label for="cadSenha">Senha (mín. 6 caracteres)</label>
-                    <input type="password" id="cadSenha" name="senha"
-                           placeholder="••••••"
-                           autocomplete="new-password" minlength="6" required>
-
-                    <button type="submit">Cadastrar</button>
-                </form>
-
-                <p class="texto-cadastro">
-                    Já tem conta?
-                    <a href="#" id="voltarLogin">Voltar ao login</a>
+                    <a href="cadastro.php">Cadastre-se</a>
                 </p>
             </div>
         </section>
     </main>
 
-    <script src="../public/JavaScript/Login.js"></script>
+    <script src="../public/JavaScript/login.js"></script>
 </body>
 </html>

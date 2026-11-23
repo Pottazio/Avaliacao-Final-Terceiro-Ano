@@ -82,6 +82,29 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+<<<<<<< HEAD
+    <title>MONSTROBOLSO | Início</title>
+    <link rel="stylesheet" href="CSS/style.css?v=20261118">
+</head>
+<body class="jogo">
+    <header class="topo">
+        <h1>MONSTROBOLSO</h1>
+        <p>Olá, <strong><?= htmlspecialchars($perfil['nome_usuario'], ENT_QUOTES, 'UTF-8') ?></strong>
+           — perfil: <?= htmlspecialchars($perfil['nome_perfil'], ENT_QUOTES, 'UTF-8') ?></p>
+        <p>Pokédollars: <strong id="saldoHeader"><?= (int) $perfil['pokedollar'] ?></strong></p>
+        <a href="../src/controller/roteadorLogin.php?acao=sair">Sair</a>
+    </header>
+
+    <nav class="menu">
+        <a href="#" onclick="navegar('team'); return false;">Montar meu time</a>
+        <a href="#" onclick="navegar('battle'); return false;">Ir para batalha</a>
+        <a href="#" onclick="navegar('shop'); return false;">Visitar Poké Mart</a>
+    </nav>
+
+    <main id="conteudo"></main>
+
+    <script src="JavaScript/java.js?v=shop-db-20261118"></script>
+=======
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POKENOAS | Painel do Treinador</title>
     <link rel="stylesheet" href="CSS/style.css">
@@ -164,5 +187,6 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
 
     </main>
 
+>>>>>>> 870bd3e6fc66c1eba27454d39cc5b5d2b94bff58
 </body>
 </html>

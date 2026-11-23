@@ -1,6 +1,6 @@
 /**
  * MONSTROBOLSO - Login e cadastro (lado cliente).
- * Caminho do projeto: public/JavaScript/Login.js
+ * Caminho do projeto: public/JavaScript/login.js
  *
  * Orientação a Objetos em JavaScript (requisito do trabalho):
  * a classe LoginApp encapsula estado e comportamento e fala com o
@@ -12,21 +12,15 @@ class LoginApp {
     constructor(urlController) {
         this.urlController = urlController;
 
-        this.telaLogin = document.getElementById('telaLogin');
-        this.telaCadastro = document.getElementById('telaCadastro');
-
         this.formLogin = document.getElementById('formLogin');
         this.formCadastro = document.getElementById('formCadastro');
 
-        this.mensagem = document.getElementById('mensagemLogin');
-        this.linkCadastro = document.getElementById('mostrarCadastro');
-        this.linkVoltar = document.getElementById('voltarLogin');
+        this.mensagemLogin = document.getElementById('mensagemLogin');
+        this.mensagemCadastro = document.getElementById('mensagemCadastro');
+        this.mensagem = this.mensagemLogin;
 
-        // Toda instância nasce sem handlers: registra só o que existe.
         if (this.formLogin) this.formLogin.addEventListener('submit', (e) => this.ligacao(e));
         if (this.formCadastro) this.formCadastro.addEventListener('submit', (e) => this.ligacao(e));
-        if (this.linkCadastro) this.linkCadastro.addEventListener('click', (e) => this.trocarAba(e, 'cadastro'));
-        if (this.linkVoltar) this.linkVoltar.addEventListener('click', (e) => this.trocarAba(e, 'login'));
     }
 
     /** Um único ponto de escuta para os dois formulários. */
@@ -47,17 +41,11 @@ class LoginApp {
         }
     }
 
-    trocarAba(evento, aba) {
-        evento.preventDefault();
-        this.limparMensagem();
-
-        const paraCadastro = aba === 'cadastro';
-        this.telaLogin.style.display = paraCadastro ? 'none' : 'block';
-        this.telaCadastro.style.display = paraCadastro ? 'block' : 'none';
-    }
-
     /** Requisição assíncrona; o backend responde em JSON. */
     async enviar(acao, dados) {
+        this.mensagem = acao === 'cadastrar'
+            ? this.mensagemCadastro
+            : this.mensagemLogin;
         this.mostrarMensagem('Enviando...', 'info');
         this.bloquear(true);
 
@@ -74,7 +62,15 @@ class LoginApp {
             const json = await resposta.json();
 
             if (json.sucesso) {
-                this.mostrarMensagem('Entrando...', 'ok');
+                this.mostrarMensagem(
+                    acao === 'cadastrar'
+                        ? 'Cadastro concluído. Redirecionando para o login...'
+                        : 'Entrando...',
+                    'ok'
+                );
+                if (acao === 'cadastrar') {
+                    await new Promise((resolve) => setTimeout(resolve, 900));
+                }
                 window.location.href = json.rota || '../public/index.php';
                 return;
             }
@@ -103,13 +99,9 @@ class LoginApp {
         this.mensagem.style.color =
             tipo === 'erro' ? '#d62828' : tipo === 'ok' ? '#2a9d8f' : '#555';
     }
-
-    limparMensagem() {
-        if (this.mensagem) this.mensagem.textContent = '';
-    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Caminho relativo ao login/login.php (é de lá que a página é aberta).
+    // Login and cadastro pages share this relative path to the controller.
     window.appLogin = new LoginApp('../src/controller/roteadorLogin.php');
 });

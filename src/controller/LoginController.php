@@ -63,16 +63,10 @@ class LoginController
                 ->setEmail($email)
                 ->setSenha($senha);
 
-            $idPerfil = $this->usuarioModel->cadastrar();
+            $this->usuarioModel->cadastrar();
 
-            Auth::logar(
-                (int) $this->usuarioModel->getIdUsuario(),
-                $idPerfil,
-                $this->usuarioModel->getNome()
-            );
-
-            $this->responder(true, 'Conta criada com sucesso.', [
-                'rota' => '../public/index.php',
+            $this->responder(true, 'Conta criada com sucesso. Faça login para continuar.', [
+                'rota' => $this->rotaPublica('/login/login.php'),
             ]);
         } catch (DadosInvalidosException $e) {
             $this->responder(false, $e->getMessage(), error: true);
@@ -132,11 +126,25 @@ class LoginController
         // Form tradicional (sem JS): mensagem pela sessão e volta.
         if (!$sucesso) {
             $_SESSION['erro_login'] = $mensagem;
-            header('Location: ../../login/login.php');
+            $destino = ($_GET['acao'] ?? $_POST['acao'] ?? '') === 'cadastrar'
+                ? '../../login/cadastro.php'
+                : '../../login/login.php';
+            header('Location: ' . $destino);
             exit;
         }
 
         header('Location: ' . ($extra['rota'] ?? '../public/index.php'));
         exit;
+    }
+
+    private function rotaPublica(string $caminho): string
+    {
+        $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        $raizProjeto = dirname($script, 3);
+        $prefixo = $raizProjeto === '/' || $raizProjeto === '.'
+            ? ''
+            : rtrim($raizProjeto, '/');
+
+        return $prefixo . $caminho;
     }
 }

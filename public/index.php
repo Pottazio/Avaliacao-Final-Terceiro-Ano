@@ -84,20 +84,16 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POKENOAS | Painel do Treinador</title>
-    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="CSS/style.css?v=team-styles-20261123">
 </head>
 <body class="jogo">
-
     <main class="painel">
-
-        <!-- ---------------- CABEÇALHO ---------------- -->
         <header class="topo">
             <div class="topo-marca">
                 <h1>POKENOAS</h1>
             </div>
 
             <div class="topo-treinador">
-                <!-- Avatar com as iniciais do treinador -->
                 <div class="avatar" style="background-color: <?= htmlspecialchars($corAvatar, ENT_QUOTES, 'UTF-8') ?>">
                     <span class="avatar-iniciais"><?= htmlspecialchars($iniciais, ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
@@ -110,7 +106,7 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
 
                     <p class="saldo">
                         <span class="saldo-icone">$</span>
-                        <span class="saldo-valor"><?= number_format((int) $perfil['pokedollar'], 0, ',', '.') ?></span>
+                        <span class="saldo-valor" id="saldoHeader"><?= number_format((int) $perfil['pokedollar'], 0, ',', '.') ?></span>
                         <span class="saldo-rotulo">pokédollars</span>
                     </p>
                 </div>
@@ -119,7 +115,6 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
             <a class="btn-sair" href="../src/controller/roteadorLogin.php?acao=sair">Sair</a>
         </header>
 
-        <!-- ---------------- ESTATÍSTICAS ---------------- -->
         <section class="stats">
             <div class="stat">
                 <span class="stat-valor"><?= $qtdPokemon ?></span>
@@ -135,19 +130,18 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
             </div>
         </section>
 
-        <!-- ---------------- MENU ---------------- -->
         <nav class="menu">
             <a class="card-menu card-time" href="team.php">
                 <span class="card-titulo">Montar meu time</span>
                 <span class="card-desc">Escolha seus Pokémon e monte a equipe</span>
             </a>
 
-            <a class="card-menu card-batalha" href="battle.php">
+            <a class="card-menu card-batalha" href="#" onclick="navegar('battle'); return false;">
                 <span class="card-titulo">Ir para batalha</span>
                 <span class="card-desc">Enfrente um oponente e ganhe pokédollars</span>
             </a>
 
-            <a class="card-menu card-loja" href="shop.php">
+            <a class="card-menu card-loja" href="#" onclick="navegar('shop'); return false;">
                 <span class="card-titulo">Poké Mart</span>
                 <span class="card-desc">Poções, cura de status e pedras de evolução</span>
             </a>
@@ -158,11 +152,13 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
             </a>
         </nav>
 
+        <div id="conteudo"></div>
+
         <footer class="rodape">
             <p>Treinador desde <?= htmlspecialchars(date('d/m/Y', strtotime((string) $perfil['criado_em'])), ENT_QUOTES, 'UTF-8') ?></p>
         </footer>
-
     </main>
 
+    <script src="JavaScript/java.js?v=team-route-20261123"></script>
 </body>
 </html>

@@ -296,7 +296,7 @@ class Time
             return [];
         }
 
-        $sql = 'SELECT pk.id_pokemon, pk.id_pokedex,
+        $sql = 'SELECT pk.id_pokemon,
                        pk.nome,
                        pk.status,
                        p.name AS especie,
@@ -315,7 +315,7 @@ class Time
 
         $stmt = $this->conexao->prepare($sql);
         $stmt->execute([':id_time' => $this->idTime]);
-
+      
         return $stmt->fetchAll();
     }
 }

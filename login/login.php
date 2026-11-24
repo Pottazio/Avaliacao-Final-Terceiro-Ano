@@ -12,7 +12,7 @@ require __DIR__ . '/../bootstrap.php';
 
 use src\core\Auth;
 
-// Já logado? Vai direto para o jogo.
+
 if (Auth::logado()) {
     header('Location: ../public/index.php');
     exit;
@@ -105,17 +105,16 @@ foreach ([
 
                 <p id="mensagemCadastro" class="login-msg"></p>
 
-                <form id="formCadastro" class="login-form" method="POST"
-                      action="../src/controller/roteadorLogin.php?acao=cadastrar">
+                <form id="formCadastro" class="login-form" method="POST">
                     <label for="cadNome">Nome do treinador</label>
                     <input type="text" id="cadNome" name="nome"
                            placeholder="Morais Zanferrari"
-                           autocomplete="name" maxlength="100" required>
+                           autocomplete="name" required>
 
                     <label for="cadEmail">E-mail</label>
                     <input type="email" id="cadEmail" name="email"
                            placeholder="treinador@pokenoas.com"
-                           autocomplete="email" maxlength="150" required>
+                           autocomplete="email" required>
 
                     <label for="cadSenha">Senha (mín. 6 caracteres)</label>
                     <input type="password" id="cadSenha" name="senha"

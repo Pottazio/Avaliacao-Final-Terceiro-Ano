@@ -5,7 +5,7 @@ declare(strict_types=1);
  * POKENOAS - Front controller do Team Builder.
  * Caminho do projeto: src/controller/roteadorTime.php
  *
- * Aceita ?acao=buscar | adicionar | remover | atualizarNivel | listar
+ * Aceita ?acao=buscar | adicionar | remover | listar
  * e responde sempre em JSON (requisito do trabalho).
  */
 
@@ -36,6 +36,7 @@ match ($acao) {
     'remover'   => $controller->remover(),
     'atualizarNivel' => $controller->atualizarNivel(),
     'listar'    => $controller->listar(),
+    'progresso' => $controller->progresso(),
     default     => (static function (): void {
         http_response_code(400);
         header('Content-Type: application/json; charset=utf-8');
@@ -45,3 +46,5 @@ match ($acao) {
         ], JSON_UNESCAPED_UNICODE);
     })(),
 };
+
+    

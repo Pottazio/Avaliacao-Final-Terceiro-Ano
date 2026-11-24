@@ -36,13 +36,10 @@ $stmtSaldo->execute([':id_perfil' => Auth::idPerfil()]);
 $perfil = $stmtSaldo->fetch() ?: ['pokedollar' => 0, 'nome_perfil' => 'Treinador'];
 
 $nomeUsuario = Auth::nome();
-$iniciais = '';
-foreach (preg_split('/\s+/', trim($nomeUsuario)) as $parte) {
-    if ($parte !== '' && mb_strlen($iniciais) < 2) {
-        $iniciais .= mb_strtoupper(mb_substr($parte, 0, 1));
-    }
-}
-$iniciais = $iniciais !== '' ? $iniciais : '?';
+$generoPersonagem = $_SESSION['genero_personagem'] ?? 'masculino';
+$imagemPersonagem = $generoPersonagem === 'feminino'
+    ? 'PersonagemFemiPequeno.png'
+    : 'PersonagemMascPequeno.png';
 
 $paleta = ['#d62828', '#1d3557', '#2a9d8f', '#f4a300', '#7b2cbf', '#e76f51'];
 $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
@@ -53,8 +50,8 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POKENOAS | Team Builder</title>
-    <link rel="stylesheet" href="CSS/style.css">
-    <link rel="stylesheet" href="CSS/time.css">
+    <link rel="stylesheet" href="CSS/style.css?v=<?= (int) filemtime(__DIR__ . '/CSS/style.css') ?>">
+    <link rel="stylesheet" href="CSS/time.css?v=<?= (int) filemtime(__DIR__ . '/CSS/time.css') ?>">
 </head>
 <body class="jogo time-page" data-nivel-maximo="<?= $nivelMaximo ?>">
 
@@ -68,7 +65,11 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
 
             <div class="topo-treinador">
                 <div class="avatar" style="background-color: <?= htmlspecialchars($corAvatar, ENT_QUOTES, 'UTF-8') ?>">
-                    <span class="avatar-iniciais"><?= htmlspecialchars($iniciais, ENT_QUOTES, 'UTF-8') ?></span>
+                    <img
+                        class="avatar-imagem"
+                        src="assets/<?= htmlspecialchars($imagemPersonagem, ENT_QUOTES, 'UTF-8') ?>"
+                        alt="Personagem do treinador"
+                    >
                 </div>
                 <div class="topo-dados">
                     <p class="topo-nome"><?= htmlspecialchars($nomeUsuario, ENT_QUOTES, 'UTF-8') ?></p>
@@ -94,18 +95,13 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
             <h2 class="bloco-titulo">Buscar na Pokédex</h2>
             <p class="bloco-desc">
                 Digite o nome ou o número do Pokémon. Os atributos vêm da PokeAPI.
-                Seu limite atual é nível <?= $nivelMaximo ?>.
             </p>
 
-            <form id="formBusca" class="busca-form" autocomplete="off">
+            <form id="formBusca" class="busca-form">
                 <input type="text" id="campoPokemon" name="nome"
                        placeholder="pikachu, charmander, 25..."
-                       autocomplete="off" required
-                       role="combobox" aria-autocomplete="list"
-                       aria-controls="sugestoesPokemon" aria-expanded="false">
+                       autocomplete="off" required>
                 <button type="submit">Pesquisar</button>
-                <div id="sugestoesPokemon" class="sugestoes-pokemon"
-                     role="listbox" aria-label="Sugestões da primeira geração" hidden></div>
             </form>
 
             <div id="resultadoBusca" class="resultado-busca"></div>
@@ -114,14 +110,34 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
         <!-- ---------------- TIME ATUAL ---------------- -->
         <section class="bloco">
             <h2 class="bloco-titulo">Meu time</h2>
+            <p class="bloco-desc">
+                Sua equipe pode ter até seis Pokémon. Os atributos ficam resumidos em cada cartão.
+            </p>
 
             <div id="listaTime" class="grade-time">
                 <p class="time-vazio">Carregando o time...</p>
             </div>
         </section>
 
+        <!-- ---------------- ESCOLHA DE POKÉMON ---------------- -->
+        <section class="bloco">
+            <h2 class="bloco-titulo">Pokédex desbloqueada</h2>
+            <p class="bloco-desc">
+                Selecione um Pokémon liberado para ver os detalhes e adicioná-lo ao time.
+            </p>
+
+            <div class="pokedex-desbloqueada">
+                <p id="resumoProgresso" class="bloco-desc">Carregando Pokédex liberada...</p>
+                <div id="galeriaPokemon" class="grade-pokedex" aria-live="polite">
+                    <p class="time-vazio">Carregando Pokémon...</p>
+                </div>
+            </div>
+
+            <div id="resultadoBusca" class="resultado-busca"></div>
+        </section>
+
     </main>
 
-    <script src="JavaScript/Time.js"></script>
+    <script src="JavaScript/Time.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/Time.js') ?>"></script>
 </body>
 </html>

@@ -125,7 +125,7 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
                 <span class="card-desc">Enfrente um oponente e ganhe pokédollars</span>
             </a>
 
-            <a class="card-menu card-loja" href="#" onclick="navegar('shop'); return false;">
+            <a class="card-menu card-loja" href="shop.php">
                 <span class="card-titulo">Poké Mart</span>
                 <span class="card-desc">Poções, cura de status e pedras de evolução</span>
             </a>

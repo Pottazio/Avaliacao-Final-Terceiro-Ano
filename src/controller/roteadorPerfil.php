@@ -75,6 +75,35 @@ if ($metodo === 'POST') {
         }
     }
 
+    if (($_POST['acao'] ?? '') === 'remover') {
+        $idRecebido = filter_var($_POST['id_perfil'] ?? null, FILTER_VALIDATE_INT);
+        try {
+            if ($idRecebido === false || $idRecebido === null) {
+                throw new DadosInvalidosException('Perfil inválido.');
+            }
+            $usuario = new Usuario(Database::conectar());
+            $usuario->removerPerfil(Auth::idUsuario(), (int) $idRecebido);
+            if ((int) $idRecebido === Auth::idPerfil()) {
+                $perfisRestantes = $usuario->listarPerfis();
+                if ($perfisRestantes !== []) {
+                    Auth::trocarPerfil((int) $perfisRestantes[0]['id_perfil']);
+                }
+            }
+            header('Location: ../../public/perfil.php?status=removido');
+            exit;
+        } catch (DadosInvalidosException $erro) {
+            $status = str_contains($erro->getMessage(), 'único')
+                ? 'ultimo_perfil'
+                : (str_contains($erro->getMessage(), 'batalha') ? 'perfil_em_batalha' : 'dados_perfil');
+            header('Location: ../../public/perfil.php?status=' . $status);
+            exit;
+        } catch (\PDOException | ConexaoException $erro) {
+            error_log($erro->getMessage());
+            header('Location: ../../public/perfil.php?status=erro');
+            exit;
+        }
+    }
+
     http_response_code(400);
     exit;
 }

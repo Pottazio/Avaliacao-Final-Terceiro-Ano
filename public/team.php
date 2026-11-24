@@ -43,6 +43,10 @@ $imagemPersonagem = $generoPersonagem === 'feminino'
 
 $paleta = ['#d62828', '#1d3557', '#2a9d8f', '#f4a300', '#7b2cbf', '#e76f51'];
 $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
+
+$stmtBatalha = $pdo->prepare("SELECT 1 FROM batalhas WHERE id_perfil = :id_perfil AND resultado = 'EM_ANDAMENTO' LIMIT 1");
+$stmtBatalha->execute([':id_perfil' => Auth::idPerfil()]);
+$emBatalha = $stmtBatalha->fetchColumn() !== false;
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -53,7 +57,7 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
     <link rel="stylesheet" href="CSS/style.css?v=<?= (int) filemtime(__DIR__ . '/CSS/style.css') ?>">
     <link rel="stylesheet" href="CSS/time.css?v=<?= (int) filemtime(__DIR__ . '/CSS/time.css') ?>">
 </head>
-<body class="jogo time-page" data-nivel-maximo="<?= $nivelMaximo ?>">
+<body class="jogo time-page" data-nivel-maximo="<?= $nivelMaximo ?>" data-batalha-em-andamento="<?= $emBatalha ? '1' : '0' ?>">
 
     <main class="painel">
 
@@ -89,6 +93,11 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
         </header>
 
         <p id="mensagemTime" class="login-msg"></p>
+        <?php if ($emBatalha): ?>
+            <p class="login-msg" data-tipo="info" role="alert">
+                Uma batalha está em andamento. Volte para a batalha e a encerre antes de modificar o time.
+            </p>
+        <?php endif; ?>
 
         <!-- ---------------- BUSCA NA POKEAPI ---------------- -->
         <section class="bloco">

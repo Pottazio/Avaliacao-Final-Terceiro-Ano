@@ -945,3 +945,31 @@ body.jogo {
         grid-template-columns: 1fr;
     }
 }
+
+body.time-page[data-batalha-em-andamento="1"] .bloco,
+body.time-page[data-batalha-em-andamento="1"] #formBusca,
+body.time-page[data-batalha-em-andamento="1"] #listaTime,
+body.time-page[data-batalha-em-andamento="1"] #galeriaPokemon {
+    pointer-events: none;
+    opacity: 0.58;
+}
+
+body.time-page[data-batalha-em-andamento="1"] button,
+body.time-page[data-batalha-em-andamento="1"] input,
+body.time-page[data-batalha-em-andamento="1"] select {
+    cursor: not-allowed !important;
+}
+
+.perfil-remover-form {
+    margin-top: 8px;
+}
+
+.perfil-remover {
+    background: transparent;
+    border: 2px solid var(--vermelho);
+    color: var(--vermelho-esc);
+    cursor: pointer;
+    font: 0.52rem var(--fonte-titulo);
+    padding: 9px 10px;
+    width: 100%;
+}

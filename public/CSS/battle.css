@@ -376,14 +376,19 @@ body.battle-page [hidden] {
     width: min(270px, 100%);
 }
 
-.opponent-card .fighter-details {
-    align-self: flex-end;
+.opponent-card {
+    flex-direction: column-reverse;
 }
 
-.opponent-roster {
-    color: #555;
-    font-size: 0.86rem;
-    margin-top: 8px;
+.opponent-card .fighter-details {
+    align-self: flex-end;
+    margin-top: auto;
+}
+
+.opponent-card .opponent-sprite {
+    align-self: flex-end;
+    margin-bottom: auto;
+    margin-top: 0;
 }
 
 .switch-decision-panel {

@@ -94,6 +94,7 @@ class TeamController
         }
 
         try {
+            $this->garantirSemBatalhaAtiva();
             // 1) Grava os atributos na pokedex (fonte: PokeAPI)
             $this->pokemonModel->salvarNaPokedex($idPokedex, $especie, [
                 'HP'   => (int) ($_POST['HP'] ?? 0),
@@ -143,6 +144,7 @@ class TeamController
         $idPokemon = (int) ($_POST['id_pokemon'] ?? $_GET['id_pokemon'] ?? 0);
 
         try {
+            $this->garantirSemBatalhaAtiva();
             $this->timeModel->doPerfil(Auth::idPerfil());
             $removido = $this->timeModel->removerPokemon($idPokemon);
 
@@ -170,6 +172,7 @@ class TeamController
         }
 
         try {
+            $this->garantirSemBatalhaAtiva();
             $progresso = ProgressaoJogo::carregar(Database::conectar(), Auth::idPerfil());
             if ($nivel > $progresso['nivel_maximo']) {
                 $this->responder(
@@ -228,6 +231,7 @@ class TeamController
         }
 
         try {
+            $this->garantirSemBatalhaAtiva();
             $this->timeModel->doPerfil(Auth::idPerfil());
             if ($nivel === null) {
                 $this->timeModel->salvarMovePool((int) $idPokemon, $movimentos);
@@ -299,5 +303,16 @@ class TeamController
             ['sucesso' => $sucesso, 'mensagem' => $mensagem] + $extra,
             JSON_UNESCAPED_UNICODE
         );
+    }
+
+    private function garantirSemBatalhaAtiva(): void
+    {
+        $stmt = Database::conectar()->prepare(
+            "SELECT 1 FROM batalhas WHERE id_perfil = :id_perfil AND resultado = 'EM_ANDAMENTO' LIMIT 1"
+        );
+        $stmt->execute([':id_perfil' => Auth::idPerfil()]);
+        if ($stmt->fetchColumn() !== false) {
+            throw new TimeInvalidoException('Não é possível modificar o time durante uma batalha.');
+        }
     }
 }

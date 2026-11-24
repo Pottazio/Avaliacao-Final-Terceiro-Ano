@@ -279,6 +279,76 @@ class Usuario
             throw new DadosInvalidosException('Esse perfil não pertence à sua conta.');
         }
     }
+
+    public function removerPerfil(int $idUsuario, int $idPerfil): void
+    {
+        if ($idUsuario < 1 || $idPerfil < 1) {
+            throw new DadosInvalidosException('Perfil inválido.');
+        }
+
+        $this->conexao->beginTransaction();
+        try {
+            $stmt = $this->conexao->prepare(
+                'SELECT COUNT(*) FROM perfis WHERE id_usuario = :id_usuario'
+            );
+            $stmt->execute([':id_usuario' => $idUsuario]);
+            $quantidade = (int) $stmt->fetchColumn();
+            if ($quantidade <= 1) {
+                throw new DadosInvalidosException('Não é possível remover o único perfil da conta.');
+            }
+
+            $stmt = $this->conexao->prepare(
+                'SELECT 1 FROM perfis WHERE id_perfil = :id_perfil AND id_usuario = :id_usuario'
+            );
+            $stmt->execute([':id_perfil' => $idPerfil, ':id_usuario' => $idUsuario]);
+            if ($stmt->fetchColumn() === false) {
+                throw new DadosInvalidosException('Esse perfil não pertence à sua conta.');
+            }
+
+            $stmt = $this->conexao->prepare("SELECT COUNT(*) FROM batalhas WHERE id_perfil = :id_perfil AND resultado = 'EM_ANDAMENTO'");
+            $stmt->execute([':id_perfil' => $idPerfil]);
+            if ((int) $stmt->fetchColumn() > 0) {
+                throw new DadosInvalidosException('Encerre a batalha deste perfil antes de removê-lo.');
+            }
+
+            $stmt = $this->conexao->prepare('SELECT id_time FROM times WHERE id_perfil = :id_perfil');
+            $stmt->execute([':id_perfil' => $idPerfil]);
+            $idsTimes = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($idsTimes as $idTime) {
+                $deleteMovimentos = $this->conexao->prepare(
+                    'DELETE tm FROM time_pokemon_movimentos tm JOIN time_pokemons tp ON tp.id_time = tm.id_time AND tp.id_pokemon = tm.id_pokemon WHERE tp.id_time = :id_time'
+                );
+                $deleteMovimentos->execute([':id_time' => (int) $idTime]);
+
+                $deleteTimePokemons = $this->conexao->prepare('DELETE FROM time_pokemons WHERE id_time = :id_time');
+                $deleteTimePokemons->execute([':id_time' => (int) $idTime]);
+            }
+
+            $tabelas = [
+                'DELETE FROM batalha_logs WHERE id_batalha IN (SELECT id_batalha FROM batalhas WHERE id_perfil = :id_perfil)',
+                'DELETE FROM batalha_pokemons WHERE id_batalha IN (SELECT id_batalha FROM batalhas WHERE id_perfil = :id_perfil)',
+                'DELETE FROM compras WHERE id_perfil = :id_perfil',
+                'DELETE FROM inventarios WHERE id_perfil = :id_perfil',
+                'DELETE FROM progresso_jogo WHERE id_perfil = :id_perfil',
+                'DELETE FROM batalhas WHERE id_perfil = :id_perfil',
+                'DELETE FROM times WHERE id_perfil = :id_perfil',
+                'DELETE FROM perfis WHERE id_perfil = :id_perfil AND id_usuario = :id_usuario',
+            ];
+            foreach ($tabelas as $sql) {
+                $delete = $this->conexao->prepare($sql);
+                $delete->execute(str_contains($sql, 'AND id_usuario')
+                    ? [':id_perfil' => $idPerfil, ':id_usuario' => $idUsuario]
+                    : [':id_perfil' => $idPerfil]);
+            }
+
+            $this->conexao->commit();
+        } catch (Throwable $erro) {
+            if ($this->conexao->inTransaction()) {
+                $this->conexao->rollBack();
+            }
+            throw $erro;
+        }
+    }
 }
 
 /** Exceção customizada (1 das 3 exigidas). */

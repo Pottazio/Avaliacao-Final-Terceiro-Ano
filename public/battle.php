@@ -126,7 +126,7 @@ Auth::exigirLogin('../login/login.php');
                         <label for="alvoItem">Usar em</label>
                         <select id="alvoItem"></select>
                         <div id="itensInventario" class="inventory-grid" aria-live="polite"></div>
-                        <p class="inventory-shop-link"><a href="index.php">Comprar itens no Poké Mart</a></p>
+                        <p class="inventory-shop-link"><a href="shop.php">Comprar itens no Poké Mart</a></p>
                     </section>
                 </section>
 

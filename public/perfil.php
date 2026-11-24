@@ -39,6 +39,9 @@ $mensagens = [
     'dados_perfil' => 'Confira o nome e o gênero selecionados.',
     'csrf' => 'A sessão expirou. Atualize a página e tente novamente.',
     'erro' => 'Não foi possível salvar o perfil.',
+    'removido' => 'Perfil removido.',
+    'ultimo_perfil' => 'Não é possível remover o único perfil da conta.',
+    'perfil_em_batalha' => 'Encerre a batalha deste perfil antes de removê-lo.',
 ];
 ?>
 <!DOCTYPE html>
@@ -65,7 +68,7 @@ $mensagens = [
         </header>
 
         <?php if (isset($mensagens[$status])): ?>
-            <p class="login-msg" data-tipo="<?= in_array($status, ['criado', 'atualizado'], true) ? 'ok' : 'info' ?>" role="status">
+            <p class="login-msg" data-tipo="<?= in_array($status, ['criado', 'atualizado', 'removido'], true) ? 'ok' : 'info' ?>" role="status">
                 <?= htmlspecialchars($mensagens[$status], ENT_QUOTES, 'UTF-8') ?>
             </p>
         <?php endif; ?>
@@ -96,6 +99,13 @@ $mensagens = [
                             <option value="feminino" <?= $p['genero'] === 'feminino' ? 'selected' : '' ?>>Feminino</option>
                         </select>
                         <button type="submit">Salvar alterações</button>
+                    </form>
+                    <form class="perfil-remover-form" action="../src/controller/roteadorPerfil.php" method="post"
+                          onsubmit="return confirm('Remover este perfil e todos os seus dados? Esta ação não pode ser desfeita.')">
+                        <input type="hidden" name="acao" value="remover">
+                        <input type="hidden" name="id_perfil" value="<?= (int) $p['id_perfil'] ?>">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                        <button class="perfil-remover" type="submit">Remover perfil</button>
                     </form>
                 </article>
             <?php endforeach; ?>

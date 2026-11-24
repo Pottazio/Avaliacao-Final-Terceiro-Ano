@@ -5,7 +5,7 @@ declare(strict_types=1);
  * POKENOAS - Front controller do Team Builder.
  * Caminho do projeto: src/controller/roteadorTime.php
  *
- * Aceita ?acao=buscar | adicionar | remover | listar
+ * Aceita ?acao=buscar | adicionar | remover | listar | salvarMovePool
  * e responde sempre em JSON (requisito do trabalho).
  */
 
@@ -35,6 +35,7 @@ match ($acao) {
     'adicionar' => $controller->adicionar(),
     'remover'   => $controller->remover(),
     'atualizarNivel' => $controller->atualizarNivel(),
+    'salvarMovePool' => $controller->salvarMovePool(),
     'listar'    => $controller->listar(),
     'progresso' => $controller->progresso(),
     default     => (static function (): void {

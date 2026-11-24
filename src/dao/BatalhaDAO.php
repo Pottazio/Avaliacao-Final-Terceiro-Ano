@@ -8,23 +8,10 @@ use RuntimeException;
 
 class BatalhaDAO
 {
-    private const FAIXAS_POKEDEX_AREA = [
-        0 => [1, 151],
-        1 => [152, 251],
-        2 => [252, 386],
-        3 => [387, 493],
-        4 => [494, 649],
-        5 => [650, 721],
-        6 => [1, 721],
-    ];
+    private const FAIXA_POKEDEX_PRIMEIRA_GERACAO = [1, 151];
 
     private const POKEMON_LENDARIOS_E_MITICOS = [
         144, 145, 146, 150, 151,
-        243, 244, 245, 249, 250, 251,
-        377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
-        480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493,
-        494, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
-        716, 717, 718, 719, 720, 721,
     ];
 
     public function __construct(private PDO $pdo)
@@ -62,34 +49,31 @@ class BatalhaDAO
     public function listarTime(int $idPerfil): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT pk.id_pokemon, pk.nome, p.id_pokedex, p.name AS especie, tp.nivel,
-                    p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE,
-                    GROUP_CONCAT(t.nome ORDER BY t.nome SEPARATOR ", ") AS tipos
-               FROM times tm
-               JOIN time_pokemons tp ON tp.id_time = tm.id_time
-               JOIN pokemons pk ON pk.id_pokemon = tp.id_pokemon
-               JOIN pokedex p ON p.id_pokedex = pk.id_pokedex
-               LEFT JOIN pokemon_tipos pt ON pt.id_pokemon = pk.id_pokemon
-               LEFT JOIN tipos t ON t.id_tipo = pt.id_tipo
-              WHERE tm.id_perfil = :id_perfil
-              GROUP BY pk.id_pokemon, tp.nivel, tp.posicao, p.id_pokedex,
-                       p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE
-              ORDER BY tp.posicao'
+            'SELECT id_pokemon, nome, status, id_pokedex, especie, nivel, shiny,
+                    HP, ATQ, ATQE, DEF, DEFE, SPE, move_pool, tipos
+               FROM vw_pokemon_time
+              WHERE id_perfil = :id_perfil
+              ORDER BY posicao'
         );
         $stmt->execute([':id_perfil' => $idPerfil]);
-        return $stmt->fetchAll();
+        $pokemons = $stmt->fetchAll();
+        foreach ($pokemons as &$pokemon) {
+            $pokemon['move_pool'] = $pokemon['move_pool'] === null || $pokemon['move_pool'] === ''
+                ? []
+                : explode(',', $pokemon['move_pool']);
+        }
+        unset($pokemon);
+
+        return $pokemons;
     }
 
     public function buscarPokemonDoTime(int $idPerfil, int $idPokemon): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT pk.id_pokemon, pk.nome, p.name AS especie, tp.nivel,
-                    p.id_pokedex, p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE
-               FROM times tm
-               JOIN time_pokemons tp ON tp.id_time = tm.id_time
-               JOIN pokemons pk ON pk.id_pokemon = tp.id_pokemon
-               JOIN pokedex p ON p.id_pokedex = pk.id_pokedex
-              WHERE tm.id_perfil = :id_perfil AND pk.id_pokemon = :id_pokemon
+            'SELECT id_pokemon, nome, status, especie, nivel, shiny,
+                    id_pokedex, HP, ATQ, ATQE, DEF, DEFE, SPE, tipos
+               FROM vw_pokemon_time
+              WHERE id_perfil = :id_perfil AND id_pokemon = :id_pokemon
               LIMIT 1'
         );
         $stmt->execute([
@@ -97,9 +81,6 @@ class BatalhaDAO
             ':id_pokemon' => $idPokemon,
         ]);
         $pokemon = $stmt->fetch();
-        if ($pokemon !== false) {
-            $pokemon['tipos'] = $this->buscarTiposPokemon((int) $pokemon['id_pokedex']);
-        }
         return $pokemon === false ? null : $pokemon;
     }
 
@@ -119,7 +100,7 @@ class BatalhaDAO
 
     public function buscarPokemonOponente(int $idPokedex, int $area): array
     {
-        [$idMinimo, $idMaximo] = self::FAIXAS_POKEDEX_AREA[$area] ?? self::FAIXAS_POKEDEX_AREA[6];
+        [$idMinimo, $idMaximo] = self::FAIXA_POKEDEX_PRIMEIRA_GERACAO;
         $exclusoes = implode(',', self::POKEMON_LENDARIOS_E_MITICOS);
         $stmt = $this->pdo->prepare(
             "SELECT id_pokedex, name, HP, ATQ, ATQE, DEF, DEFE, SPE
@@ -176,6 +157,19 @@ class BatalhaDAO
         return $pokemon;
     }
 
+    public function pokemonElegivelOponente(int $idPokedex): bool
+    {
+        [$idMinimo, $idMaximo] = self::FAIXA_POKEDEX_PRIMEIRA_GERACAO;
+        return $idPokedex >= $idMinimo
+            && $idPokedex <= $idMaximo
+            && !in_array($idPokedex, self::POKEMON_LENDARIOS_E_MITICOS, true);
+    }
+
+    public function listarIdsPokemonExcluidosOponente(): array
+    {
+        return self::POKEMON_LENDARIOS_E_MITICOS;
+    }
+
     public function buscarBatalhaAtiva(int $idPerfil, bool $travar = false): ?array
     {
         $sql = "SELECT id_batalha, area, treinador_numero, nome_oponente, estado_json
@@ -228,6 +222,57 @@ class BatalhaDAO
         );
         $stmt->execute([':id_batalha' => $idBatalha]);
         return $stmt->fetchAll();
+    }
+
+    public function listarInventario(int $idPerfil): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT i.id_item, i.nome, i.descricao, i.valor_hp, i.cura_status,
+                    i.revive, i.evolucao, inv.quantidade
+               FROM inventarios inv
+               JOIN itens i ON i.id_item = inv.id_item
+              WHERE inv.id_perfil = :id_perfil AND inv.quantidade > 0
+              ORDER BY i.nome'
+        );
+        $stmt->execute([':id_perfil' => $idPerfil]);
+        return $stmt->fetchAll();
+    }
+
+    public function buscarItemInventario(int $idPerfil, int $idItem): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT i.id_item, i.nome, i.descricao, i.valor_hp, i.cura_status,
+                    i.revive, i.evolucao, inv.quantidade
+               FROM inventarios inv
+               JOIN itens i ON i.id_item = inv.id_item
+              WHERE inv.id_perfil = :id_perfil
+                AND inv.id_item = :id_item
+              FOR UPDATE'
+        );
+        $stmt->execute([
+            ':id_perfil' => $idPerfil,
+            ':id_item' => $idItem,
+        ]);
+        $item = $stmt->fetch();
+        return $item === false ? null : $item;
+    }
+
+    public function consumirItem(int $idPerfil, int $idItem): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE inventarios
+                SET quantidade = quantidade - 1
+              WHERE id_perfil = :id_perfil
+                AND id_item = :id_item
+                AND quantidade > 0'
+        );
+        $stmt->execute([
+            ':id_perfil' => $idPerfil,
+            ':id_item' => $idItem,
+        ]);
+        if ($stmt->rowCount() !== 1) {
+            throw new RuntimeException('Este item não está mais disponível na mochila.');
+        }
     }
 
     public function iniciar(

@@ -148,6 +148,10 @@ body.battle-page {
     overflow-wrap: anywhere;
 }
 
+.fighter-name.mega-evoluido {
+    color: #8a4ba8;
+}
+
 .fighter-level,
 .hp-text,
 .stage-text,
@@ -376,11 +380,46 @@ body.battle-page [hidden] {
     align-self: flex-end;
 }
 
+.opponent-roster {
+    color: #555;
+    font-size: 0.86rem;
+    margin-top: 8px;
+}
+
+.switch-decision-panel {
+    display: grid;
+    gap: 10px;
+}
+
+.switch-decision-panel p {
+    color: #555;
+    margin: 0;
+}
+
+.switch-decision-panel label {
+    font-weight: bold;
+}
+
+.switch-decision-panel select {
+    background: var(--branco);
+    border: var(--borda-fina);
+    font: 1rem var(--fonte-texto);
+    max-width: 100%;
+    padding: 8px;
+}
+
 .fighter-card progress {
     accent-color: var(--verde);
     height: 12px;
     margin-top: 7px;
     width: 100%;
+}
+
+.fighter-status {
+    color: #8a4a9c;
+    font-size: 0.88rem;
+    font-weight: bold;
+    margin: 4px 0 0;
 }
 
 .fighter-card progress.hp-warning {
@@ -395,20 +434,14 @@ body.battle-page [hidden] {
     animation: sprite-idle 2.4s steps(2, end) infinite;
     align-self: flex-start;
     display: block;
-    height: clamp(180px, 20vw, 260px);
+    height: 192px;
     image-rendering: pixelated;
     margin-top: auto;
     object-fit: contain;
     position: relative;
-    transform: scale(var(--pokemon-scale, 1));
-    width: clamp(180px, 20vw, 260px);
+    width: 192px;
     z-index: 1;
 }
-
-.fighter-sprite[data-size="small"] { --pokemon-scale: 0.7; }
-.fighter-sprite[data-size="medium"] { --pokemon-scale: 0.86; }
-.fighter-sprite[data-size="large"] { --pokemon-scale: 1; }
-.fighter-sprite[data-size="very-large"] { --pokemon-scale: 1.14; }
 
 .player-sprite {
     margin-left: 4%;
@@ -416,11 +449,13 @@ body.battle-page [hidden] {
 
 .opponent-sprite {
     align-self: flex-end;
+    height: 160px;
     margin-right: 3%;
+    width: 160px;
 }
 
 @keyframes sprite-idle {
-    50% { transform: translateY(-5px) scale(var(--pokemon-scale, 1)); }
+    50% { transform: translateY(-5px); }
 }
 
 .moves-panel {
@@ -633,6 +668,86 @@ body.battle-page [hidden] {
     background: #5c554b;
 }
 
+.inventory-button {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
+}
+
+.inventory-button img {
+    object-fit: contain;
+}
+
+.inventory-panel {
+    border-top: 1px solid #c7bfae;
+    margin-top: 16px;
+    padding-top: 14px;
+}
+
+.inventory-panel label {
+    display: block;
+    font-weight: bold;
+    margin: 12px 0 6px;
+}
+
+.inventory-panel select {
+    background: var(--branco);
+    border: var(--borda-fina);
+    font: 1rem var(--fonte-texto);
+    max-width: 100%;
+    padding: 8px;
+}
+
+.inventory-grid {
+    display: grid;
+    gap: 9px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    margin-top: 12px;
+}
+
+.inventory-grid > p {
+    color: #666;
+    grid-column: 1 / -1;
+}
+
+.inventory-item {
+    background: var(--branco);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    color: var(--preto);
+    cursor: pointer;
+    font: 0.9rem var(--fonte-texto);
+    padding: 10px;
+    text-align: left;
+}
+
+.inventory-item:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+    opacity: 0.55;
+}
+
+.inventory-item strong,
+.inventory-item span {
+    display: block;
+}
+
+.inventory-item span {
+    color: #666;
+    font-size: 0.82rem;
+    margin-top: 4px;
+}
+
+.inventory-shop-link {
+    margin-top: 12px;
+}
+
+.inventory-shop-link a {
+    color: var(--azul-claro);
+    font-weight: bold;
+    text-decoration: underline;
+}
+
 .log-panel {
     align-self: stretch;
     display: flex;
@@ -666,11 +781,42 @@ body.battle-page [hidden] {
 }
 
 .battle-log .log-damage { border-color: var(--vermelho); }
+.battle-log .log-status { border-color: #8a4a9c; }
 .battle-log .log-boost { border-color: var(--amarelo); }
 .battle-log .log-result { border-color: var(--verde); font-weight: bold; }
 .battle-log .log-faint { border-color: #555; }
 .battle-log .log-miss { border-color: #8a4a9c; }
 .battle-log .log-switch { border-color: #2a7fd4; }
+.battle-log .log-item { border-color: #d98b22; }
+
+.battle-log .log-turn {
+    background: var(--azul);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    color: var(--branco);
+    font-family: var(--fonte-titulo);
+    font-size: 0.58rem;
+    padding: 9px 11px;
+    text-align: center;
+}
+
+.battle-log .log-turn-setup {
+    background: #5c554b;
+}
+
+.battle-log .battle-log-entry {
+    align-items: flex-start;
+    display: flex;
+    gap: 8px;
+}
+
+.battle-log-icon {
+    flex: 0 0 32px;
+    height: 32px;
+    image-rendering: pixelated;
+    object-fit: contain;
+    width: 32px;
+}
 
 @media (max-width: 760px) {
     .battle-layout {
@@ -696,8 +842,13 @@ body.battle-page [hidden] {
     }
 
     .fighter-sprite {
-        height: clamp(130px, 20vw, 200px);
-        width: clamp(130px, 20vw, 200px);
+        height: 160px;
+        width: 160px;
+    }
+
+    .opponent-sprite {
+        height: 136px;
+        width: 136px;
     }
 }
 
@@ -725,8 +876,13 @@ body.battle-page [hidden] {
     }
 
     .fighter-sprite {
-        height: 120px;
-        width: 120px;
+        height: 136px;
+        width: 136px;
+    }
+
+    .opponent-sprite {
+        height: 112px;
+        width: 112px;
     }
 
     .move-grid {

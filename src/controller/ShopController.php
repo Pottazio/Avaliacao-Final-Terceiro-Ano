@@ -5,6 +5,8 @@ namespace src\controller;
 
 use PDO;
 use RuntimeException;
+use models\MegaEvolucao;
+use models\ProgressaoJogo;
 use src\core\Auth;
 use src\dao\LojaCatalogoDAO;
 
@@ -24,9 +26,9 @@ class ShopController
 
         $idPerfil = Auth::idPerfil();
         $stmt = $this->pdo->prepare(
-            'SELECT i.id_item, i.nome, i.descricao, i.preco,
+            'SELECT i.id_item, i.nome, i.descricao, i.preco, i.categoria, i.evolucao,
                     COALESCE(inv.quantidade, 0) AS quantidade
-               FROM itens i
+               FROM vw_catalogo_itens i
                LEFT JOIN inventarios inv
                  ON inv.id_item = i.id_item
                 AND inv.id_perfil = :id_perfil
@@ -34,6 +36,14 @@ class ShopController
         );
         $stmt->execute([':id_perfil' => $idPerfil]);
         $itens = $stmt->fetchAll();
+        foreach ($itens as &$item) {
+            $mega = (bool) $item['evolucao']
+                ? MegaEvolucao::porItem((string) $item['nome'])
+                : null;
+            $item['id_pokedex_mega'] = $mega['id_pokedex'] ?? null;
+        }
+        unset($item);
+        $progresso = ProgressaoJogo::carregar($this->pdo, $idPerfil);
 
         $saldo = $this->buscarSaldo($idPerfil);
         $token = $_SESSION['csrf_loja'] ?? bin2hex(random_bytes(32));
@@ -43,6 +53,8 @@ class ShopController
             'sucesso' => true,
             'itens' => $itens,
             'saldo' => $saldo,
+            'area_atual' => (int) $progresso['area'],
+            'ids_pokemon_com_pedra_mega' => $this->idsPokemonComPedraMega($idPerfil),
             'csrfToken' => $token,
         ]);
     }
@@ -84,8 +96,18 @@ class ShopController
         try {
             $this->pdo->beginTransaction();
 
+            $stmtPerfil = $this->pdo->prepare(
+                'SELECT id_perfil FROM perfis WHERE id_perfil = :id_perfil FOR UPDATE'
+            );
+            $stmtPerfil->execute([':id_perfil' => $idPerfil]);
+            if ($stmtPerfil->fetchColumn() === false) {
+                $this->pdo->rollBack();
+                $this->responder(404, ['sucesso' => false, 'mensagem' => 'O perfil da sessão não foi encontrado.']);
+                return;
+            }
+
             $stmtItem = $this->pdo->prepare(
-                'SELECT id_item, nome, preco
+                'SELECT id_item, nome, preco, evolucao
                    FROM itens
                   WHERE id_item = :id_item
                   FOR UPDATE'
@@ -95,6 +117,29 @@ class ShopController
             if ($item === false) {
                 $this->pdo->rollBack();
                 $this->responder(404, ['sucesso' => false, 'mensagem' => 'Este item não está disponível na loja.']);
+                return;
+            }
+
+            $megaStone = (bool) $item['evolucao'];
+            if ($megaStone && MegaEvolucao::porItem((string) $item['nome']) === null) {
+                $this->pdo->rollBack();
+                $this->responder(409, ['sucesso' => false, 'mensagem' => 'Esta pedra de evolução não está disponível.']);
+                return;
+            }
+            if ($megaStone && $quantidade !== 1) {
+                $this->pdo->rollBack();
+                $this->responder(400, ['sucesso' => false, 'mensagem' => 'Só é possível comprar uma Pedra Mega por vez.']);
+                return;
+            }
+            if ($megaStone && (int) ProgressaoJogo::carregar($this->pdo, $idPerfil)['area'] < 3) {
+                $this->pdo->rollBack();
+                $this->responder(403, ['sucesso' => false, 'mensagem' => 'As Pedras Mega são desbloqueadas na Área 3.']);
+                return;
+            }
+            $mega = $megaStone ? MegaEvolucao::porItem((string) $item['nome']) : null;
+            if ($megaStone && $mega !== null && $this->temMegaPedra($idPerfil, $mega['id_pokedex'])) {
+                $this->pdo->rollBack();
+                $this->responder(409, ['sucesso' => false, 'mensagem' => 'Você já possui uma Pedra Mega deste Pokémon.']);
                 return;
             }
 
@@ -153,6 +198,7 @@ class ShopController
                 'saldo' => $this->buscarSaldo($idPerfil),
                 'id_item' => $idItem,
                 'quantidade' => $this->buscarQuantidade($idPerfil, $idItem),
+                'ids_pokemon_com_pedra_mega' => $this->idsPokemonComPedraMega($idPerfil),
             ]);
         } catch (\Throwable $e) {
             if ($this->pdo->inTransaction()) {
@@ -224,6 +270,32 @@ class ShopController
         );
         $stmt->execute([':id_perfil' => $idPerfil, ':id_item' => $idItem]);
         return (int) $stmt->fetchColumn();
+    }
+
+    private function idsPokemonComPedraMega(int $idPerfil): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT i.nome
+               FROM inventarios inv
+               JOIN itens i ON i.id_item = inv.id_item
+              WHERE inv.id_perfil = :id_perfil
+                AND i.evolucao = 1
+                AND inv.quantidade > 0'
+        );
+        $stmt->execute([':id_perfil' => $idPerfil]);
+        $idsPokemon = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $nomeItem) {
+            $mega = MegaEvolucao::porItem((string) $nomeItem);
+            if ($mega !== null) {
+                $idsPokemon[] = $mega['id_pokedex'];
+            }
+        }
+        return array_values(array_unique($idsPokemon));
+    }
+
+    private function temMegaPedra(int $idPerfil, int $idPokedex): bool
+    {
+        return in_array($idPokedex, $this->idsPokemonComPedraMega($idPerfil), true);
     }
 
     private function responder(int $status, array $dados): void

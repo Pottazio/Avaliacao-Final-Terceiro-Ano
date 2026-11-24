@@ -17,15 +17,9 @@ Auth::exigirLogin('../login/login.php');
 $pdo = Database::conectar();
 
 $stmt = $pdo->prepare(
-    'SELECT p.id_perfil,
-            p.nome_perfil,
-            p.pokedollar,
-            u.nome  AS nome_usuario,
-            u.email,
-            u.criado_em
-       FROM perfis p
-       JOIN usuarios u ON u.id_usuario = p.id_usuario
-      WHERE p.id_perfil = :id_perfil'
+    'SELECT id_perfil, nome_perfil, genero, pokedollar, nome_usuario, email, criado_em
+       FROM vw_perfis_usuario
+      WHERE id_perfil = :id_perfil'
 );
 $stmt->execute([':id_perfil' => Auth::idPerfil()]);
 $perfil = $stmt->fetch();
@@ -37,25 +31,13 @@ if ($perfil === false) {
     exit;
 }
 
-/* ---------------------------------------------------------------
-   Avatar: iniciais do treinador, geradas a partir do nome.
-   Sem upload e sem coluna nova no banco.
-   --------------------------------------------------------------- */
 $nomeUsuario = (string) $perfil['nome_usuario'];
+$imagemPersonagem = $perfil['genero'] === 'feminino'
+    ? 'PersonagemFemiPequeno.png'
+    : 'PersonagemMascPequeno.png';
 
-$iniciais = '';
-foreach (preg_split('/\s+/', trim($nomeUsuario)) as $parte) {
-    if ($parte !== '' && mb_strlen($iniciais) < 2) {
-        $iniciais .= mb_strtoupper(mb_substr($parte, 0, 1));
-    }
-}
-if ($iniciais === '') {
-    $iniciais = '?';
-}
-
-/* Cor do avatar derivada do nome: sempre a mesma para o mesmo treinador. */
 $paleta = ['#d62828', '#1d3557', '#2a9d8f', '#f4a300', '#7b2cbf', '#e76f51'];
-$corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
+$corAvatar = $paleta[abs(crc32((string) $perfil['nome_perfil'])) % count($paleta)];
 
 /* Quantos Pokemon e quantas batalhas o perfil tem (para os cartões). */
 $stmtQtd = $pdo->prepare(
@@ -84,7 +66,7 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POKENOAS | Painel do Treinador</title>
-    <link rel="stylesheet" href="CSS/style.css?v=team-styles-20261123">
+    <link rel="stylesheet" href="CSS/style.css?v=<?= (int) filemtime(__DIR__ . '/CSS/style.css') ?>">
 </head>
 <body class="jogo">
     <main class="painel">
@@ -95,7 +77,9 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
 
             <div class="topo-treinador">
                 <div class="avatar" style="background-color: <?= htmlspecialchars($corAvatar, ENT_QUOTES, 'UTF-8') ?>">
-                    <span class="avatar-iniciais"><?= htmlspecialchars($iniciais, ENT_QUOTES, 'UTF-8') ?></span>
+                    <img class="avatar-imagem"
+                         src="assets/<?= htmlspecialchars($imagemPersonagem, ENT_QUOTES, 'UTF-8') ?>"
+                         alt="Personagem de <?= htmlspecialchars($perfil['nome_perfil'], ENT_QUOTES, 'UTF-8') ?>">
                 </div>
 
                 <div class="topo-dados">
@@ -159,6 +143,6 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
         </footer>
     </main>
 
-    <script src="JavaScript/java.js?v=team-route-20261123"></script>
+    <script src="JavaScript/java.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/java.js') ?>"></script>
 </body>
 </html>

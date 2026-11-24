@@ -9,10 +9,11 @@ use RuntimeException;
 /**
  * POKENOAS - Model Pokemon
  *
+ * HERANCA: Pokemon recebe os tipos definidos em PokemonTipado.
  * ASSOCIACAO: Pokemon <-> Tipo (N:N, resolvida pela tabela pokemon_tipos).
- * Um Pokemon tem um ou dois tipos; o tipo vive na outra ponta da associacao.
+ * COMPOSICAO: Pokemon mantém seus atributos base como um objeto de valor.
  */
-class Pokemon
+class Pokemon extends PokemonTipado
 {
     public const MAX_PRIMEIRA_GERACAO = 151;
 
@@ -21,8 +22,7 @@ class Pokemon
     private string $nome = '';
     private ?string $status = null;
 
-    /** @var string[] Tipos associados (ex.: ["Fogo", "Voador"]) */
-    private array $tipos = [];
+    private ?AtributosPokemon $atributos = null;
 
     public function __construct(private PDO $conexao)
     {
@@ -50,10 +50,9 @@ class Pokemon
         return $this->status;
     }
 
-    /** @return string[] */
-    public function getTipos(): array
+    public function getAtributos(): ?AtributosPokemon
     {
-        return $this->tipos;
+        return $this->atributos;
     }
 
     public function setIdPokemon(int $id): self
@@ -90,36 +89,6 @@ class Pokemon
         return $this;
     }
 
-    /**
-     * SOBRECARGA (simulada): aceita um tipo ou vários.
-     * PHP não tem sobrecarga nativa, então usamos um parâmetro flexível
-     * com func_get_args(), que é a técnica aceita para o requisito.
-     */
-    public function setTipos(string|array $tipos): self
-    {
-        // Se vier mais de um argumento, trata como lista.
-        $argumentos = func_get_args();
-        $lista = (count($argumentos) > 1) ? $argumentos : (array) $tipos;
-
-        $limpos = [];
-        foreach ($lista as $tipo) {
-            $tipo = trim((string) $tipo);
-            if ($tipo !== '') {
-                $limpos[] = $tipo;
-            }
-        }
-
-        if ($limpos === []) {
-            throw new DadosPokemonInvalidosException('O Pokémon precisa ter ao menos um tipo.');
-        }
-        if (count($limpos) > 2) {
-            throw new DadosPokemonInvalidosException('Um Pokémon tem no máximo dois tipos.');
-        }
-
-        $this->tipos = array_values(array_unique($limpos));
-        return $this;
-    }
-
     // ---------- persistência ----------
 
     /**
@@ -131,6 +100,9 @@ class Pokemon
         if ($idPokedex < 1 || $idPokedex > self::MAX_PRIMEIRA_GERACAO) {
             throw new DadosPokemonInvalidosException('Só é permitido cadastrar Pokémon da primeira geração (#001–#151).');
         }
+
+        $this->atributos = new AtributosPokemon($atributos);
+        $valores = $this->atributos->paraPersistencia();
 
         $sql = 'INSERT INTO pokedex (id_pokedex, name, HP, ATQ, ATQE, DEF, DEFE, SPE)
                 VALUES (:id_pokedex, :name, :HP, :ATQ, :ATQE, :DEF, :DEFE, :SPE)
@@ -147,12 +119,12 @@ class Pokemon
         $stmt->execute([
             ':id_pokedex' => $idPokedex,
             ':name'       => $especie,
-            ':HP'         => (int) ($atributos['HP'] ?? 0),
-            ':ATQ'        => (int) ($atributos['ATQ'] ?? 0),
-            ':ATQE'       => (int) ($atributos['ATQE'] ?? 0),
-            ':DEF'        => (int) ($atributos['DEF'] ?? 0),
-            ':DEFE'       => (int) ($atributos['DEFE'] ?? 0),
-            ':SPE'        => (int) ($atributos['SPE'] ?? 0),
+            ':HP'         => $valores['HP'],
+            ':ATQ'        => $valores['ATQ'],
+            ':ATQE'       => $valores['ATQE'],
+            ':DEF'        => $valores['DEF'],
+            ':DEFE'       => $valores['DEFE'],
+            ':SPE'        => $valores['SPE'],
         ]);
     }
 
@@ -229,7 +201,8 @@ class Pokemon
                   LEFT JOIN pokemon_tipos pt ON pt.id_pokemon = pk.id_pokemon
                   LEFT JOIN tipos t          ON t.id_tipo = pt.id_tipo
                  WHERE pk.nome = :nome
-                 GROUP BY pk.id_pokemon
+                 GROUP BY pk.id_pokemon, pk.nome, pk.status, pk.id_pokedex,
+                          p.name, p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE
                  LIMIT 1';
 
         $stmt = $this->conexao->prepare($sql);
@@ -238,9 +211,4 @@ class Pokemon
         $linha = $stmt->fetch();
         return $linha === false ? null : $linha;
     }
-}
-
-/** Exceção customizada do modulo Pokemon. */
-class DadosPokemonInvalidosException extends RuntimeException
-{
 }

@@ -262,6 +262,120 @@ class Time
         return $consulta->fetchColumn() !== false;
     }
 
+    public function salvarMovePool(int $idPokemon, array $movimentos): void
+    {
+        if ($this->idTime === null) {
+            throw new TimeInvalidoException('Time não carregado.');
+        }
+        if (count($movimentos) > 4) {
+            throw new TimeInvalidoException('Um Pokémon pode ter no máximo 4 ataques.');
+        }
+
+        $nomes = [];
+        foreach ($movimentos as $movimento) {
+            if (!is_string($movimento) || !preg_match('/^[a-z0-9-]{1,60}$/', $movimento)) {
+                throw new TimeInvalidoException('A lista de ataques contém um golpe inválido.');
+            }
+            if (in_array($movimento, $nomes, true)) {
+                throw new TimeInvalidoException('A lista de ataques não pode ter golpes repetidos.');
+            }
+            $nomes[] = $movimento;
+        }
+
+        $membro = $this->conexao->prepare(
+            'SELECT 1
+               FROM time_pokemons
+              WHERE id_time = :id_time AND id_pokemon = :id_pokemon'
+        );
+        $membro->execute([
+            ':id_time' => $this->idTime,
+            ':id_pokemon' => $idPokemon,
+        ]);
+        if ($membro->fetchColumn() === false) {
+            throw new TimeInvalidoException('Esse Pokémon não está no seu time.');
+        }
+
+        $transacaoPropria = !$this->conexao->inTransaction();
+        if ($transacaoPropria) {
+            $this->conexao->beginTransaction();
+        }
+
+        try {
+            $remover = $this->conexao->prepare(
+                'DELETE FROM time_pokemon_movimentos
+                  WHERE id_time = :id_time AND id_pokemon = :id_pokemon'
+            );
+            $remover->execute([
+                ':id_time' => $this->idTime,
+                ':id_pokemon' => $idPokemon,
+            ]);
+
+            $inserir = $this->conexao->prepare(
+                'INSERT INTO time_pokemon_movimentos
+                    (id_time, id_pokemon, posicao, nome_movimento)
+                 VALUES (:id_time, :id_pokemon, :posicao, :nome_movimento)'
+            );
+            foreach ($nomes as $indice => $nome) {
+                $inserir->execute([
+                    ':id_time' => $this->idTime,
+                    ':id_pokemon' => $idPokemon,
+                    ':posicao' => $indice + 1,
+                    ':nome_movimento' => $nome,
+                ]);
+            }
+
+            if ($transacaoPropria) {
+                $this->conexao->commit();
+            }
+        } catch (\Throwable $erro) {
+            if ($transacaoPropria && $this->conexao->inTransaction()) {
+                $this->conexao->rollBack();
+            }
+            throw $erro;
+        }
+    }
+
+    public function salvarEdicaoPokemon(
+        int $idPokemon,
+        int $nivel,
+        array $movimentos,
+        ?bool $shiny = null
+    ): void
+    {
+        $transacaoPropria = !$this->conexao->inTransaction();
+        if ($transacaoPropria) {
+            $this->conexao->beginTransaction();
+        }
+
+        try {
+            if (!$this->atualizarNivel($idPokemon, $nivel)) {
+                throw new TimeInvalidoException('Esse Pokémon não está no seu time.');
+            }
+            if ($shiny !== null) {
+                $atualizarShiny = $this->conexao->prepare(
+                    'UPDATE time_pokemons
+                        SET shiny = :shiny
+                      WHERE id_time = :id_time AND id_pokemon = :id_pokemon'
+                );
+                $atualizarShiny->execute([
+                    ':shiny' => $shiny ? 1 : 0,
+                    ':id_time' => $this->idTime,
+                    ':id_pokemon' => $idPokemon,
+                ]);
+            }
+            $this->salvarMovePool($idPokemon, $movimentos);
+
+            if ($transacaoPropria) {
+                $this->conexao->commit();
+            }
+        } catch (\Throwable $erro) {
+            if ($transacaoPropria && $this->conexao->inTransaction()) {
+                $this->conexao->rollBack();
+            }
+            throw $erro;
+        }
+    }
+
     public function removerPokemon(int $idPokemon): bool
     {
         if ($this->idTime === null) {
@@ -296,27 +410,24 @@ class Time
             return [];
         }
 
-        $sql = 'SELECT pk.id_pokemon,
-                       pk.nome,
-                       pk.status,
-                       p.name AS especie,
-                       p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE,
-                       tp.posicao, tp.nivel,
-                       GROUP_CONCAT(t.nome ORDER BY t.nome SEPARATOR ", ") AS tipos
-                  FROM time_pokemons tp
-                  JOIN pokemons pk ON pk.id_pokemon = tp.id_pokemon
-                  JOIN pokedex  p  ON p.id_pokedex  = pk.id_pokedex
-                  LEFT JOIN pokemon_tipos pt ON pt.id_pokemon = pk.id_pokemon
-                  LEFT JOIN tipos t          ON t.id_tipo    = pt.id_tipo
-                  WHERE tp.id_time = :id_time
-                    AND p.id_pokedex BETWEEN 1 AND 151
-                 GROUP BY pk.id_pokemon, tp.posicao
-                 ORDER BY tp.posicao';
+        $sql = 'SELECT id_pokemon, nome, status, id_pokedex, especie,
+                       HP, ATQ, ATQE, DEF, DEFE, SPE, posicao, nivel, shiny,
+                       move_pool, tipos
+                  FROM vw_pokemon_time
+                 WHERE id_time = :id_time AND id_pokedex BETWEEN 1 AND 151
+                 ORDER BY posicao';
 
         $stmt = $this->conexao->prepare($sql);
         $stmt->execute([':id_time' => $this->idTime]);
-      
-        return $stmt->fetchAll();
+        $pokemons = $stmt->fetchAll();
+        foreach ($pokemons as &$pokemon) {
+            $pokemon['move_pool'] = $pokemon['move_pool'] === null || $pokemon['move_pool'] === ''
+                ? []
+                : explode(',', $pokemon['move_pool']);
+        }
+        unset($pokemon);
+
+        return $pokemons;
     }
 }
 

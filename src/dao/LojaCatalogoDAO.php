@@ -5,6 +5,7 @@ namespace src\dao;
 
 use PDO;
 use Throwable;
+use models\MegaEvolucao;
 
 class LojaCatalogoDAO
 {
@@ -13,7 +14,7 @@ class LojaCatalogoDAO
             'nome' => 'Potion',
             'categoria' => 'Recuperacao de HP',
             'descricao' => 'Recupera 20 HP.',
-            'preco' => 100,
+            'preco' => 50,
             'valor_hp' => 20,
             'cura_status' => false,
             'revive' => false,
@@ -31,7 +32,7 @@ class LojaCatalogoDAO
             'nome' => 'Hyper Potion',
             'categoria' => 'Recuperacao de HP',
             'descricao' => 'Recupera 200 HP.',
-            'preco' => 100,
+            'preco' => 200,
             'valor_hp' => 200,
             'cura_status' => false,
             'revive' => false,
@@ -40,7 +41,7 @@ class LojaCatalogoDAO
             'nome' => 'Max Potion',
             'categoria' => 'Recuperacao de HP',
             'descricao' => 'Recupera 100% do HP.',
-            'preco' => 100,
+            'preco' => 350,
             'valor_hp' => 0,
             'cura_status' => false,
             'revive' => false,
@@ -49,7 +50,7 @@ class LojaCatalogoDAO
             'nome' => 'Full Restore',
             'categoria' => 'Recuperacao de HP',
             'descricao' => 'Recupera 100% do HP e cura todas as condicoes de status.',
-            'preco' => 100,
+            'preco' => 500,
             'valor_hp' => 0,
             'cura_status' => true,
             'revive' => false,
@@ -58,7 +59,7 @@ class LojaCatalogoDAO
             'nome' => 'Antidote',
             'categoria' => 'Cura de status',
             'descricao' => 'Cura envenenamento.',
-            'preco' => 100,
+            'preco' => 50,
             'valor_hp' => 0,
             'cura_status' => true,
             'revive' => false,
@@ -67,7 +68,7 @@ class LojaCatalogoDAO
             'nome' => 'Burn Heal',
             'categoria' => 'Cura de status',
             'descricao' => 'Cura queimadura.',
-            'preco' => 100,
+            'preco' => 50,
             'valor_hp' => 0,
             'cura_status' => true,
             'revive' => false,
@@ -76,7 +77,7 @@ class LojaCatalogoDAO
             'nome' => 'Ice Heal',
             'categoria' => 'Cura de status',
             'descricao' => 'Cura congelamento.',
-            'preco' => 100,
+            'preco' => 50,
             'valor_hp' => 0,
             'cura_status' => true,
             'revive' => false,
@@ -85,7 +86,7 @@ class LojaCatalogoDAO
             'nome' => 'Awakening',
             'categoria' => 'Cura de status',
             'descricao' => 'Cura sono.',
-            'preco' => 100,
+            'preco' => 50,
             'valor_hp' => 0,
             'cura_status' => true,
             'revive' => false,
@@ -94,7 +95,7 @@ class LojaCatalogoDAO
             'nome' => 'Paralyze Heal',
             'categoria' => 'Cura de status',
             'descricao' => 'Cura paralisia.',
-            'preco' => 100,
+            'preco' => 50,
             'valor_hp' => 0,
             'cura_status' => true,
             'revive' => false,
@@ -103,7 +104,7 @@ class LojaCatalogoDAO
             'nome' => 'Full Heal',
             'categoria' => 'Cura de status',
             'descricao' => 'Cura todos os status.',
-            'preco' => 100,
+            'preco' => 150,
             'valor_hp' => 0,
             'cura_status' => true,
             'revive' => false,
@@ -112,7 +113,7 @@ class LojaCatalogoDAO
             'nome' => 'Revive',
             'categoria' => 'Reviver',
             'descricao' => 'Revive um Pokemon desmaiado com metade da vida.',
-            'preco' => 100,
+            'preco' => 200,
             'valor_hp' => 0,
             'cura_status' => false,
             'revive' => true,
@@ -123,7 +124,7 @@ class LojaCatalogoDAO
     {
     }
 
-    /** Insere apenas os itens ausentes e preserva os registros existentes. */
+    /** Mantém o catálogo e sincroniza preços/efeitos dos itens conhecidos. */
     public function garantirCatalogo(): int
     {
         $this->pdo->beginTransaction();
@@ -142,20 +143,42 @@ class LojaCatalogoDAO
                   LIMIT 1
                   FOR UPDATE'
             );
+            $stmtAtualizar = $this->pdo->prepare(
+                'UPDATE itens
+                    SET id_categoria = :id_categoria,
+                        descricao = :descricao,
+                        preco = :preco,
+                        valor_hp = :valor_hp,
+                        cura_status = :cura_status,
+                        revive = :revive,
+                        evolucao = :evolucao
+                  WHERE id_item = :id_item'
+            );
             $stmtInserir = $this->pdo->prepare(
                 'INSERT INTO itens
                     (id_categoria, nome, descricao, preco, valor_hp, cura_status, revive, evolucao)
                  VALUES
-                    (:id_categoria, :nome, :descricao, :preco, :valor_hp, :cura_status, :revive, 0)'
+                    (:id_categoria, :nome, :descricao, :preco, :valor_hp, :cura_status, :revive, :evolucao)'
             );
 
             $inseridos = 0;
-            foreach (self::ITENS as $item) {
+            foreach (array_merge(self::ITENS, MegaEvolucao::itensLoja()) as $item) {
                 $stmtCategoria->execute([':nome' => $item['categoria']]);
                 $idCategoria = (int) $this->pdo->lastInsertId();
 
                 $stmtItem->execute([':nome' => $item['nome']]);
-                if ($stmtItem->fetchColumn() !== false) {
+                $idExistente = $stmtItem->fetchColumn();
+                $dadosItem = [
+                    ':id_categoria' => $idCategoria,
+                    ':descricao' => $item['descricao'],
+                    ':preco' => $item['preco'],
+                    ':valor_hp' => $item['valor_hp'],
+                    ':cura_status' => $item['cura_status'] ? 1 : 0,
+                    ':revive' => $item['revive'] ? 1 : 0,
+                    ':evolucao' => !empty($item['evolucao']) ? 1 : 0,
+                ];
+                if ($idExistente !== false) {
+                    $stmtAtualizar->execute($dadosItem + [':id_item' => (int) $idExistente]);
                     continue;
                 }
 
@@ -167,6 +190,7 @@ class LojaCatalogoDAO
                     ':valor_hp' => $item['valor_hp'],
                     ':cura_status' => $item['cura_status'] ? 1 : 0,
                     ':revive' => $item['revive'] ? 1 : 0,
+                    ':evolucao' => !empty($item['evolucao']) ? 1 : 0,
                 ]);
                 $inseridos++;
             }

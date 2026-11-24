@@ -31,12 +31,12 @@ if ($time === false) {
 }
 
 // Saldo, para o cabecalho
-$stmtSaldo = $pdo->prepare('SELECT pokedollar, nome_perfil FROM perfis WHERE id_perfil = :id_perfil');
+$stmtSaldo = $pdo->prepare('SELECT pokedollar, nome_perfil, genero FROM perfis WHERE id_perfil = :id_perfil');
 $stmtSaldo->execute([':id_perfil' => Auth::idPerfil()]);
 $perfil = $stmtSaldo->fetch() ?: ['pokedollar' => 0, 'nome_perfil' => 'Treinador'];
 
-$nomeUsuario = Auth::nome();
-$generoPersonagem = $_SESSION['genero_personagem'] ?? 'masculino';
+$nomeUsuario = (string) ($perfil['nome_perfil'] ?? Auth::nome());
+$generoPersonagem = $perfil['genero'] ?? 'masculino';
 $imagemPersonagem = $generoPersonagem === 'feminino'
     ? 'PersonagemFemiPequeno.png'
     : 'PersonagemMascPequeno.png';
@@ -111,7 +111,7 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
         <section class="bloco">
             <h2 class="bloco-titulo">Meu time</h2>
             <p class="bloco-desc">
-                Sua equipe pode ter até seis Pokémon. Os atributos ficam resumidos em cada cartão.
+                Sua equipe pode ter até seis Pokémon. Edite até quatro ataques em cada cartão ou mantenha a seleção automática.
             </p>
 
             <div id="listaTime" class="grade-time">
@@ -137,6 +137,36 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
         </section>
 
     </main>
+
+    <dialog id="modalMovePool" class="modal-movepool" aria-labelledby="modalMoveTitulo">
+        <form method="dialog" class="modal-movepool-conteudo">
+            <header class="modal-movepool-cabecalho">
+                <div>
+                    <p class="modal-movepool-etiqueta">Configuração de batalha</p>
+                    <h2 id="modalMoveTitulo">Editar Pokémon</h2>
+                </div>
+                <button class="modal-movepool-fechar" value="cancel" aria-label="Fechar">×</button>
+            </header>
+            <p id="modalMoveDescricao" class="modal-movepool-descricao"></p>
+            <label class="modal-movepool-nivel" for="nivelPokemonEditado">
+                Nível
+                <select id="nivelPokemonEditado"></select>
+            </label>
+            <label class="modal-movepool-shiny" for="shinyPokemonEditado">
+                <input id="shinyPokemonEditado" type="checkbox">
+                <span>Usar aparência Shiny</span>
+            </label>
+            <p id="modalMoveContagem" class="modal-movepool-contagem">0 / 4 selecionados</p>
+            <div id="modalMoveLista" class="modal-movepool-lista" aria-live="polite"></div>
+            <p id="modalMoveMensagem" class="modal-movepool-mensagem" aria-live="polite"></p>
+            <footer class="modal-movepool-acoes">
+                <button class="modal-movepool-cancelar" value="cancel">Cancelar</button>
+                <button id="salvarMovePool" class="modal-movepool-salvar" type="button" disabled>
+                    Salvar Pokémon
+                </button>
+            </footer>
+        </form>
+    </dialog>
 
     <script src="JavaScript/Time.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/Time.js') ?>"></script>
 </body>

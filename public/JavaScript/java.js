@@ -7,8 +7,6 @@ class Pokenoas{
         this.time = [];
 
     }
-
-
     async navegar(pagina) {
 
         if (pagina === "team") {
@@ -635,35 +633,95 @@ class Pokenoas{
             }
 
 
-            lista.innerHTML =
-                dadosLoja.itens.map(
-                    (item) => {
+            const grupos = new Map();
+            const idsPokemonComPedraMega = new Set(
+                (dadosLoja.ids_pokemon_com_pedra_mega || []).map(Number)
+            );
+            dadosLoja.itens.forEach((item) => {
+                const categoria = item.categoria || "Outros";
+                if (!grupos.has(categoria)) grupos.set(categoria, []);
+                grupos.get(categoria).push(item);
+            });
 
-                        const nomeSeguro =
-                            escaparHtml(item.nome);
-                        const descricaoSegura =
-                            escaparHtml(item.descricao || "Item curativo.");
-                        return `
-                            <article class="produto">
-                                <h3>${nomeSeguro}</h3>
-                                <p>${descricaoSegura}</p>
-                                <p class="precoItem">
-                                    <strong>${item.preco} Pokédollars</strong>
-                                </p>
-                                <p>
-                                    No inventário:
-                                    <span id="quantidade-item-${item.id_item}">${item.quantidade}</span>
-                                </p>
-                                <button
-                                    onclick="comprarItem(${Number(item.id_item)})"
-                                >
-                                    Comprar
-                                </button>
-                            </article>
-                        `;
+            const ordemCategorias = [
+                "Recuperacao de HP",
+                "Cura de status",
+                "Reviver",
+                "Pedras Mega"
+            ];
+            const titulosCategorias = {
+                "Recuperacao de HP": "Recuperação de HP",
+                "Cura de status": "Cura de status",
+                "Reviver": "Reviver",
+                "Pedras Mega": "Mega Evolução"
+            };
+            const categorias = [...grupos.entries()].sort(([categoriaA], [categoriaB]) => {
+                const indiceA = ordemCategorias.indexOf(categoriaA);
+                const indiceB = ordemCategorias.indexOf(categoriaB);
+                return (indiceA < 0 ? ordemCategorias.length : indiceA)
+                    - (indiceB < 0 ? ordemCategorias.length : indiceB)
+                    || categoriaA.localeCompare(categoriaB);
+            });
 
-                    }
-                ).join("");
+            lista.innerHTML = categorias.map(([categoria, itens]) => `
+                <section class="grupo-categoria">
+                    <header class="categoria-loja-cabecalho">
+                        <h3>${escaparHtml(titulosCategorias[categoria] || categoria)}</h3>
+                        <span>${itens.length} ${itens.length === 1 ? "item" : "itens"}</span>
+                    </header>
+                    <div class="grade-produtos">
+                        ${itens.map((item) => {
+                            const nomeSeguro = escaparHtml(item.nome);
+                            const descricaoSegura = escaparHtml(item.descricao || "Item curativo.");
+                            const imagemItem = imagensItensLoja[item.nome] || "potionNV1.png";
+                            const megaStone = Number(item.evolucao) === 1;
+                            const bloqueadaPorArea = megaStone && Number(dadosLoja.area_atual) < 3;
+                            const idPokemonMega = Number(item.id_pokedex_mega);
+                            const bloqueadaPorLimite = megaStone
+                                && idsPokemonComPedraMega.has(idPokemonMega);
+                            const bloqueada = bloqueadaPorArea || bloqueadaPorLimite;
+                            const motivoBloqueio = bloqueadaPorArea
+                                ? "Desbloqueia ao chegar na Área 3."
+                                : bloqueadaPorLimite
+                                    ? "Você já possui uma Pedra Mega deste Pokémon."
+                                    : megaStone
+                                        ? "Uma pedra por Pokémon; não é consumida ao usar."
+                                        : "";
+                            const textoBotao = bloqueadaPorArea
+                                ? "Área 3"
+                                : bloqueadaPorLimite
+                                    ? "Já possui"
+                                    : "Comprar";
+                            return `
+                                <article class="produto ${bloqueada ? "produto-bloqueado" : ""}"
+                                         data-evolucao="${megaStone ? 1 : 0}"
+                                         data-pokemon-mega="${megaStone ? idPokemonMega : ""}">
+                                    <img
+                                        class="produto-imagem"
+                                        src="assets/itens/${imagemItem}"
+                                        alt=""
+                                        width="72"
+                                        height="72"
+                                    >
+                                    <h3>${nomeSeguro}</h3>
+                                    <p>${descricaoSegura}</p>
+                                    <p class="produto-quantidade">
+                                        No inventário: <span id="quantidade-item-${Number(item.id_item)}">${Number(item.quantidade)}</span>
+                                    </p>
+                                    <p class="precoItem"><strong>${Number(item.preco)} Pokédollars</strong></p>
+                                    ${motivoBloqueio
+                                        ? `<p class="produto-bloqueio">${escaparHtml(motivoBloqueio)}</p>`
+                                        : ""}
+                                    <button ${bloqueada ? "disabled" : ""}
+                                            onclick="comprarItem(${Number(item.id_item)})">
+                                        ${textoBotao}
+                                    </button>
+                                </article>
+                            `;
+                        }).join("")}
+                    </div>
+                </section>
+            `).join("");
 
         }
 
@@ -683,8 +741,37 @@ class Pokenoas{
 
 
 const jogo =
-    new MonstroBolso();
+    new Pokenoas();
 
+const imagensItensLoja = {
+    Potion: "potionNV1.png",
+    "Super Potion": "SuperPotionNV2.png",
+    "Hyper Potion": "HyperPotionNV3.png",
+    "Max Potion": "MaxPotionNV4.png",
+    "Full Restore": "FullRestorePotionNV5.png",
+    Antidote: "AntidotePotion.png",
+    "Burn Heal": "BurnHealPotion.png",
+    "Ice Heal": "IceHealPotion.png",
+    Awakening: "AwakeningPotion.png",
+    "Paralyze Heal": "ParalyzeHealPotion.png",
+    "Full Heal": "FullHealPotion.png",
+    Revive: "RevivePotion.png",
+    Aerodactylite: "aerodactylite.png",
+    Alakazite: "alakazite.png",
+    Beedrillite: "beedrillite.png",
+    Blastoisinite: "blastoisinite.png",
+    "Charizardite X": "charizarditex.png",
+    "Charizardite Y": "charizarditey.png",
+    Gengarite: "gengarite.png",
+    Gyaradosite: "gyaradosite.png",
+    Kangaskhanite: "kangaskhanite.png",
+    "Mewtwonite X": "mewtwonitex.png",
+    "Mewtwonite Y": "mewtwonitey.png",
+    Pidgeotite: "pidgeotite.png",
+    Pinsirite: "pinsirite.png",
+    Slowbronite: "slowbronite.png",
+    Venusaurite: "venusaurite.png"
+};
 
 function navegar(pagina) {
 
@@ -772,6 +859,14 @@ async function comprarItem(idItem) {
 
         }
 
+        const idsComPedra = new Set((resultado.ids_pokemon_com_pedra_mega || []).map(Number));
+        document.querySelectorAll('.produto[data-evolucao="1"]').forEach((produto) => {
+            if (!idsComPedra.has(Number(produto.dataset.pokemonMega))) return;
+            produto.classList.add("produto-bloqueado");
+            const botao = produto.querySelector("button");
+            botao.disabled = true;
+            botao.textContent = "Já possui";
+        });
 
         mensagem.textContent =
             resultado.mensagem;
@@ -867,14 +962,3 @@ function escaparHtml(valor) {
         .replace(/'/g, "&#039;");
 
 }
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        jogo.navegar("index");
-
-    }
-    
-);

@@ -340,6 +340,99 @@ body.jogo {
     line-height: 1;
 }
 
+.avatar-imagem {
+    display: block;
+    height: 100%;
+    image-rendering: pixelated;
+    object-fit: contain;
+    object-position: center bottom;
+    width: 100%;
+}
+
+.perfil-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    margin: 18px 0;
+}
+
+.perfil-gerenciamento {
+    background: var(--branco);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    padding: 14px;
+}
+
+.perfil-gerenciamento-cabecalho {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.perfil-gerenciamento-cabecalho h2,
+.perfil-gerenciamento-cabecalho p {
+    margin: 0 0 5px;
+}
+
+.perfil-gerenciamento-cabecalho h2 {
+    color: var(--azul);
+    font-family: var(--fonte-titulo);
+    font-size: 0.66rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.perfil-gerenciamento-cabecalho p {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.perfil-ativar {
+    background: var(--azul);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    color: var(--branco);
+    flex: 0 0 auto;
+    font-size: 0.86rem;
+    padding: 8px 10px;
+    text-decoration: none;
+}
+
+.perfil-ativar.perfil-ativo {
+    background: var(--verde);
+}
+
+.perfil-editar-form {
+    display: grid;
+    gap: 7px;
+    margin-top: 16px;
+}
+
+.perfil-editar-form label {
+    font-weight: bold;
+}
+
+.perfil-editar-form input,
+.perfil-editar-form select {
+    background: #fff;
+    border: var(--borda-fina);
+    font: 1rem var(--fonte-texto);
+    min-width: 0;
+    padding: 8px;
+}
+
+.perfil-editar-form button {
+    background: var(--vermelho);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    color: #fff;
+    cursor: pointer;
+    font: 0.52rem var(--fonte-titulo);
+    margin-top: 5px;
+    padding: 10px;
+}
+
 .topo-dados {
     min-width: 0;
 }
@@ -426,7 +519,7 @@ body.jogo {
 
 .cartoes {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
 }
 
@@ -483,6 +576,8 @@ body.jogo {
 }
 
 .pokemon-time-card img {
+    grid-row: 1 / span 2;
+    align-self: start;
     width: 88px;
     height: 88px;
 }
@@ -491,6 +586,13 @@ body.jogo {
     align-self: end;
     font-size: 0.72rem;
     line-height: 1.5;
+}
+
+.pokemon-time-tipos {
+    grid-column: 2;
+    color: #6b6b6b;
+    font-size: 0.78rem;
+    line-height: 1.25;
 }
 
 .pokemon-atributos-time {
@@ -559,29 +661,96 @@ body.jogo {
     }
 }
 
-.produto {
+.loja-categorias {
+    display: grid;
+    gap: 28px;
+}
+
+.grupo-categoria {
+    display: grid;
+    gap: 12px;
+}
+
+.categoria-loja-cabecalho {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    min-height: 250px;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
+    color: var(--branco);
+    background: var(--azul);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+}
+
+.categoria-loja-cabecalho h3 {
+    font-family: var(--fonte-titulo);
+    font-size: 0.62rem;
+    line-height: 1.5;
+}
+
+.categoria-loja-cabecalho span {
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.grade-produtos {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    align-items: stretch;
+}
+
+.produto {
+    display: grid;
+    grid-template-rows: 72px auto minmax(3.2em, 1fr) auto auto auto;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    min-height: 290px;
     text-align: center;
     background-color: var(--branco);
     border: var(--borda-fina);
     box-shadow: var(--sombra-dura-p);
-    padding: 16px;
+    padding: 12px;
+}
+
+.produto-imagem {
+    justify-self: center;
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+.produto-bloqueado {
+    background-color: #eee7d6;
+    opacity: 0.72;
+}
+
+.produto-bloqueio {
+    color: var(--vermelho-esc);
+    font-weight: bold;
 }
 
 .produto h3 {
-    margin: 8px 0;
+    color: var(--azul);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    margin: 4px 0;
 }
 
 .produto p {
-    flex: 1;
+    margin: 0;
+    line-height: 1.25;
 }
 
 .produto .precoItem {
-    flex: 0;
     color: var(--vermelho-esc);
+}
+
+.produto .produto-quantidade {
+    font-size: 0.9rem;
 }
 
 .produto button {
@@ -596,6 +765,30 @@ body.jogo {
     cursor: pointer;
 }
 
+.produto button:disabled {
+    color: var(--cinza-texto);
+    background-color: #b0a89c;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+    .grade-produtos {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .grade-produtos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 380px) {
+    .grade-produtos {
+        grid-template-columns: 1fr;
+    }
+}
 .btn-sair:active {
     transform: translate(2px, 2px);
     box-shadow: 1px 1px 0 var(--preto);

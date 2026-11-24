@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace models;
 
 use PDO;
+use Throwable;
 use RuntimeException;
 use src\core\Auth;
 
@@ -195,6 +196,88 @@ class Usuario
         $stmt->execute([':id_usuario' => Auth::idUsuario()]);
 
         return $stmt->fetchAll();
+    }
+
+    public function criarPerfil(int $idUsuario, string $nomePerfil): int
+    {
+        $nomePerfil = trim($nomePerfil);
+        if ($idUsuario < 1 || $nomePerfil === '' || mb_strlen($nomePerfil) > 50) {
+            throw new DadosInvalidosException('Informe um nome de perfil válido com até 50 caracteres.');
+        }
+
+        $transacaoPropria = !$this->conexao->inTransaction();
+        if ($transacaoPropria) {
+            $this->conexao->beginTransaction();
+        }
+
+        try {
+            $stmt = $this->conexao->prepare(
+                'INSERT INTO perfis (id_usuario, nome_perfil, pokedollar)
+                 VALUES (:id_usuario, :nome_perfil, 1000)'
+            );
+            $stmt->execute([
+                ':id_usuario' => $idUsuario,
+                ':nome_perfil' => $nomePerfil,
+            ]);
+            $idPerfil = (int) $this->conexao->lastInsertId();
+
+            if ($transacaoPropria) {
+                $this->conexao->commit();
+            }
+            return $idPerfil;
+        } catch (Throwable $erro) {
+            if ($transacaoPropria && $this->conexao->inTransaction()) {
+                $this->conexao->rollBack();
+            }
+            throw $erro;
+        }
+    }
+
+    public function atualizarPerfil(
+        int $idUsuario,
+        int $idPerfil,
+        string $nomePerfil,
+        string $genero
+    ): void {
+        $nomePerfil = trim($nomePerfil);
+        if (
+            $idUsuario < 1
+            || $idPerfil < 1
+            || $nomePerfil === ''
+            || mb_strlen($nomePerfil) > 50
+            || !in_array($genero, ['masculino', 'feminino'], true)
+        ) {
+            throw new DadosInvalidosException('Informe um nome e um gênero válidos para o perfil.');
+        }
+
+        $stmt = $this->conexao->prepare(
+            'UPDATE perfis
+                SET nome_perfil = :nome_perfil,
+                    genero = :genero
+              WHERE id_perfil = :id_perfil
+                AND id_usuario = :id_usuario'
+        );
+        $stmt->execute([
+            ':nome_perfil' => $nomePerfil,
+            ':genero' => $genero,
+            ':id_perfil' => $idPerfil,
+            ':id_usuario' => $idUsuario,
+        ]);
+        if ($stmt->rowCount() > 0) {
+            return;
+        }
+
+        $stmt = $this->conexao->prepare(
+            'SELECT 1 FROM perfis
+              WHERE id_perfil = :id_perfil AND id_usuario = :id_usuario'
+        );
+        $stmt->execute([
+            ':id_perfil' => $idPerfil,
+            ':id_usuario' => $idUsuario,
+        ]);
+        if ($stmt->fetchColumn() === false) {
+            throw new DadosInvalidosException('Esse perfil não pertence à sua conta.');
+        }
     }
 }
 

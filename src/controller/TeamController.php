@@ -194,6 +194,70 @@ class TeamController
         }
     }
 
+    /** POST ?acao=salvarMovePool&id_pokemon=12&nivel=5&move_pool=["quick-attack"] */
+    public function salvarMovePool(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->responder(false, 'Use POST para salvar os ataques.', error: true);
+            return;
+        }
+
+        $idPokemon = filter_var($_POST['id_pokemon'] ?? null, FILTER_VALIDATE_INT);
+        $nivel = array_key_exists('nivel', $_POST)
+            ? filter_var($_POST['nivel'], FILTER_VALIDATE_INT)
+            : null;
+        $shinyInformado = array_key_exists('shiny', $_POST);
+        $shiny = $shinyInformado
+            ? filter_var($_POST['shiny'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+            : null;
+        $movimentos = json_decode((string) ($_POST['move_pool'] ?? ''), true);
+        if (
+            $idPokemon === false || $idPokemon === null || $idPokemon <= 0
+            || $nivel === false || ($nivel !== null && $nivel <= 0)
+            || ($shinyInformado && $shiny === null)
+            || ($shinyInformado && $nivel === null)
+            || !is_array($movimentos) || count($movimentos) > 4
+            || ($movimentos !== [] && array_keys($movimentos) !== range(0, count($movimentos) - 1))
+        ) {
+            $this->responder(
+                false,
+                'Informe um Pokémon, nível, opção shiny e lista de até 4 ataques válidos.',
+                error: true
+            );
+            return;
+        }
+
+        try {
+            $this->timeModel->doPerfil(Auth::idPerfil());
+            if ($nivel === null) {
+                $this->timeModel->salvarMovePool((int) $idPokemon, $movimentos);
+            } else {
+                $progresso = ProgressaoJogo::carregar(Database::conectar(), Auth::idPerfil());
+                if ($nivel > $progresso['nivel_maximo']) {
+                    $this->responder(
+                        false,
+                        "O limite atual é nível {$progresso['nivel_maximo']}.",
+                        error: true
+                    );
+                    return;
+                }
+                $this->timeModel->salvarEdicaoPokemon((int) $idPokemon, $nivel, $movimentos, $shiny);
+            }
+            $mensagem = $nivel === null
+                ? ($movimentos === []
+                    ? 'A seleção aleatória de ataques foi restaurada.'
+                    : 'Ataques salvos para este Pokémon.')
+                : 'Nível, ataques e aparência do Pokémon atualizados.';
+            $this->responder(true, $mensagem);
+        } catch (TimeInvalidoException $e) {
+            $this->responder(false, $e->getMessage(), error: true);
+        } catch (PDOException $e) {
+            $this->responder(false, 'Erro ao salvar os ataques no banco de dados.', error: true);
+        } catch (RuntimeException $e) {
+            $this->responder(false, $e->getMessage(), error: true);
+        }
+    }
+
     /** GET ?acao=listar -> devolve o time atual em JSON. */
     public function listar(): void
     {

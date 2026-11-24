@@ -1,10 +1,63 @@
+const iconesItensLog = {
+    Potion: 'potionNV1.png',
+    'Super Potion': 'SuperPotionNV2.png',
+    'Hyper Potion': 'HyperPotionNV3.png',
+    'Max Potion': 'MaxPotionNV4.png',
+    'Full Restore': 'FullRestorePotionNV5.png',
+    Antidote: 'AntidotePotion.png',
+    'Burn Heal': 'BurnHealPotion.png',
+    'Ice Heal': 'IceHealPotion.png',
+    Awakening: 'AwakeningPotion.png',
+    'Paralyze Heal': 'ParalyzeHealPotion.png',
+    'Full Heal': 'FullHealPotion.png',
+    Revive: 'RevivePotion.png',
+    Aerodactylite: 'aerodactylite.png',
+    Alakazite: 'alakazite.png',
+    Beedrillite: 'beedrillite.png',
+    Blastoisinite: 'blastoisinite.png',
+    'Charizardite X': 'charizarditex.png',
+    'Charizardite Y': 'charizarditey.png',
+    Gengarite: 'gengarite.png',
+    Gyaradosite: 'gyaradosite.png',
+    Kangaskhanite: 'kangaskhanite.png',
+    'Mewtwonite X': 'mewtwonitex.png',
+    'Mewtwonite Y': 'mewtwonitey.png',
+    Pidgeotite: 'pidgeotite.png',
+    Pinsirite: 'pinsirite.png',
+    Slowbronite: 'slowbronite.png',
+    Venusaurite: 'venusaurite.png',
+};
+
+const pokemonMegaPorPedra = {
+    aerodactylite: 142,
+    alakazite: 65,
+    beedrillite: 15,
+    blastoisinite: 9,
+    'charizardite x': 6,
+    'charizardite y': 6,
+    gengarite: 94,
+    gyaradosite: 130,
+    kangaskhanite: 115,
+    'mewtwonite x': 150,
+    'mewtwonite y': 150,
+    pidgeotite: 18,
+    pinsirite: 127,
+    slowbronite: 80,
+    venusaurite: 3,
+};
+
 class BattleApp {
     constructor(endpoint) {
         this.endpoint = endpoint;
         this.progress = null;
         this.battle = null;
         this.team = [];
-        this.movimentos = { jogador: [] };
+        this.idsPokemonExcluidos = [];
+        this.spriteIdsPokemon = new Map();
+        this.spritesOponenteEmCarregamento = new Set();
+        this.inventory = [];
+        this.inventoryOpen = false;
+        this.movimentos = { jogador: [], oponente: [] };
         this.batalhaMovimentosCarregada = '';
         this.cacheMovimentos = new Map();
         this.message = document.getElementById('mensagemBatalha');
@@ -17,6 +70,23 @@ class BattleApp {
             button.addEventListener('click', () => this.jogar(button.dataset.acao));
         });
         document.getElementById('fugirBatalha').addEventListener('click', () => this.fugir());
+        document.getElementById('abrirMochila').addEventListener('click', () => {
+            this.inventoryOpen = !this.inventoryOpen;
+            this.renderizarBatalha();
+        });
+        document.getElementById('alvoItem').addEventListener('change', () => this.renderizarInventario());
+        document.getElementById('selecaoTrocaOponente').addEventListener(
+            'change',
+            () => this.sincronizarAcoes()
+        );
+        document.getElementById('confirmarTrocaOponente').addEventListener(
+            'click',
+            () => this.decidirTrocaOponente('sim')
+        );
+        document.getElementById('manterPokemonOponente').addEventListener(
+            'click',
+            () => this.decidirTrocaOponente('nao')
+        );
         this.carregar();
     }
 
@@ -42,6 +112,8 @@ class BattleApp {
             this.progress = result.progresso;
             this.battle = result.batalha;
             this.team = result.time;
+            this.idsPokemonExcluidos = result.ids_pokemon_excluidos_oponente || [];
+            this.inventory = result.inventario || [];
             this.renderizar();
             this.mostrarMensagem('');
         } catch (error) {
@@ -55,12 +127,78 @@ class BattleApp {
             this.mostrarMensagem('Adicione um Pokémon ao seu time antes de batalhar.');
             return;
         }
-        await this.executar('iniciar', { id_pokemon: idPokemon });
+
+        this.definirBotoes(true);
+        this.mostrarMensagem('Preparando a equipe adversária...');
+        try {
+            const equipeOponente = await this.prepararEquipeOponente();
+            await this.executar('iniciar', {
+                id_pokemon: idPokemon,
+                equipe_oponente: JSON.stringify(equipeOponente),
+            });
+        } catch (error) {
+            this.mostrarMensagem(error.message || 'Não foi possível preparar a equipe adversária.');
+            this.renderizarEquipe();
+        }
+    }
+
+    async prepararEquipeOponente() {
+        const quantidade = Number(this.progress?.pokemons_oponente);
+        const minimo = Number(this.progress?.pokedex_minimo);
+        const maximo = Number(this.progress?.pokedex_maximo);
+        if (
+            !Number.isInteger(quantidade) || quantidade < 1 || quantidade > 6
+            || !Number.isInteger(minimo) || !Number.isInteger(maximo) || minimo > maximo
+        ) {
+            throw new Error('Os dados da área não permitem preparar a equipe adversária.');
+        }
+
+        const usados = new Set([
+            ...this.idsPokemonExcluidos.map(Number),
+            ...this.team.map((pokemon) => Number(pokemon.id_pokedex)),
+        ]);
+        const candidatos = [];
+        for (let id = minimo; id <= maximo; id++) {
+            if (!usados.has(id)) candidatos.push(id);
+        }
+        for (let indice = candidatos.length - 1; indice > 0; indice--) {
+            const aleatorio = Math.floor(Math.random() * (indice + 1));
+            [candidatos[indice], candidatos[aleatorio]] = [
+                candidatos[aleatorio],
+                candidatos[indice],
+            ];
+        }
+
+        const ids = candidatos.slice(0, quantidade);
+        if (ids.length !== quantidade) {
+            throw new Error('Não há Pokémon suficientes disponíveis para esta equipe.');
+        }
+
+        return Promise.all(ids.map(async (id) => {
+            const pokemon = await this.buscarPokemonApi(id);
+            const atributos = Object.fromEntries(
+                pokemon.stats.map((stat) => [stat.stat.name, stat.base_stat])
+            );
+            return {
+                id_pokedex: pokemon.id,
+                name: pokemon.name,
+                types: pokemon.types.map((tipo) => tipo.type.name),
+                hp: atributos.hp,
+                attack: atributos.attack,
+                'special-attack': atributos['special-attack'],
+                defense: atributos.defense,
+                'special-defense': atributos['special-defense'],
+                speed: atributos.speed,
+            };
+        }));
     }
 
     async jogar(action, movimento = null) {
         const values = { acao_batalha: action };
         if (movimento) values.movimento = JSON.stringify(movimento);
+        if (action === 'atacar' && movimento?.nome === 'sleep-talk') {
+            values.movimentos_jogador = JSON.stringify(this.movimentos.jogador);
+        }
         await this.executar('jogar', values);
     }
 
@@ -71,12 +209,39 @@ class BattleApp {
         });
     }
 
+    async usarItem(idItem, idPokemon) {
+        await this.executar('jogar', {
+            acao_batalha: 'usar_item',
+            id_item: idItem,
+            id_pokemon: idPokemon,
+        });
+    }
+
+    async decidirTrocaOponente(resposta) {
+        const values = {
+            acao_batalha: 'responder_troca',
+            resposta_troca: resposta,
+        };
+        if (resposta === 'sim') {
+            values.id_pokemon = document.getElementById('selecaoTrocaOponente').value;
+        }
+        await this.executar('jogar', values);
+    }
+
     async fugir() {
         if (!window.confirm('Encerrar esta batalha? Ela contará como derrota.')) return;
         await this.executar('fugir');
     }
 
     async executar(action, values = {}) {
+        if (action === 'jogar' && values.acao_batalha !== 'responder_troca') {
+            if (this.movimentos.oponente.length === 0) {
+                this.mostrarMensagem('Aguarde o carregamento dos ataques do oponente.');
+                return;
+            }
+            values.movimentos_oponente = JSON.stringify(this.movimentos.oponente);
+        }
+
         this.definirBotoes(true);
         try {
             await this.requisitar(action, values);
@@ -84,6 +249,7 @@ class BattleApp {
         } catch (error) {
             this.mostrarMensagem(error.message);
             this.renderizarBatalha();
+            if (action === 'iniciar') this.renderizarEquipe();
         }
     }
 
@@ -153,6 +319,9 @@ class BattleApp {
 
     renderizarBatalha() {
         const active = Boolean(this.battle?.em_andamento);
+        const state = active ? this.battle.estado : null;
+        const trocaPendente = Boolean(state?.troca_oponente_pendente);
+        if (trocaPendente) this.inventoryOpen = false;
         const areaSetup = document.querySelector('.setup-panel .battle-setup');
         areaSetup.hidden = active || this.progress.concluido;
         document.querySelector('.setup-panel').hidden = active || this.progress.concluido;
@@ -160,45 +329,177 @@ class BattleApp {
 
         const controls = document.querySelectorAll('[data-acao], #fugirBatalha');
         controls.forEach((button) => {
-            button.disabled = !active;
+            button.disabled = !active || (button.id !== 'fugirBatalha' && !this.podeJogarTurno());
         });
-        this.switchPanel.hidden = !active;
+        document.getElementById('abrirMochila').disabled = !active || !this.podeJogarTurno();
+        this.switchPanel.hidden = !active || trocaPendente;
+        document.querySelector('.moves-panel').hidden = trocaPendente;
+        document.getElementById('decisaoTrocaOponente').hidden = !trocaPendente;
+        document.getElementById('painelInventario').hidden =
+            !active || trocaPendente || !this.inventoryOpen;
+        document.getElementById('abrirMochila').setAttribute('aria-expanded', String(
+            active && this.inventoryOpen
+        ));
 
         if (active) {
-            const state = this.battle.estado;
             this.renderizarCombatente('jogador', state.jogador);
             this.renderizarCombatente('oponente', state.oponente);
             this.renderizarOpcoesTroca(state);
+            this.renderizarEquipeOponente(state);
+            this.renderizarDecisaoTrocaOponente(state);
+            this.renderizarInventario();
             document.getElementById('oponenteTreinador').textContent = this.battle.nome_oponente;
             this.carregarPokemonsBatalha(state.jogador, state.oponente);
         } else {
+            this.inventoryOpen = false;
             this.switchList.replaceChildren();
             this.limparCombatentes();
             document.getElementById('oponenteTreinador').textContent = this.battle?.nome_oponente || '';
             this.batalhaMovimentosCarregada = '';
-            this.movimentos = { jogador: [] };
+            this.movimentos = { jogador: [], oponente: [] };
             this.movePanel.replaceChildren();
             this.adicionarTextoAtaques('Inicie uma batalha para carregar os ataques.');
+            this.renderizarInventario();
+            this.renderizarEquipeOponente(null);
+            this.renderizarDecisaoTrocaOponente(null);
         }
 
         document.querySelectorAll('.move-button').forEach((button) => {
-            button.disabled = !active || this.movimentos.jogador.length === 0;
+            button.disabled = !active || !this.podeJogarTurno();
         });
+        this.sincronizarAcoes();
 
+        this.renderizarLogs();
+    }
+
+    renderizarLogs() {
         const logs = document.getElementById('logsBatalha');
         logs.replaceChildren();
+        let temPreparacao = false;
+        let temLogs = false;
+
         (this.battle?.logs || []).forEach((log) => {
+            if (log.tipo === 'turn') {
+                const titulo = document.createElement('li');
+                titulo.className = 'log-turn';
+                titulo.textContent = log.mensagem;
+                logs.appendChild(titulo);
+                return;
+            }
+
+            if (!temPreparacao && !temLogs) {
+                const titulo = document.createElement('li');
+                titulo.className = 'log-turn log-turn-setup';
+                titulo.textContent = 'Início da batalha';
+                logs.appendChild(titulo);
+                temPreparacao = true;
+            }
+
             const item = document.createElement('li');
-            item.className = `log-${log.tipo}`;
-            item.textContent = log.mensagem;
+            item.className = `log-${log.tipo} battle-log-entry`;
+
+            const sprite = this.spriteDoAutorDoLog(log);
+            if (sprite !== null) {
+                const imagem = document.createElement('img');
+                imagem.className = 'battle-log-icon';
+                imagem.src = sprite;
+                imagem.alt = log.tipo === 'item'
+                    ? this.nomeItemNoLog(log.mensagem) || 'Item'
+                    : 'Pokémon';
+                imagem.width = 32;
+                imagem.height = 32;
+                item.appendChild(imagem);
+            }
+
+            const mensagem = document.createElement('span');
+            mensagem.textContent = log.mensagem;
+            item.appendChild(mensagem);
             logs.appendChild(item);
+            temLogs = true;
         });
-        if (logs.children.length === 0) {
-            const item = document.createElement('li');
-            item.textContent = 'Os acontecimentos da batalha aparecerão aqui.';
-            logs.appendChild(item);
+
+        if (!temLogs) {
+            const vazio = document.createElement('li');
+            vazio.textContent = 'Os acontecimentos da batalha aparecerão aqui.';
+            logs.appendChild(vazio);
         }
         logs.scrollTop = logs.scrollHeight;
+    }
+
+    spriteDoAutorDoLog(log) {
+        if (log.tipo === 'item') {
+            const nomeItem = this.nomeItemNoLog(log.mensagem);
+            return nomeItem ? `assets/itens/${iconesItensLog[nomeItem]}` : null;
+        }
+
+        const movimento = log.mensagem.match(/^(.+?) usou\b/);
+        if (!movimento) return null;
+        const nomeAutor = movimento[1];
+        const pokemonDoTime = this.team.find((pokemon) => pokemon.nome === nomeAutor);
+        if (pokemonDoTime) {
+            return this.spriteUrl(
+                Number(pokemonDoTime.id_pokedex),
+                'front',
+                Boolean(Number(pokemonDoTime.shiny))
+            );
+        }
+
+        const oponente = this.battle?.estado?.oponente;
+        if (oponente?.nome === nomeAutor) {
+            const id = Number(oponente.id_pokedex);
+            if (Number.isInteger(id) && id > 0) return this.spriteUrl(id, 'front');
+        }
+
+        const idEmCache = this.spriteIdsPokemon.get(nomeAutor);
+        if (Number.isInteger(idEmCache) && idEmCache > 0) {
+            return this.spriteUrl(idEmCache, 'front');
+        }
+
+        this.carregarSpriteOponenteDoLog(nomeAutor);
+        return null;
+    }
+
+    nomeItemNoLog(mensagem) {
+        const mensagemNormalizada = String(mensagem).toLowerCase();
+        return Object.keys(iconesItensLog)
+            .sort((nomeA, nomeB) => nomeB.length - nomeA.length)
+            .find((nome) => mensagemNormalizada.includes(nome.toLowerCase())) || null;
+    }
+
+    carregarSpriteOponenteDoLog(nome) {
+        if (this.spritesOponenteEmCarregamento.has(nome)) return;
+        this.spritesOponenteEmCarregamento.add(nome);
+        this.buscarPokemonApi(nome.toLowerCase().trim().replace(/\s+/g, '-'))
+            .then((pokemon) => {
+                this.spriteIdsPokemon.set(nome, pokemon.id);
+                this.renderizarLogs();
+            })
+            .catch((error) => {
+                this.mostrarMensagem(error.message || `Não foi possível carregar o sprite de ${nome}.`);
+            })
+            .finally(() => this.spritesOponenteEmCarregamento.delete(nome));
+    }
+
+    podeJogarTurno() {
+        return !this.battle?.estado?.troca_oponente_pendente
+            && this.movimentos.jogador.length > 0
+            && this.movimentos.oponente.length > 0;
+    }
+
+    sincronizarAcoes() {
+        const active = Boolean(this.battle?.em_andamento);
+        const trocaPendente = Boolean(this.battle?.estado?.troca_oponente_pendente);
+        const podeAgir = active && this.podeJogarTurno();
+        document.querySelectorAll('[data-acao], .switch-button, .inventory-item, #abrirMochila')
+            .forEach((button) => { button.disabled = !podeAgir; });
+        document.querySelectorAll('.move-button')
+            .forEach((button) => { button.disabled = !podeAgir; });
+        const decisaoDisponivel = active && trocaPendente;
+        const selectTroca = document.getElementById('selecaoTrocaOponente');
+        document.getElementById('confirmarTrocaOponente').disabled =
+            !decisaoDisponivel || !selectTroca.value;
+        document.getElementById('manterPokemonOponente').disabled = !decisaoDisponivel;
+        document.getElementById('fugirBatalha').disabled = !active;
     }
 
     renderizarOpcoesTroca(state) {
@@ -238,7 +539,11 @@ class BattleApp {
 
             const sprite = document.createElement('img');
             sprite.className = 'switch-sprite';
-            sprite.src = this.spriteUrl(Number(pokemon.id_pokedex), 'front');
+            sprite.src = this.spriteUrl(
+                Number(pokemon.id_pokedex),
+                'front',
+                Boolean(Number(pokemon.shiny))
+            );
             sprite.alt = '';
             sprite.width = 64;
             sprite.height = 64;
@@ -249,7 +554,7 @@ class BattleApp {
             details.className = 'switch-details';
             const name = document.createElement('span');
             name.className = 'switch-name';
-            name.textContent = `${pokemon.nome} · Nv. ${pokemon.nivel}`;
+            name.textContent = `${pokemon.nome}${reserva?.mega ? ' · Mega' : ''} · Nv. ${pokemon.nivel}`;
             details.appendChild(name);
 
             const hpBar = document.createElement('progress');
@@ -267,22 +572,152 @@ class BattleApp {
         });
     }
 
+    renderizarEquipeOponente(state) {
+        const painel = document.getElementById('equipeOponente');
+        painel.replaceChildren();
+        if (!state) return;
+
+        const restantes = Number(state.pokemons_oponente_restantes || 0);
+        painel.textContent = `Pokémon restantes: ${restantes}`;
+    }
+
+    renderizarDecisaoTrocaOponente(state) {
+        const painel = document.getElementById('decisaoTrocaOponente');
+        const select = document.getElementById('selecaoTrocaOponente');
+        const texto = document.getElementById('decisaoTrocaTexto');
+        select.replaceChildren();
+        if (!state?.troca_oponente_pendente) {
+            texto.textContent = '';
+            return;
+        }
+
+        texto.textContent = `${this.battle.nome_oponente} irá usar um ${state.oponente.nome}. Deseja trocar seu Pokémon em campo?`;
+        const disponiveis = (state.reservas_jogador || []).filter(
+            (pokemon) => Number(pokemon.hp) > 0
+        );
+        if (disponiveis.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Não há Pokémon disponíveis para troca';
+            select.appendChild(option);
+            return;
+        }
+
+        disponiveis.forEach((pokemon) => {
+            const option = document.createElement('option');
+            option.value = pokemon.id_pokemon;
+            option.textContent = `${pokemon.nome} · Nv. ${pokemon.nivel} · ${pokemon.hp}/${pokemon.hp_maximo} HP`;
+            select.appendChild(option);
+        });
+    }
+
+    renderizarInventario() {
+        const lista = document.getElementById('itensInventario');
+        const alvoSelect = document.getElementById('alvoItem');
+        const alvoAnterior = alvoSelect.value;
+        lista.replaceChildren();
+        alvoSelect.replaceChildren();
+
+        const state = this.battle?.estado;
+        const alvos = state
+            ? [state.jogador, ...(state.reservas_jogador || [])]
+            : [];
+        alvos.forEach((pokemon) => {
+            const option = document.createElement('option');
+            option.value = pokemon.id_pokemon;
+            option.textContent = `${pokemon.nome}${pokemon.mega ? ' · Mega' : ''} · ${pokemon.hp}/${pokemon.hp_maximo} HP`;
+            alvoSelect.appendChild(option);
+        });
+        if (alvos.some((pokemon) => String(pokemon.id_pokemon) === alvoAnterior)) {
+            alvoSelect.value = alvoAnterior;
+        }
+
+        if (this.inventory.length === 0) {
+            const texto = document.createElement('p');
+            texto.textContent = 'Sua mochila está vazia. Compre itens no Poké Mart antes da batalha.';
+            lista.appendChild(texto);
+            return;
+        }
+
+        const alvo = alvos.find(
+            (pokemon) => String(pokemon.id_pokemon) === alvoSelect.value
+        );
+        this.inventory.forEach((item) => {
+            const revive = Number(item.revive) === 1;
+            const curaStatus = Number(item.cura_status) === 1;
+            const megaStone = Number(item.evolucao) === 1;
+            const megaUsada = Boolean(state?.mega_utilizada);
+            const idMega = pokemonMegaPorPedra[String(item.nome).toLowerCase()];
+            const megaCompativel = Number(alvo?.id_pokedex) === idMega;
+            const jaMega = Boolean(alvo?.mega);
+            const hpAlvo = Number(alvo?.hp ?? 0);
+            const hpMaximo = Number(alvo?.hp_maximo ?? 0);
+            const podeUsar = megaStone
+                ? Boolean(alvo) && hpAlvo > 0 && megaCompativel && !megaUsada && !jaMega
+                : Boolean(alvo) && (revive
+                ? hpAlvo <= 0
+                : hpAlvo > 0 && (
+                    hpAlvo < hpMaximo
+                    || (curaStatus && String(alvo.status || 'NORMAL') !== 'NORMAL')
+                ));
+            const botao = document.createElement('button');
+            botao.type = 'button';
+            botao.className = 'inventory-item';
+            botao.disabled = !podeUsar || !this.podeJogarTurno();
+            botao.title = !alvo
+                ? 'Escolha um Pokémon para usar o item.'
+                : megaStone && megaUsada
+                    ? 'A Mega Evolução já foi usada nesta batalha.'
+                    : megaStone && jaMega
+                        ? 'Este Pokémon já Mega Evoluiu.'
+                        : megaStone && !megaCompativel
+                            ? `${item.nome} não pode ser usada neste Pokémon.`
+                            : megaStone
+                                ? 'Mega Evolui este Pokémon; a pedra não é consumida, mas o turno é gasto.'
+                : revive && hpAlvo > 0
+                    ? 'Revive só pode ser usado em um Pokémon desmaiado.'
+                    : !revive && hpAlvo <= 0
+                        ? 'Este Pokémon desmaiou; use um Revive.'
+                        : hpAlvo >= hpMaximo && !curaStatus
+                            ? 'Este Pokémon já está com o HP cheio.'
+                            : `${item.descricao || item.nome} (consome seu turno).`;
+            botao.addEventListener('click', () => {
+                this.usarItem(item.id_item, alvoSelect.value);
+            });
+
+            const nome = document.createElement('strong');
+            nome.textContent = `${item.nome} · ${item.quantidade}x`;
+            const descricao = document.createElement('span');
+            descricao.textContent = item.descricao || 'Item de batalha';
+            botao.append(nome, descricao);
+            lista.appendChild(botao);
+        });
+    }
+
     async carregarPokemonsBatalha(jogador, oponente) {
         const identificadorJogador = this.identificarPokemon(jogador, 'jogador');
         const identificadorOponente = this.identificarPokemon(oponente, 'oponente');
-        const chave = `${this.battle.id}:${identificadorJogador}:${identificadorOponente}`;
+        const formaMegaJogador = jogador.forma_mega || '';
+        const chave = `${this.battle.id}:${identificadorJogador}:${formaMegaJogador}:${identificadorOponente}`;
         if (this.batalhaMovimentosCarregada === chave) return;
         this.batalhaMovimentosCarregada = chave;
-        this.movimentos = { jogador: [] };
+        this.movimentos = { jogador: [], oponente: [] };
         this.movePanel.replaceChildren();
         this.adicionarTextoAtaques('Carregando sprites e ataques da PokéAPI...');
-        this.definirTamanhoSprite('jogadorSprite', null);
-        this.definirTamanhoSprite('oponenteSprite', null);
 
+        const pokemonDoTime = this.team.find(
+            (pokemon) => Number(pokemon.id_pokemon) === Number(jogador.id_pokemon)
+        );
+        const jogadorShiny = Boolean(Number(jogador.shiny ?? pokemonDoTime?.shiny));
         if (Number.isInteger(Number(identificadorJogador))) {
             this.definirSprite(
                 'jogadorSprite',
-                [this.spriteUrl(identificadorJogador, 'back'), this.spriteUrl(identificadorJogador, 'front')],
+                [
+                    this.spriteUrl(identificadorJogador, 'back', jogadorShiny),
+                    this.spriteUrl(identificadorJogador, 'back'),
+                    this.spriteUrl(identificadorJogador, 'front', jogadorShiny),
+                    this.spriteUrl(identificadorJogador, 'front'),
+                ],
                 jogador.nome
             );
         }
@@ -293,54 +728,81 @@ class BattleApp {
                 this.buscarPokemonApi(identificadorOponente),
             ]);
             if (this.batalhaMovimentosCarregada !== chave) return;
+            let dadosFormaJogador = dadosJogador;
+            if (formaMegaJogador) {
+                try {
+                    dadosFormaJogador = await this.buscarPokemonApi(formaMegaJogador);
+                } catch (error) {
+                    console.error(error);
+                    this.mostrarMensagem('Não foi possível carregar o sprite Mega; a batalha continuará normalmente.');
+                }
+            }
+            if (this.batalhaMovimentosCarregada !== chave) return;
+            this.spriteIdsPokemon.set(oponente.nome, dadosOponente.id);
 
-            this.definirTamanhoSprite('jogadorSprite', dadosJogador.height);
-            this.definirTamanhoSprite('oponenteSprite', dadosOponente.height);
             this.definirSprite(
                 'jogadorSprite',
-                [
-                    dadosJogador.sprites?.other?.showdown?.back_default,
-                    dadosJogador.sprites?.back_default,
-                    dadosJogador.sprites?.other?.['official-artwork']?.front_default,
-                    dadosJogador.sprites?.front_default,
-                    this.spriteUrl(dadosJogador.id, 'back'),
-                    this.spriteUrl(dadosJogador.id, 'front'),
-                ],
-                jogador.nome
+                this.candidatosSprite(dadosFormaJogador, 'back', jogadorShiny),
+                jogador.mega_nome || jogador.nome
             );
             this.definirSprite(
                 'oponenteSprite',
-                [
-                    dadosOponente.sprites?.other?.showdown?.front_default,
-                    dadosOponente.sprites?.front_default,
-                    dadosOponente.sprites?.other?.['official-artwork']?.front_default,
-                    dadosOponente.sprites?.back_default,
-                    this.spriteUrl(dadosOponente.id, 'front'),
-                    this.spriteUrl(dadosOponente.id, 'back'),
-                ],
+                this.candidatosSprite(dadosOponente, 'front', Boolean(Number(oponente.shiny))),
                 oponente.nome
             );
 
             const nivelMaximoGolpes = this.progress?.area === 0
                 ? 20
                 : Number(jogador.nivel);
-            this.movimentos.jogador = await this.buscarMovimentos(
-                dadosJogador.moves,
-                nivelMaximoGolpes
+            const movePool = Array.isArray(pokemonDoTime?.move_pool)
+                ? pokemonDoTime.move_pool
+                : [];
+            if (movePool.length > 0) {
+                const referenciasPorNome = new Map(
+                    (dadosJogador.moves || []).map((referencia) => [
+                        referencia.move.name,
+                        referencia,
+                    ])
+                );
+                const referenciasSelecionadas = movePool.map(
+                    (nome) => referenciasPorNome.get(nome)
+                );
+                if (referenciasSelecionadas.some((referencia) => !referencia)) {
+                    throw new Error('Um ataque salvo não está mais disponível para este Pokémon na PokéAPI.');
+                }
+                this.movimentos.jogador = await this.buscarMovimentos(
+                    referenciasSelecionadas,
+                    nivelMaximoGolpes,
+                    false
+                );
+                if (this.movimentos.jogador.length !== movePool.length) {
+                    throw new Error('Não foi possível carregar todos os ataques salvos deste Pokémon.');
+                }
+            } else {
+                this.movimentos.jogador = await this.buscarMovimentos(
+                    dadosJogador.moves,
+                    nivelMaximoGolpes
+                );
+            }
+            const nivelMaximoGolpesOponente = this.progress?.area === 0
+                ? 20
+                : Number(oponente.nivel);
+            this.movimentos.oponente = await this.buscarMovimentos(
+                dadosOponente.moves,
+                nivelMaximoGolpesOponente
             );
             if (this.batalhaMovimentosCarregada !== chave) return;
             this.renderizarAtaques();
-            document.querySelectorAll('[data-acao], #fugirBatalha').forEach((button) => {
-                button.disabled = !this.battle?.em_andamento;
-            });
+            this.renderizarInventario();
+            this.renderizarLogs();
+            this.sincronizarAcoes();
         } catch (error) {
             if (this.batalhaMovimentosCarregada !== chave) return;
             this.movePanel.replaceChildren();
             this.adicionarTextoAtaques('Não foi possível carregar os ataques da PokéAPI. Verifique a conexão e recarregue a página.');
             this.mostrarMensagem(error.message || 'Falha ao carregar os dados da batalha.');
-            document.querySelectorAll('[data-acao], #fugirBatalha').forEach((button) => {
-                button.disabled = !this.battle?.em_andamento;
-            });
+            this.movimentos = { jogador: [], oponente: [] };
+            this.sincronizarAcoes();
         }
     }
 
@@ -376,37 +838,89 @@ class BattleApp {
         return response.json();
     }
 
-    async buscarMovimentos(referencias, nivelMaximo) {
+    async buscarMovimentos(referencias, nivelMaximo, randomizar = true) {
         const candidatos = [...(referencias || [])].filter((item) => {
             if (!item?.move?.url || !item?.move?.name || !Array.isArray(item.version_group_details)) {
                 return false;
             }
 
-            return item.version_group_details.some((detalhe) => (
-                detalhe.move_learn_method?.name === 'level-up'
-                && Number.isInteger(detalhe.level_learned_at)
-                && detalhe.level_learned_at <= nivelMaximo
-            ));
+            return item.version_group_details.some((detalhe) => {
+                const metodo = detalhe.move_learn_method?.name;
+                if (['snore', 'sleep-talk'].includes(item.move.name)) {
+                    return ['level-up', 'machine', 'tutor', 'egg'].includes(metodo);
+                }
+                return metodo === 'level-up'
+                    && Number.isInteger(detalhe.level_learned_at)
+                    && detalhe.level_learned_at <= nivelMaximo;
+            });
         });
-        for (let indice = candidatos.length - 1; indice > 0; indice--) {
-            const aleatorio = Math.floor(Math.random() * (indice + 1));
-            [candidatos[indice], candidatos[aleatorio]] = [candidatos[aleatorio], candidatos[indice]];
+        if (randomizar) {
+            for (let indice = candidatos.length - 1; indice > 0; indice--) {
+                const aleatorio = Math.floor(Math.random() * (indice + 1));
+                [candidatos[indice], candidatos[aleatorio]] = [
+                    candidatos[aleatorio],
+                    candidatos[indice],
+                ];
+            }
         }
 
         const converterMovimento = (movimento) => {
+            const classe = movimento.damage_class?.name;
+            const alvo = movimento.target?.name;
+            const movimentoSleepTalk = movimento.name === 'sleep-talk' && classe === 'status';
+            const ailment = {
+                burn: 'burn',
+                freeze: 'freeze',
+                paralysis: 'paralysis',
+                poison: 'poison',
+                toxic: 'poison',
+                sleep: 'sleep',
+            }[movimento.meta?.ailment?.name];
+            const podeAtingirOponente = movimentoSleepTalk || (alvo !== 'user'
+                && alvo !== 'user-or-ally'
+                && alvo !== 'users-field'
+                && alvo !== 'user-side');
+            const movimentoDeDano = ['physical', 'special'].includes(classe)
+                && Number.isInteger(movimento.power)
+                && movimento.power >= 1 && movimento.power <= 250;
+            const movimentoDeStatus = classe === 'status' && (Boolean(ailment) || movimentoSleepTalk);
             if (
-                !Number.isInteger(movimento.power) || movimento.power < 1 || movimento.power > 250
-                || !['physical', 'special'].includes(movimento.damage_class?.name)
+                (!movimentoDeDano && !movimentoDeStatus)
+                || !podeAtingirOponente
+                || !Number.isInteger(movimento.priority)
+                || movimento.priority < -7 || movimento.priority > 5
                 || (movimento.accuracy !== null && (!Number.isInteger(movimento.accuracy)
                     || movimento.accuracy < 1 || movimento.accuracy > 100))
                 || !/^[a-z-]{1,20}$/.test(movimento.type?.name || '')
             ) return null;
+
+            const chanceMeta = Number(movimento.meta?.ailment_chance);
+            const chanceEfeito = Number(movimento.effect_chance);
+            const chanceStatus = movimentoSleepTalk
+                ? 0
+                : movimentoDeStatus
+                ? (chanceMeta > 0 ? chanceMeta : chanceEfeito > 0 ? chanceEfeito : 100)
+                : chanceMeta > 0 ? chanceMeta : chanceEfeito > 0 ? chanceEfeito : 0;
+            if (
+                !Number.isInteger(chanceStatus)
+                || chanceStatus < 0 || chanceStatus > 100
+                || (movimentoDeStatus && !movimentoSleepTalk && chanceStatus < 1)
+            ) return null;
+
+            if (
+                !/^[a-z0-9-]{1,60}$/.test(movimento.name || '')
+            ) return null;
             return {
                 nome: movimento.name,
                 tipo: movimento.type.name,
-                classe: movimento.damage_class.name,
-                poder: movimento.power,
+                classe,
+                poder: movimentoSleepTalk || movimentoDeStatus
+                    ? 0
+                    : movimento.name === 'snore' ? 40 : movimento.power,
                 precisao: Number.isInteger(movimento.accuracy) ? movimento.accuracy : null,
+                prioridade: movimento.priority,
+                efeito_status: ailment && chanceStatus > 0 ? ailment : null,
+                chance_status: ailment && chanceStatus > 0 ? chanceStatus : 0,
             };
         };
 
@@ -464,7 +978,7 @@ class BattleApp {
     renderizarAtaques() {
         this.movePanel.replaceChildren();
         if (this.movimentos.jogador.length === 0) {
-            this.adicionarTextoAtaques('Não há ataques de dano disponíveis para este Pokémon na PokéAPI.');
+            this.adicionarTextoAtaques('Não há movimentos válidos disponíveis para este Pokémon na PokéAPI.');
             return;
         }
 
@@ -473,7 +987,19 @@ class BattleApp {
             button.type = 'button';
             button.className = 'move-button';
             button.disabled = !this.battle?.em_andamento;
-            button.setAttribute('aria-label', `${this.formatarNomeAtaque(movimento.nome)}, poder ${movimento.poder}`);
+            const prioridade = Number.isInteger(movimento.prioridade) ? movimento.prioridade : 0;
+            const textoPrioridade = prioridade === 0
+                ? ''
+                : `, prioridade ${prioridade > 0 ? '+' : ''}${prioridade}`;
+            const descricaoMovimento = movimento.classe === 'status'
+                ? movimento.nome === 'sleep-talk'
+                    ? ', chama outro movimento enquanto dorme'
+                    : `, golpe de status que pode causar ${this.nomeStatus(movimento.efeito_status)}`
+                : `, poder ${movimento.poder}`;
+            button.setAttribute(
+                'aria-label',
+                `${this.formatarNomeAtaque(movimento.nome)}${descricaoMovimento}${textoPrioridade}`
+            );
 
             const nome = document.createElement('span');
             nome.className = 'move-name';
@@ -489,8 +1015,21 @@ class BattleApp {
             const detalhes = document.createElement('span');
             detalhes.className = 'move-details';
             const classe = movimento.classe === 'physical' ? 'Físico' : 'Especial';
+            const classeLegivel = movimento.classe === 'status' ? 'Status' : classe;
             const precisao = movimento.precisao === null ? 'Não erra' : `${movimento.precisao}% precisão`;
-            detalhes.textContent = `${classe} · ${precisao}`;
+            const resumo = [classeLegivel, precisao];
+            if (movimento.efeito_status) {
+                resumo.push(`${this.nomeStatus(movimento.efeito_status)} · ${movimento.chance_status}%`);
+            }
+            if (prioridade !== 0) {
+                resumo.push(`Prioridade ${prioridade > 0 ? '+' : ''}${prioridade}`);
+            }
+            detalhes.textContent = resumo.join(' · ');
+            if (movimento.classe === 'status') {
+                poder.textContent = movimento.nome === 'sleep-talk'
+                    ? 'Usa outro movimento enquanto dorme'
+                    : 'Golpe de status';
+            }
             meta.append(poder, document.createElement('br'), tipo, detalhes);
             button.append(nome, meta);
             button.addEventListener('click', () => this.jogar('atacar', movimento));
@@ -502,27 +1041,20 @@ class BattleApp {
         return nome.replace(/-/g, ' ');
     }
 
+    nomeStatus(status) {
+        return {
+            burn: 'Queimadura',
+            freeze: 'Congelamento',
+            paralysis: 'Paralisia',
+            poison: 'Envenenamento',
+            sleep: 'Sono',
+        }[status] || status;
+    }
+
     adicionarTextoAtaques(texto) {
         const mensagem = document.createElement('p');
         mensagem.textContent = texto;
         this.movePanel.appendChild(mensagem);
-    }
-
-    definirTamanhoSprite(id, altura) {
-        const imagem = document.getElementById(id);
-        const alturaEmDecimetros = Number(altura);
-        if (!Number.isFinite(alturaEmDecimetros) || alturaEmDecimetros <= 0) {
-            delete imagem.dataset.size;
-            return;
-        }
-
-        imagem.dataset.size = alturaEmDecimetros <= 5
-            ? 'small'
-            : alturaEmDecimetros <= 14
-                ? 'medium'
-                : alturaEmDecimetros <= 29
-                    ? 'large'
-                    : 'very-large';
     }
 
     definirSprite(id, url, nome) {
@@ -555,8 +1087,40 @@ class BattleApp {
         tentarSprite(0);
     }
 
-    spriteUrl(id, lado) {
-        const diretorio = lado === 'back' ? 'back/' : '';
+    candidatosSprite(pokemon, lado, shiny) {
+        const sprites = pokemon.sprites || {};
+        const showdown = sprites.other?.showdown || {};
+        const artwork = sprites.other?.['official-artwork'] || {};
+        const ladoOposto = lado === 'back' ? 'front' : 'back';
+        const variantes = shiny ? ['shiny', 'default'] : ['default'];
+        const candidatos = [];
+
+        variantes.forEach((variante) => {
+            candidatos.push(showdown[`${lado}_${variante}`], sprites[`${lado}_${variante}`]);
+            if (lado === 'back') {
+                candidatos.push(showdown[`front_${variante}`], sprites[`front_${variante}`]);
+            } else {
+                candidatos.push(artwork[`front_${variante}`]);
+            }
+        });
+
+        candidatos.push(
+            this.spriteUrl(pokemon.id, lado, shiny),
+            this.spriteUrl(pokemon.id, ladoOposto, shiny)
+        );
+        if (shiny) {
+            candidatos.push(
+                this.spriteUrl(pokemon.id, lado, false),
+                this.spriteUrl(pokemon.id, ladoOposto, false)
+            );
+        }
+        return candidatos;
+    }
+
+    spriteUrl(id, lado, shiny = false) {
+        const diretorio = shiny
+            ? (lado === 'back' ? 'back/shiny/' : 'shiny/')
+            : (lado === 'back' ? 'back/' : '');
         return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${diretorio}${Number(id)}.png`;
     }
 
@@ -566,9 +1130,22 @@ class BattleApp {
 
     renderizarCombatente(lado, combatente) {
         const nome = document.getElementById(`${lado}Nome`);
-        nome.textContent = combatente.nome;
+        nome.textContent = combatente.mega
+            ? `${combatente.nome} · Mega`
+            : combatente.nome;
         nome.classList.add('capitalize');
+        nome.classList.toggle('mega-evoluido', Boolean(combatente.mega));
         document.getElementById(`${lado}Nivel`).textContent = `Nível ${combatente.nivel}`;
+        const status = String(combatente.status || 'NORMAL');
+        document.getElementById(`${lado}Status`).textContent = status === 'NORMAL'
+            ? ''
+            : ({
+                BURN: 'Queimado',
+                FREEZE: 'Congelado',
+                PARALYSIS: 'Paralisado',
+                POISON: 'Envenenado',
+                SLEEP: 'Dormindo',
+            }[status] || status);
         const hpBar = document.getElementById(`${lado}HpBar`);
         hpBar.max = combatente.hp_maximo;
         hpBar.value = combatente.hp;
@@ -583,6 +1160,7 @@ class BattleApp {
         ['jogador', 'oponente'].forEach((lado) => {
             document.getElementById(`${lado}Nome`).textContent = 'Aguardando...';
             document.getElementById(`${lado}Nivel`).textContent = '';
+            document.getElementById(`${lado}Status`).textContent = '';
             document.getElementById(`${lado}HpBar`).value = 0;
             document.getElementById(`${lado}HpBar`).max = 1;
             document.getElementById(`${lado}HpTexto`).textContent = '—';
@@ -592,7 +1170,7 @@ class BattleApp {
 
     definirBotoes(disabled) {
         document.querySelectorAll(
-            '#iniciarBatalha, [data-acao], #fugirBatalha, .move-button, .switch-button'
+            '#iniciarBatalha, [data-acao], #fugirBatalha, #abrirMochila, .move-button, .switch-button, .inventory-item, #confirmarTrocaOponente, #manterPokemonOponente'
         )
             .forEach((button) => { button.disabled = disabled; });
     }

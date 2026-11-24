@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS perfis
     id_perfil INT NOT NULL AUTO_INCREMENT,
     id_usuario INT NOT NULL,
     nome_perfil VARCHAR(50) NOT NULL DEFAULT 'guest',
+    genero VARCHAR(12) NOT NULL DEFAULT 'masculino',
     pokedollar INT NOT NULL DEFAULT 0,
     PRIMARY KEY (id_perfil),
     CONSTRAINT FK_usuarios_TO_perfis
@@ -136,11 +137,26 @@ CREATE TABLE IF NOT EXISTS time_pokemons
     id_pokemon INT NOT NULL,
     posicao INT NOT NULL,
     nivel TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    shiny TINYINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (id_time, id_pokemon),
     CONSTRAINT FK_times_TO_time_pokemons
         FOREIGN KEY (id_time) REFERENCES times (id_time),
     CONSTRAINT FK_pokemons_TO_time_pokemons
         FOREIGN KEY (id_pokemon) REFERENCES pokemons (id_pokemon)
+);
+
+CREATE TABLE IF NOT EXISTS time_pokemon_movimentos
+(
+    id_time INT NOT NULL,
+    id_pokemon INT NOT NULL,
+    posicao TINYINT UNSIGNED NOT NULL,
+    nome_movimento VARCHAR(60) NOT NULL,
+    PRIMARY KEY (id_time, id_pokemon, posicao),
+    UNIQUE KEY UQ_time_pokemon_movimento (id_time, id_pokemon, nome_movimento),
+    CONSTRAINT FK_time_pokemon_movimentos_time_pokemon
+        FOREIGN KEY (id_time, id_pokemon)
+        REFERENCES time_pokemons (id_time, id_pokemon)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS batalhas
@@ -189,6 +205,36 @@ CREATE TABLE IF NOT EXISTS progresso_jogo
     CONSTRAINT FK_perfis_TO_progresso_jogo
         FOREIGN KEY (id_perfil) REFERENCES perfis (id_perfil)
 );
+
+CREATE OR REPLACE VIEW vw_perfis_usuario AS
+SELECT p.id_perfil, p.id_usuario, p.nome_perfil, p.genero, p.pokedollar,
+       u.nome AS nome_usuario, u.email, u.criado_em
+  FROM perfis p
+  JOIN usuarios u ON u.id_usuario = p.id_usuario;
+
+CREATE OR REPLACE VIEW vw_catalogo_itens AS
+SELECT i.id_item, i.nome, i.descricao, i.preco, i.valor_hp,
+       i.cura_status, i.revive, i.evolucao, c.nome AS categoria
+  FROM itens i
+  JOIN categorias_itens c ON c.id_categoria = i.id_categoria;
+
+CREATE OR REPLACE VIEW vw_pokemon_time AS
+SELECT tm.id_perfil, tp.id_time, tp.id_pokemon, tp.posicao, tp.nivel, tp.shiny,
+       pk.nome, pk.status, p.id_pokedex, p.name AS especie,
+       p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE,
+       (SELECT GROUP_CONCAT(tpm.nome_movimento ORDER BY tpm.posicao SEPARATOR ',')
+          FROM time_pokemon_movimentos tpm
+         WHERE tpm.id_time = tp.id_time AND tpm.id_pokemon = tp.id_pokemon
+       ) AS move_pool,
+       (SELECT GROUP_CONCAT(t.nome ORDER BY t.nome SEPARATOR ', ')
+          FROM pokemon_tipos pt
+          JOIN tipos t ON t.id_tipo = pt.id_tipo
+         WHERE pt.id_pokemon = pk.id_pokemon
+       ) AS tipos
+  FROM times tm
+  JOIN time_pokemons tp ON tp.id_time = tm.id_time
+  JOIN pokemons pk ON pk.id_pokemon = tp.id_pokemon
+  JOIN pokedex p ON p.id_pokedex = pk.id_pokedex;
 
 CREATE TABLE IF NOT EXISTS batalha_logs
 (

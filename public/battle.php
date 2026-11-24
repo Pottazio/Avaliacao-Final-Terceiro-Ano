@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../bootstrap.php';
+require __DIR__ . '/../bootstrap.php';
 
 use src\core\Auth;
 
@@ -65,23 +65,41 @@ Auth::exigirLogin('../login/login.php');
                         <div class="fighter-details">
                             <p id="jogadorNome" class="fighter-name">Seu Pokémon</p>
                             <p id="jogadorNivel" class="fighter-level"></p>
+                            <p id="jogadorStatus" class="fighter-status"></p>
                             <progress id="jogadorHpBar" max="1" value="0"></progress>
                             <p id="jogadorHpTexto" class="hp-text">—</p>
                         </div>
                         <img id="jogadorSprite" class="fighter-sprite player-sprite"
-                             alt="" width="180" height="180" hidden>
+                             alt="" width="192" height="192" hidden>
                     </article>
                     <article class="fighter-card opponent-card">
                         <div class="fighter-details">
                             <p id="oponenteTreinador" class="trainer-name"></p>
                             <p id="oponenteNome" class="fighter-name">Oponente</p>
                             <p id="oponenteNivel" class="fighter-level"></p>
+                            <p id="oponenteStatus" class="fighter-status"></p>
                             <progress id="oponenteHpBar" max="1" value="0"></progress>
                             <p id="oponenteHpTexto" class="hp-text">—</p>
+                            <div id="equipeOponente" class="opponent-roster"
+                                 aria-label="Equipe do treinador adversário"></div>
                         </div>
                         <img id="oponenteSprite" class="fighter-sprite opponent-sprite"
-                             alt="" width="180" height="180" hidden>
+                             alt="" width="160" height="160" hidden>
                     </article>
+                </section>
+
+                <section id="decisaoTrocaOponente" class="battle-panel switch-decision-panel"
+                         aria-labelledby="decisaoTrocaTitulo" aria-live="polite" hidden>
+                    <h2 id="decisaoTrocaTitulo">Próximo Pokémon do treinador</h2>
+                    <p id="decisaoTrocaTexto"></p>
+                    <label for="selecaoTrocaOponente">Escolha um Pokémon para enviar</label>
+                    <select id="selecaoTrocaOponente"></select>
+                    <div class="battle-tools">
+                        <button id="confirmarTrocaOponente" type="button">Trocar Pokémon</button>
+                        <button id="manterPokemonOponente" class="btn-secondary" type="button">
+                            Manter Pokémon atual
+                        </button>
+                    </div>
                 </section>
 
                 <section class="battle-panel moves-panel" aria-labelledby="moves-title">
@@ -93,8 +111,23 @@ Auth::exigirLogin('../login/login.php');
                         <p>Inicie uma batalha para carregar os ataques.</p>
                     </div>
                     <div class="battle-tools" aria-label="Ação da batalha">
+                        <button id="abrirMochila" class="btn-secondary inventory-button" type="button" disabled
+                                aria-expanded="false" aria-controls="painelInventario">
+                            <img src="assets/InventoryBag.png" alt="" width="32" height="32">
+                            Mochila
+                        </button>
                         <button id="fugirBatalha" class="btn-secondary" type="button" disabled>Encerrar batalha</button>
                     </div>
+                    <section id="painelInventario" class="inventory-panel" aria-labelledby="inventory-title" hidden>
+                        <div class="moves-heading">
+                            <h2 id="inventory-title">Mochila</h2>
+                            <p>Usar um item consome seu turno.</p>
+                        </div>
+                        <label for="alvoItem">Usar em</label>
+                        <select id="alvoItem"></select>
+                        <div id="itensInventario" class="inventory-grid" aria-live="polite"></div>
+                        <p class="inventory-shop-link"><a href="index.php">Comprar itens no Poké Mart</a></p>
+                    </section>
                 </section>
 
                 <section id="equipeBatalha" class="battle-panel switch-panel" aria-labelledby="switch-title" hidden>

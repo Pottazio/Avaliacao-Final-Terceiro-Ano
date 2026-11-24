@@ -17,6 +17,7 @@ class PokeApiClient {
     constructor(base = 'https://pokeapi.co/api/v2') {
         this.base = base;
         this.cache = new Map();          // evita repetir a mesma busca
+        this.moveCache = new Map();
         this.listaCache = null;
     }
 
@@ -41,8 +42,9 @@ class PokeApiClient {
         return this.listaCache;
     }
 
-    spriteUrl(id) {
-        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+    spriteUrl(id, shiny = false) {
+        const diretorio = shiny ? 'shiny/' : '';
+        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${diretorio}${id}.png`;
     }
 
     async listarPrimeiraGeracao(quantidade) {
@@ -102,6 +104,69 @@ class PokeApiClient {
         return normalizado;
     }
 
+    async listarMovimentosDisponiveis(idPokemon, nivel) {
+        const chaveCache = `${idPokemon}:${nivel}`;
+        if (this.moveCache.has(chaveCache)) return this.moveCache.get(chaveCache);
+
+        const respostaPokemon = await fetch(`${this.base}/pokemon/${idPokemon}`);
+        if (!respostaPokemon.ok) {
+            throw new Error('Não foi possível carregar os ataques deste Pokémon na PokéAPI.');
+        }
+        const dadosPokemon = await respostaPokemon.json();
+        const referencias = (dadosPokemon.moves ?? [])
+            .map((referencia) => {
+                const niveis = (referencia.version_group_details ?? [])
+                    .filter((detalhe) => (
+                        detalhe.move_learn_method?.name === 'level-up'
+                        && Number.isInteger(detalhe.level_learned_at)
+                        && detalhe.level_learned_at <= nivel
+                    ))
+                    .map((detalhe) => detalhe.level_learned_at);
+                return niveis.length > 0
+                    ? { nome: referencia.move.name, url: referencia.move.url, nivel: Math.min(...niveis) }
+                    : null;
+            })
+            .filter(Boolean)
+            .sort((a, b) => a.nivel - b.nivel || a.nome.localeCompare(b.nome));
+
+        const movimentos = [];
+        for (let inicio = 0; inicio < referencias.length; inicio += 4) {
+            const lote = await Promise.all(referencias.slice(inicio, inicio + 4).map(
+                async (referencia) => {
+                    const resposta = await fetch(referencia.url);
+                    if (!resposta.ok) {
+                        throw new Error(`Não foi possível carregar o ataque ${referencia.nome} da PokéAPI.`);
+                    }
+                    const dados = await resposta.json();
+                    if (
+                        !Number.isInteger(dados.power) || dados.power < 1 || dados.power > 250
+                        || !['physical', 'special'].includes(dados.damage_class?.name)
+                        || (dados.accuracy !== null && (!Number.isInteger(dados.accuracy)
+                            || dados.accuracy < 1 || dados.accuracy > 100))
+                        || !/^[a-z-]{1,20}$/.test(dados.type?.name || '')
+                        || !Number.isInteger(dados.priority)
+                        || dados.priority < -7 || dados.priority > 5
+                    ) {
+                        return null;
+                    }
+                    return {
+                        nome: dados.name,
+                        tipo: dados.type.name,
+                        classe: dados.damage_class.name,
+                        poder: dados.power,
+                        precisao: Number.isInteger(dados.accuracy) ? dados.accuracy : null,
+                        prioridade: dados.priority,
+                        nivel: referencia.nivel,
+                    };
+                }
+            ));
+            movimentos.push(...lote.filter(Boolean));
+        }
+
+        this.moveCache.set(chaveCache, movimentos);
+        return movimentos;
+    }
+
     /**
      * Converte a resposta da API no formato das colunas de `pokedex`:
      * id_pokedex, name, HP, ATQ, ATQE, DEF, DEFE, SPE
@@ -155,12 +220,30 @@ class TimeApp {
         this.mensagem = document.getElementById('mensagemTime');
         this.galeriaPokemon = document.getElementById('galeriaPokemon');
         this.resumoProgresso = document.getElementById('resumoProgresso');
+        this.modalMovePool = document.getElementById('modalMovePool');
+        this.modalMoveTitulo = document.getElementById('modalMoveTitulo');
+        this.modalMoveDescricao = document.getElementById('modalMoveDescricao');
+        this.modalMoveLista = document.getElementById('modalMoveLista');
+        this.modalMoveMensagem = document.getElementById('modalMoveMensagem');
+        this.modalMoveContagem = document.getElementById('modalMoveContagem');
+        this.campoNivelMovePool = document.getElementById('nivelPokemonEditado');
+        this.campoShinyPokemon = document.getElementById('shinyPokemonEditado');
+        this.botaoSalvarMovePool = document.getElementById('salvarMovePool');
 
         this.maximo = 6;
         this.nivelMaximo = Number(document.body.dataset.nivelMaximo || 5);
         this.time = [];
+        this.pokemonEmEdicao = null;
+        this.movimentosDisponiveis = [];
+        this.movimentosSelecionados = new Set();
+        this.movimentosCarregados = false;
+        this.requisicaoMovePool = 0;
 
         if (this.form) this.form.addEventListener('submit', (e) => this.buscar(e));
+        this.botaoSalvarMovePool.addEventListener('click', () => this.salvarMovePool());
+        this.campoNivelMovePool.addEventListener('change', () => {
+            this.carregarMovimentosDoNivel([...this.movimentosSelecionados]);
+        });
 
         this.carregarTime();
         this.carregarGaleria();
@@ -259,7 +342,7 @@ class TimeApp {
 
     /** Busca na PokeAPI e mostra o cartao de confirmação. */
     async buscar(evento) {
-        evento.preventDefault();
+        evento?.preventDefault();
         this.limparMensagem();
         this.painel.innerHTML = '';
         this.painel.appendChild(this.criarCarregando());
@@ -368,7 +451,8 @@ class TimeApp {
     }
 
     async selecionarPokemon(idPokedex) {
-        await this.mostrarPokemon(idPokedex);
+        this.campo.value = String(idPokedex);
+        await this.buscar();
         this.painel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
@@ -507,7 +591,7 @@ class TimeApp {
 
             if (json.sucesso) {
                 this.mostrarMensagem(json.mensagem, 'ok');
-                this.carregarTime();
+                await this.carregarTime();
             } else {
                 this.mostrarMensagem(json.mensagem, 'erro');
                 botao.disabled = false;
@@ -527,13 +611,22 @@ class TimeApp {
             const resposta = await fetch(`${this.urlRoteador}?acao=listar`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
             });
-            const json = await resposta.json();
+            const texto = await resposta.text();
+            let json;
+            try {
+                json = JSON.parse(texto);
+            } catch {
+                throw new Error(`O servidor respondeu ${resposta.status} ao carregar o time.`);
+            }
+            if (!resposta.ok || !json.sucesso) {
+                throw new Error(json.mensagem || 'Não foi possível carregar o time.');
+            }
 
             this.time = json.pokemons ?? [];
             this.maximo = json.maximo ?? 6;
             this.desenharTime();
         } catch (erro) {
-            this.mostrarMensagem('Erro ao carregar o time.', 'erro');
+            this.mostrarMensagem(erro.message || 'Erro ao carregar o time.', 'erro');
             console.error(erro);
         }
     }
@@ -558,23 +651,77 @@ class TimeApp {
 
     criarSlot(p) {
         const slot = document.createElement('div');
-        slot.className = 'slot-pokemon';
+        slot.className = 'pokemon-card pokemon-time-card';
 
-        const nome = document.createElement('p');
-        nome.className = 'slot-nome';
+        const sprite = document.createElement('img');
+        sprite.src = this.api.spriteUrl(Number(p.id_pokedex), Boolean(Number(p.shiny)));
+        sprite.alt = p.especie || p.nome;
+        sprite.width = 88;
+        sprite.height = 88;
+        sprite.loading = 'lazy';
+        slot.appendChild(sprite);
+
+        const nome = document.createElement('h3');
         nome.textContent = p.nome;
-        identificacao.appendChild(nome);
+        slot.appendChild(nome);
 
         const tipos = document.createElement('p');
-        tipos.className = 'slot-tipos';
-        tipos.textContent = p.tipos ?? '—';
-        identificacao.appendChild(tipos);
-        slot.appendChild(identificacao);
+        tipos.className = 'pokemon-time-tipos';
+        tipos.textContent = String(p.tipos || '—').replace(/,\s*/g, ', ').toUpperCase();
+        slot.appendChild(tipos);
 
-        const vel = document.createElement('p');
-        vel.className = 'slot-vel';
-        vel.textContent = `VEL ${p.SPE}`;
-        slot.appendChild(vel);
+        if (Number(p.shiny) === 1 || p.shiny === true) {
+            const shiny = document.createElement('span');
+            shiny.className = 'pokemon-time-shiny';
+            shiny.textContent = 'SHINY';
+            slot.appendChild(shiny);
+        }
+
+        const nivel = document.createElement('p');
+        nivel.className = 'pokemon-time-nivel';
+        nivel.textContent = `Nível ${p.nivel}`;
+        slot.appendChild(nivel);
+
+        const ataques = document.createElement('p');
+        ataques.className = 'pokemon-time-ataques';
+        ataques.textContent = Array.isArray(p.move_pool) && p.move_pool.length > 0
+            ? `Ataques: ${p.move_pool.map((nomeAtaque) => this.formatarNome(nomeAtaque)).join(', ')}`
+            : 'Ataques: seleção automática';
+        slot.appendChild(ataques);
+
+        const atributos = document.createElement('div');
+        atributos.className = 'pokemon-atributos pokemon-atributos-time';
+        [
+            [
+                ['HP', p.HP],
+                ['Ataque', p.ATQ],
+                ['Defesa', p.DEF],
+            ],
+            [
+                ['Velocidade', p.SPE],
+                ['Ataque Especial', p.ATQE],
+                ['Defesa Especial', p.DEFE],
+            ],
+        ].forEach((grupo) => {
+            const coluna = document.createElement('div');
+            coluna.className = 'pokemon-resumo-lado';
+            grupo.forEach(([rotulo, valor]) => {
+                const atributo = document.createElement('p');
+                const nomeAtributo = document.createElement('strong');
+                nomeAtributo.textContent = `${rotulo}: `;
+                atributo.append(nomeAtributo, document.createTextNode(valor));
+                coluna.appendChild(atributo);
+            });
+            atributos.appendChild(coluna);
+        });
+        slot.appendChild(atributos);
+
+        const editarMovimentos = document.createElement('button');
+        editarMovimentos.type = 'button';
+        editarMovimentos.className = 'btn-editar-movimentos';
+        editarMovimentos.textContent = 'Editar Pokémon';
+        editarMovimentos.addEventListener('click', () => this.editarMovePool(p));
+        slot.appendChild(editarMovimentos);
 
         const remover = document.createElement('button');
         remover.type = 'button';
@@ -583,6 +730,179 @@ class TimeApp {
         remover.addEventListener('click', () => this.remover(p.id_pokemon));
         slot.appendChild(remover);
         return slot;
+    }
+
+    async editarMovePool(pokemon) {
+        this.pokemonEmEdicao = pokemon;
+        this.movimentosDisponiveis = [];
+        this.movimentosSelecionados = new Set(pokemon.move_pool || []);
+        this.modalMoveTitulo.textContent = `Editar ${pokemon.nome}`;
+        this.modalMoveDescricao.textContent =
+            'Altere o nível e escolha até 4 ataques disponíveis. Sem seleção, os ataques serão escolhidos automaticamente.';
+        this.campoNivelMovePool.replaceChildren();
+        for (let nivel = 1; nivel <= this.nivelMaximo; nivel++) {
+            const opcao = document.createElement('option');
+            opcao.value = nivel;
+            opcao.textContent = `Nível ${nivel}`;
+            this.campoNivelMovePool.appendChild(opcao);
+        }
+        this.campoNivelMovePool.value = pokemon.nivel;
+        this.campoShinyPokemon.checked = Number(pokemon.shiny) === 1 || pokemon.shiny === true;
+        this.modalMovePool.showModal();
+        await this.carregarMovimentosDoNivel([...this.movimentosSelecionados]);
+    }
+
+    async carregarMovimentosDoNivel(ataquesAnteriores) {
+        const pokemon = this.pokemonEmEdicao;
+        if (!pokemon) return;
+
+        const requisicao = ++this.requisicaoMovePool;
+        const nivel = Number(this.campoNivelMovePool.value);
+        this.movimentosDisponiveis = [];
+        this.movimentosCarregados = false;
+        this.modalMoveLista.replaceChildren();
+        this.modalMoveMensagem.textContent = 'Carregando ataques da PokéAPI...';
+        this.modalMoveMensagem.dataset.tipo = 'info';
+        this.botaoSalvarMovePool.disabled = true;
+        this.atualizarContagemMovePool();
+
+        try {
+            const movimentos = await this.api.listarMovimentosDisponiveis(
+                Number(pokemon.id_pokedex),
+                nivel
+            );
+            if (requisicao !== this.requisicaoMovePool || this.pokemonEmEdicao !== pokemon) return;
+
+            const disponiveis = new Set(movimentos.map((movimento) => movimento.nome));
+            this.movimentosSelecionados = new Set(
+                ataquesAnteriores.filter((nome) => disponiveis.has(nome))
+            );
+            this.movimentosDisponiveis = movimentos;
+            this.movimentosCarregados = true;
+            if (movimentos.length === 0) {
+                this.modalMoveMensagem.textContent =
+                    'Não há ataques de dano disponíveis neste nível. Deixe a seleção vazia para usar ataques automáticos.';
+                this.modalMoveMensagem.dataset.tipo = 'info';
+            } else if (this.movimentosSelecionados.size < ataquesAnteriores.length) {
+                this.modalMoveMensagem.textContent =
+                    'Alguns ataques não estão disponíveis neste nível e foram removidos da seleção.';
+                this.modalMoveMensagem.dataset.tipo = 'info';
+            } else {
+                this.modalMoveMensagem.textContent = '';
+            }
+            this.renderizarOpcoesMovePool();
+        } catch (erro) {
+            if (requisicao !== this.requisicaoMovePool) return;
+            this.modalMoveLista.replaceChildren();
+            this.modalMoveMensagem.textContent =
+                erro.message || 'Não foi possível carregar os ataques disponíveis.';
+            this.modalMoveMensagem.dataset.tipo = 'erro';
+            this.movimentosCarregados = false;
+            this.atualizarContagemMovePool();
+        }
+    }
+
+    renderizarOpcoesMovePool() {
+        this.modalMoveLista.replaceChildren();
+        this.movimentosDisponiveis.forEach((movimento) => {
+            const opcao = document.createElement('label');
+            opcao.className = 'move-pool-opcao';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = movimento.nome;
+            checkbox.checked = this.movimentosSelecionados.has(movimento.nome);
+            if (checkbox.checked) opcao.classList.add('move-pool-opcao-selecionada');
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked && this.movimentosSelecionados.size >= 4) {
+                    checkbox.checked = false;
+                    this.modalMoveMensagem.textContent = 'Cada Pokémon pode ter no máximo 4 ataques.';
+                    this.modalMoveMensagem.dataset.tipo = 'erro';
+                    return;
+                }
+
+                if (checkbox.checked) {
+                    this.movimentosSelecionados.add(movimento.nome);
+                } else {
+                    this.movimentosSelecionados.delete(movimento.nome);
+                }
+                opcao.classList.toggle('move-pool-opcao-selecionada', checkbox.checked);
+                this.modalMoveMensagem.textContent = '';
+                this.atualizarContagemMovePool();
+            });
+
+            const texto = document.createElement('span');
+            texto.className = 'move-pool-dados';
+            const nome = document.createElement('strong');
+            nome.textContent = this.formatarNome(movimento.nome);
+            const detalhes = document.createElement('span');
+            const precisao = movimento.precisao === null
+                ? 'Não erra'
+                : `${movimento.precisao}% precisão`;
+            const classe = movimento.classe === 'physical' ? 'Físico' : 'Especial';
+            const prioridade = movimento.prioridade === 0
+                ? ''
+                : ` · Prioridade ${movimento.prioridade > 0 ? '+' : ''}${movimento.prioridade}`;
+            detalhes.textContent =
+                `${movimento.tipo} · ${classe} · Poder ${movimento.poder} · ${precisao}${prioridade} · Nv. ${movimento.nivel}`;
+            texto.append(nome, detalhes);
+            opcao.append(checkbox, texto);
+            this.modalMoveLista.appendChild(opcao);
+        });
+        this.atualizarContagemMovePool();
+    }
+
+    atualizarContagemMovePool() {
+        const quantidade = this.movimentosSelecionados.size;
+        this.modalMoveContagem.textContent = `${quantidade} / 4 ataques selecionados`;
+        this.botaoSalvarMovePool.textContent = quantidade === 0
+            ? 'Salvar com ataques aleatórios'
+            : 'Salvar Pokémon';
+        this.botaoSalvarMovePool.disabled =
+            quantidade > 4 || !this.movimentosCarregados;
+    }
+
+    async salvarMovePool() {
+        if (!this.pokemonEmEdicao || this.movimentosSelecionados.size > 4
+            || !this.movimentosCarregados) return;
+
+        this.botaoSalvarMovePool.disabled = true;
+        this.modalMoveMensagem.textContent = 'Salvando Pokémon...';
+        this.modalMoveMensagem.dataset.tipo = 'info';
+        try {
+            const resposta = await fetch(`${this.urlRoteador}?acao=salvarMovePool`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new URLSearchParams({
+                    id_pokemon: this.pokemonEmEdicao.id_pokemon,
+                    nivel: this.campoNivelMovePool.value,
+                    shiny: this.campoShinyPokemon.checked ? '1' : '0',
+                    move_pool: JSON.stringify([...this.movimentosSelecionados]),
+                }),
+            });
+            const texto = await resposta.text();
+            let json;
+            try {
+                json = JSON.parse(texto);
+            } catch {
+                throw new Error(`O servidor respondeu ${resposta.status} ao salvar o Pokémon.`);
+            }
+            if (!resposta.ok || !json.sucesso) {
+                throw new Error(json.mensagem || 'Não foi possível salvar o Pokémon.');
+            }
+
+            this.modalMovePool.close();
+            await this.carregarTime();
+            this.mostrarMensagem(json.mensagem, 'ok');
+        } catch (erro) {
+            this.modalMoveMensagem.textContent =
+                erro.message || 'Não foi possível salvar o Pokémon.';
+            this.modalMoveMensagem.dataset.tipo = 'erro';
+            this.atualizarContagemMovePool();
+        }
     }
 
     async remover(idPokemon) {

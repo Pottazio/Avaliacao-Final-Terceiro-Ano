@@ -14,7 +14,7 @@ Auth::exigirLogin('../login/login.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POKENOAS | Batalha</title>
     <link rel="stylesheet" href="CSS/style.css">
-    <link rel="stylesheet" href="CSS/battle.css">
+    <link rel="stylesheet" href="CSS/battle.css?v=<?= filemtime(__DIR__ . '/CSS/battle.css') ?>">
 </head>
 <body class="jogo battle-page">
     <main class="painel">
@@ -110,6 +110,6 @@ Auth::exigirLogin('../login/login.php');
             </aside>
         </div>
     </main>
-    <script src="JavaScript/Battle.js"></script>
+    <script src="JavaScript/Battle.js?v=<?= filemtime(__DIR__ . '/JavaScript/Battle.js') ?>"></script>
 </body>
 </html>

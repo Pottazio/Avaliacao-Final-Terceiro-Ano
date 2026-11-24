@@ -29,12 +29,55 @@ class BattleApp {
         this.movimentos = { jogador: [], oponente: [] };
         this.movePanel.replaceChildren();
         this.adicionarTextoAtaques('Carregando sprites e ataques da PokéAPI...');
+        this.definirSprite(
+            'jogadorSprite',
+            [
+                this.spriteUrl(jogador.id_pokedex, 'back'),
+                this.spriteUrl(jogador.id_pokedex, 'front'),
+            ],
+            jogador.nome
+        );
+        this.definirSprite(
+            'oponenteSprite',
+            [
+                this.spriteUrl(oponente.id_pokedex, 'front'),
+                this.spriteUrl(oponente.id_pokedex, 'back'),
+            ],
+            oponente.nome
+        );
 
         try {
             const [dadosJogador, dadosOponente] = await Promise.all([
                 this.buscarPokemonApi(jogador.id_pokedex),
                 this.buscarPokemonApi(oponente.id_pokedex),
             ]);
+            if (this.batalhaMovimentosCarregada !== chave) return;
+
+            this.definirSprite(
+                'jogadorSprite',
+                [
+                    dadosJogador.sprites?.other?.showdown?.back_default,
+                    dadosJogador.sprites?.back_default,
+                    dadosJogador.sprites?.other?.['official-artwork']?.front_default,
+                    dadosJogador.sprites?.front_default,
+                    this.spriteUrl(jogador.id_pokedex, 'back'),
+                    this.spriteUrl(jogador.id_pokedex, 'front'),
+                ],
+                jogador.nome
+            );
+            this.definirSprite(
+                'oponenteSprite',
+                [
+                    dadosOponente.sprites?.other?.showdown?.front_default,
+                    dadosOponente.sprites?.front_default,
+                    dadosOponente.sprites?.other?.['official-artwork']?.front_default,
+                    dadosOponente.sprites?.back_default,
+                    this.spriteUrl(oponente.id_pokedex, 'front'),
+                    this.spriteUrl(oponente.id_pokedex, 'back'),
+                ],
+                oponente.nome
+            );
+
             const [movimentosJogador, movimentosOponente] = await Promise.all([
                 this.buscarMovimentos(dadosJogador.moves),
                 this.buscarMovimentos(dadosOponente.moves),
@@ -45,16 +88,6 @@ class BattleApp {
             document.querySelectorAll('[data-acao]').forEach((button) => {
                 button.disabled = movimentosOponente.length === 0;
             });
-            this.definirSprite(
-                'jogadorSprite',
-                dadosJogador.sprites?.back_default || dadosJogador.sprites?.front_default,
-                jogador.nome
-            );
-            this.definirSprite(
-                'oponenteSprite',
-                dadosOponente.sprites?.front_default || dadosOponente.sprites?.back_default,
-                oponente.nome
-            );
             this.renderizarAtaques();
         } catch (error) {
             if (this.batalhaMovimentosCarregada !== chave) return;
@@ -64,8 +97,6 @@ class BattleApp {
             this.movePanel.replaceChildren();
             this.adicionarTextoAtaques('Não foi possível carregar os ataques da PokéAPI. Verifique a conexão e recarregue a página.');
             this.mostrarMensagem(error.message || 'Falha ao carregar os dados da batalha.');
-            this.definirSprite('jogadorSprite', '', jogador.nome);
-            this.definirSprite('oponenteSprite', '', oponente.nome);
         }
     }
 
@@ -147,7 +178,12 @@ class BattleApp {
             const tipo = document.createElement('span');
             tipo.className = `move-type type-${movimento.tipo}`;
             tipo.textContent = movimento.tipo;
-            meta.append(poder, document.createElement('br'), tipo);
+            const detalhes = document.createElement('span');
+            detalhes.className = 'move-details';
+            const classe = movimento.classe === 'physical' ? 'Físico' : 'Especial';
+            const precisao = movimento.precisao === null ? 'Não erra' : `${movimento.precisao}% precisão`;
+            detalhes.textContent = `${classe} · ${precisao}`;
+            meta.append(poder, document.createElement('br'), tipo, detalhes);
             button.append(nome, meta);
             button.addEventListener('click', () => this.jogar('atacar', movimento));
             this.movePanel.appendChild(button);
@@ -167,19 +203,35 @@ class BattleApp {
     definirSprite(id, url, nome) {
         const imagem = document.getElementById(id);
         imagem.onerror = null;
-        if (!url) {
+        const urls = (Array.isArray(url) ? url : [url]).filter(
+            (item, indice, lista) => typeof item === 'string' && item !== '' && lista.indexOf(item) === indice
+        );
+        if (urls.length === 0) {
             imagem.removeAttribute('src');
             imagem.alt = '';
             imagem.hidden = true;
             return;
         }
-        imagem.alt = url ? `Sprite de ${nome}` : '';
-        imagem.src = url;
+        imagem.alt = `Sprite de ${nome}`;
         imagem.hidden = false;
-        imagem.onerror = () => {
-            imagem.hidden = true;
-            this.mostrarMensagem(`Não foi possível carregar o sprite de ${nome} pela PokéAPI.`);
+        const tentarSprite = (indice) => {
+            imagem.onerror = () => {
+                if (indice + 1 < urls.length) {
+                    tentarSprite(indice + 1);
+                    return;
+                }
+                imagem.onerror = null;
+                imagem.hidden = true;
+                this.mostrarMensagem(`Não foi possível carregar o sprite de ${nome} pela PokéAPI.`);
+            };
+            imagem.src = urls[indice];
         };
+        tentarSprite(0);
+    }
+
+    spriteUrl(id, lado) {
+        const diretorio = lado === 'back' ? 'back/' : '';
+        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${diretorio}${Number(id)}.png`;
     }
 
     limparSprites() {
@@ -317,6 +369,7 @@ class BattleApp {
         const active = Boolean(this.battle?.em_andamento);
         const areaSetup = document.querySelector('.setup-panel .battle-setup');
         areaSetup.hidden = active || this.progress.concluido;
+        document.querySelector('.progression-panel').hidden = active;
 
         document.querySelectorAll('[data-acao]').forEach((button) => {
             button.disabled = !active || this.movimentos.oponente.length === 0;
@@ -369,8 +422,11 @@ class BattleApp {
         const hpBar = document.getElementById(`${lado}HpBar`);
         hpBar.max = combatente.hp_maximo;
         hpBar.value = combatente.hp;
+        const percentualHp = combatente.hp / Math.max(1, combatente.hp_maximo);
+        hpBar.classList.toggle('hp-warning', percentualHp <= 0.5 && percentualHp > 0.2);
+        hpBar.classList.toggle('hp-critical', percentualHp <= 0.2);
         document.getElementById(`${lado}HpTexto`).textContent =
-            `${combatente.hp}/${combatente.hp_maximo} HP (${Math.round(100 * combatente.hp / combatente.hp_maximo)}%)`;
+            `${combatente.hp}/${combatente.hp_maximo} HP (${Math.round(100 * percentualHp)}%)`;
         document.getElementById(`${lado}Estagios`).textContent =
             `ATQ ${this.formatarEstagio(combatente.estagio_ataque)} · DEF ${this.formatarEstagio(combatente.estagio_defesa)}`;
     }

@@ -18,11 +18,15 @@ body.battle-page[data-arena="shopping-street"] {
     background-image: linear-gradient(rgba(10, 20, 40, 0.62), rgba(10, 20, 40, 0.83)), url('../assets/rua-comercial.png');
 }
 
+body.battle-page .painel {
+    max-width: 1440px;
+}
+
 .battle-layout {
     align-items: start;
     display: grid;
     gap: 20px;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
 }
 
 .battle-main {
@@ -152,28 +156,44 @@ body.battle-page[data-arena="shopping-street"] {
 
 .arena-panel {
     background:
-        linear-gradient(rgba(244, 249, 246, 0.93), rgba(232, 241, 238, 0.95));
+        linear-gradient(180deg, rgba(197, 226, 232, 0.98) 0%, rgba(232, 241, 238, 0.97) 53%, rgba(196, 220, 184, 0.98) 54%, rgba(166, 202, 143, 0.98) 100%);
     border: var(--borda);
     box-shadow: var(--sombra-dura);
     display: grid;
     gap: 18px;
     grid-template-columns: 1fr 1fr;
-    min-height: 330px;
+    min-height: 350px;
     overflow: hidden;
     padding: 24px;
     position: relative;
 }
 
 .arena-panel::before {
-    background: radial-gradient(ellipse at center bottom, rgba(42, 157, 143, 0.16), transparent 68%);
+    background:
+        radial-gradient(ellipse at 24% 89%, rgba(42, 157, 143, 0.34), transparent 27%),
+        radial-gradient(ellipse at 76% 57%, rgba(42, 157, 143, 0.28), transparent 25%),
+        linear-gradient(180deg, transparent 53%, rgba(255, 255, 255, 0.15) 54%, transparent 55%);
     content: "";
     inset: 0;
     pointer-events: none;
     position: absolute;
 }
 
+.arena-panel::after {
+    border: 2px solid rgba(29, 53, 87, 0.15);
+    border-radius: 50%;
+    bottom: -96px;
+    content: "";
+    height: 190px;
+    left: 50%;
+    pointer-events: none;
+    position: absolute;
+    transform: translateX(-50%);
+    width: 46%;
+}
+
 .fighter-card {
-    align-items: center;
+    align-items: flex-start;
     display: flex;
     min-width: 0;
     position: relative;
@@ -226,26 +246,40 @@ body.battle-page[data-arena="shopping-street"] {
     accent-color: var(--verde);
     height: 12px;
     margin-top: 7px;
+    width: 100%;
+}
+
+.fighter-card progress.hp-warning {
+    accent-color: var(--amarelo);
+}
+
+.fighter-card progress.hp-critical {
+    accent-color: var(--vermelho);
 }
 
 .fighter-sprite {
-    height: clamp(120px, 18vw, 200px);
+    animation: sprite-idle 2.4s steps(2, end) infinite;
+    height: clamp(135px, 17vw, 210px);
     image-rendering: pixelated;
     object-fit: contain;
     position: absolute;
-    top: 100px;
-    width: clamp(120px, 18vw, 200px);
+    top: 115px;
+    width: clamp(135px, 17vw, 210px);
     z-index: 1;
 }
 
 .player-sprite {
-    bottom: 0;
-    left: 8%;
+    bottom: 7px;
+    left: 6%;
     top: auto;
 }
 
 .opponent-sprite {
-    right: 7%;
+    right: 5%;
+}
+
+@keyframes sprite-idle {
+    50% { transform: translateY(-5px); }
 }
 
 .moves-panel {
@@ -311,6 +345,13 @@ body.battle-page[data-arena="shopping-street"] {
     color: #555;
     font-size: 0.9rem;
     text-align: right;
+}
+
+.move-details {
+    color: #666;
+    display: block;
+    font-size: 0.82rem;
+    margin-top: 3px;
 }
 
 .move-type {
@@ -417,19 +458,28 @@ body.battle-page[data-arena="shopping-street"] {
     display: none;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 760px) {
     .battle-layout {
-        grid-template-columns: minmax(0, 1fr) minmax(230px, 280px);
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .arena-panel {
-        min-height: 300px;
+        min-height: 330px;
         padding: 18px;
     }
 
     .fighter-details {
         padding: 9px;
-        width: min(190px, 78%);
+        width: min(220px, 78%);
+    }
+
+    .log-panel {
+        min-height: 260px;
+        position: static;
+    }
+
+    .battle-log {
+        max-height: 340px;
     }
 }
 
@@ -492,12 +542,13 @@ body.battle-page[data-arena="shopping-street"] {
 
     .fighter-sprite {
         height: 130px;
-        top: 150px;
+        top: 155px;
         width: 130px;
     }
 
     .player-sprite {
-        top: 150px;
+        bottom: 4px;
+        top: auto;
     }
 
     .move-grid {
@@ -511,5 +562,11 @@ body.battle-page[data-arena="shopping-street"] {
 
     .battle-tools button {
         flex: 1 1 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fighter-sprite {
+        animation: none;
     }
 }

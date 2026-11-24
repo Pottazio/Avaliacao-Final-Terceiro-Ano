@@ -33,13 +33,10 @@ $stmtSaldo->execute([':id_perfil' => Auth::idPerfil()]);
 $perfil = $stmtSaldo->fetch() ?: ['pokedollar' => 0, 'nome_perfil' => 'Treinador'];
 
 $nomeUsuario = Auth::nome();
-$iniciais = '';
-foreach (preg_split('/\s+/', trim($nomeUsuario)) as $parte) {
-    if ($parte !== '' && mb_strlen($iniciais) < 2) {
-        $iniciais .= mb_strtoupper(mb_substr($parte, 0, 1));
-    }
-}
-$iniciais = $iniciais !== '' ? $iniciais : '?';
+$generoPersonagem = $_SESSION['genero_personagem'] ?? 'masculino';
+$imagemPersonagem = $generoPersonagem === 'feminino'
+    ? 'PersonagemFemiPequeno.png'
+    : 'PersonagemMascPequeno.png';
 
 $paleta = ['#d62828', '#1d3557', '#2a9d8f', '#f4a300', '#7b2cbf', '#e76f51'];
 $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
@@ -65,7 +62,11 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
 
             <div class="topo-treinador">
                 <div class="avatar" style="background-color: <?= htmlspecialchars($corAvatar, ENT_QUOTES, 'UTF-8') ?>">
-                    <span class="avatar-iniciais"><?= htmlspecialchars($iniciais, ENT_QUOTES, 'UTF-8') ?></span>
+                    <img
+                        class="avatar-imagem"
+                        src="assets/<?= htmlspecialchars($imagemPersonagem, ENT_QUOTES, 'UTF-8') ?>"
+                        alt="Personagem do treinador"
+                    >
                 </div>
                 <div class="topo-dados">
                     <p class="topo-nome"><?= htmlspecialchars($nomeUsuario, ENT_QUOTES, 'UTF-8') ?></p>

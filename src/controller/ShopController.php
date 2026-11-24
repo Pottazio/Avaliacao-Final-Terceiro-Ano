@@ -6,108 +6,10 @@ namespace src\controller;
 use PDO;
 use RuntimeException;
 use src\core\Auth;
+use src\dao\LojaCatalogoDAO;
 
 class ShopController
 {
-    private const ITENS = [
-        'potion' => [
-            'nome' => 'Potion',
-            'preco' => 300,
-            'categoria' => 'healing',
-            'valor_hp' => 20,
-            'cura_status' => false,
-            'revive' => false,
-        ],
-        'super-potion' => [
-            'nome' => 'Super Potion',
-            'preco' => 700,
-            'categoria' => 'healing',
-            'valor_hp' => 50,
-            'cura_status' => false,
-            'revive' => false,
-        ],
-        'hyper-potion' => [
-            'nome' => 'Hyper Potion',
-            'preco' => 1200,
-            'categoria' => 'healing',
-            'valor_hp' => 200,
-            'cura_status' => false,
-            'revive' => false,
-        ],
-        'max-potion' => [
-            'nome' => 'Max Potion',
-            'preco' => 2500,
-            'categoria' => 'healing',
-            'valor_hp' => 0,
-            'cura_status' => false,
-            'revive' => false,
-        ],
-        'full-restore' => [
-            'nome' => 'Full Restore',
-            'preco' => 3000,
-            'categoria' => 'healing',
-            'valor_hp' => 0,
-            'cura_status' => true,
-            'revive' => false,
-        ],
-        'antidote' => [
-            'nome' => 'Antidote',
-            'preco' => 100,
-            'categoria' => 'status-cures',
-            'valor_hp' => 0,
-            'cura_status' => true,
-            'revive' => false,
-        ],
-        'burn-heal' => [
-            'nome' => 'Burn Heal',
-            'preco' => 250,
-            'categoria' => 'status-cures',
-            'valor_hp' => 0,
-            'cura_status' => true,
-            'revive' => false,
-        ],
-        'ice-heal' => [
-            'nome' => 'Ice Heal',
-            'preco' => 250,
-            'categoria' => 'status-cures',
-            'valor_hp' => 0,
-            'cura_status' => true,
-            'revive' => false,
-        ],
-        'awakening' => [
-            'nome' => 'Awakening',
-            'preco' => 250,
-            'categoria' => 'status-cures',
-            'valor_hp' => 0,
-            'cura_status' => true,
-            'revive' => false,
-        ],
-        'paralyze-heal' => [
-            'nome' => 'Paralyze Heal',
-            'preco' => 200,
-            'categoria' => 'status-cures',
-            'valor_hp' => 0,
-            'cura_status' => true,
-            'revive' => false,
-        ],
-        'full-heal' => [
-            'nome' => 'Full Heal',
-            'preco' => 600,
-            'categoria' => 'status-cures',
-            'valor_hp' => 0,
-            'cura_status' => true,
-            'revive' => false,
-        ],
-        'revive' => [
-            'nome' => 'Revive',
-            'preco' => 1500,
-            'categoria' => 'revival',
-            'valor_hp' => 0,
-            'cura_status' => false,
-            'revive' => true,
-        ],
-    ];
-
     public function __construct(private PDO $pdo)
     {
     }
@@ -117,6 +19,8 @@ class ShopController
         if (!$this->exigirLogin()) {
             return;
         }
+
+        (new LojaCatalogoDAO($this->pdo))->garantirCatalogo();
 
         $idPerfil = Auth::idPerfil();
         $stmt = $this->pdo->prepare(
@@ -149,102 +53,14 @@ class ShopController
             return;
         }
 
-        $dados = $this->lerJson();
-        if ($dados === null) {
-            return;
-        }
-        $itensRecebidos = $dados['itens'] ?? null;
-        if (!is_array($itensRecebidos) || $itensRecebidos === []) {
-            $this->responder(400, ['sucesso' => false, 'mensagem' => 'A lista de itens está vazia ou inválida.']);
-            return;
-        }
-
-        try {
-            $this->pdo->beginTransaction();
-            $stmtCategoria = $this->pdo->prepare(
-                'INSERT INTO categorias_itens (nome)
-                 VALUES (:nome)
-                 ON DUPLICATE KEY UPDATE id_categoria = LAST_INSERT_ID(id_categoria)'
-            );
-            $stmtItem = $this->pdo->prepare(
-                'SELECT id_item FROM itens WHERE nome = :nome LIMIT 1 FOR UPDATE'
-            );
-            $stmtAtualizar = $this->pdo->prepare(
-                'UPDATE itens
-                    SET id_categoria = :id_categoria,
-                        descricao = :descricao,
-                        preco = :preco,
-                        valor_hp = :valor_hp,
-                        cura_status = :cura_status,
-                        revive = :revive,
-                        evolucao = 0
-                  WHERE id_item = :id_item'
-            );
-            $stmtInserir = $this->pdo->prepare(
-                'INSERT INTO itens
-                    (id_categoria, nome, descricao, preco, valor_hp, cura_status, revive, evolucao)
-                 VALUES
-                    (:id_categoria, :nome, :descricao, :preco, :valor_hp, :cura_status, :revive, 0)'
-            );
-
-            $sincronizados = 0;
-            foreach ($itensRecebidos as $itemRecebido) {
-                if (!is_array($itemRecebido)) {
-                    continue;
-                }
-
-                $slug = (string) ($itemRecebido['slug'] ?? '');
-                if (!isset(self::ITENS[$slug])) {
-                    continue;
-                }
-
-                $item = self::ITENS[$slug];
-                $descricao = trim(strip_tags((string) ($itemRecebido['descricao'] ?? '')));
-                $descricao = function_exists('mb_substr')
-                    ? mb_substr($descricao, 0, 255, 'UTF-8')
-                    : substr($descricao, 0, 255);
-
-                $stmtCategoria->execute([':nome' => $item['categoria']]);
-                $idCategoria = (int) $this->pdo->lastInsertId();
-
-                $stmtItem->execute([':nome' => $item['nome']]);
-                $idExistente = $stmtItem->fetchColumn();
-                $valores = [
-                    ':id_categoria' => $idCategoria,
-                    ':descricao' => $descricao,
-                    ':preco' => $item['preco'],
-                    ':valor_hp' => $item['valor_hp'],
-                    ':cura_status' => $item['cura_status'] ? 1 : 0,
-                    ':revive' => $item['revive'] ? 1 : 0,
-                ];
-
-                if ($idExistente !== false) {
-                    $stmtAtualizar->execute($valores + [':id_item' => (int) $idExistente]);
-                } else {
-                    $stmtInserir->execute($valores + [
-                        ':nome' => $item['nome'],
-                    ]);
-                }
-
-                $sincronizados++;
-            }
-
-            if ($sincronizados === 0) {
-                throw new RuntimeException('Nenhum item válido foi recebido para sincronização.');
-            }
-
-            $this->pdo->commit();
-            $this->responder(200, [
-                'sucesso' => true,
-                'mensagem' => 'Itens sincronizados com o banco de dados.',
-                'sincronizados' => $sincronizados,
-            ]);
-        } catch (\Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-            throw $e;
-        }
+        $inseridos = (new LojaCatalogoDAO($this->pdo))->garantirCatalogo();
+        $this->responder(200, [
+            'sucesso' => true,
+            'mensagem' => $inseridos > 0
+                ? 'Itens inseridos no banco de dados local.'
+                : 'O catálogo local já está completo.',
+            'inseridos' => $inseridos,
+        ]);
     }
 
     public function comprar(): void

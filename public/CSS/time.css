@@ -11,6 +11,195 @@ body.time-page {
         url('../assets/rua-tranquila.png');
 }
 
+/* ---------- Cabecalho do Team Builder ---------- */
+body.time-page .topo {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.7fr) auto;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 22px;
+    background: linear-gradient(135deg, var(--creme), #fffaf0);
+}
+
+body.time-page .topo-marca {
+    width: fit-content;
+    padding: 11px 14px;
+    background: var(--azul);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+}
+
+body.time-page .topo-marca h1 {
+    color: var(--amarelo-claro);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    letter-spacing: 1px;
+}
+
+body.time-page .topo-treinador {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 10px 14px;
+    background: var(--branco);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+}
+
+body.time-page .avatar {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 62px;
+    height: 62px;
+    border: var(--borda-fina);
+    box-shadow: 3px 3px 0 var(--preto);
+}
+
+body.time-page .avatar-imagem {
+    display: block;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    image-rendering: pixelated;
+}
+
+body.time-page .topo-dados {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+body.time-page .topo-nome {
+    margin: 0;
+    color: var(--azul);
+    font-family: var(--fonte-titulo);
+    font-size: 0.76rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+body.time-page .topo-perfil {
+    margin: 0;
+    color: #6b6b6b;
+    font-size: 1.05rem;
+}
+
+body.time-page .saldo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    margin: 2px 0 0;
+    padding: 3px 8px;
+    background: var(--amarelo-claro);
+    border: 2px solid var(--preto);
+    box-shadow: 2px 2px 0 var(--preto);
+}
+
+body.time-page .saldo-icone {
+    color: var(--vermelho);
+    font-family: var(--fonte-titulo);
+    font-size: 0.65rem;
+}
+
+body.time-page .saldo-valor {
+    color: var(--preto);
+    font-family: var(--fonte-titulo);
+    font-size: 0.78rem;
+}
+
+body.time-page .saldo-rotulo {
+    color: #6b5a20;
+    font-size: 1rem;
+}
+
+body.time-page .btn-sair {
+    display: inline-flex;
+    align-items: center;
+    justify-self: end;
+    margin: 0;
+    padding: 12px 16px;
+    color: var(--branco);
+    background: var(--azul);
+    border: var(--borda-fina);
+    box-shadow: var(--sombra-dura-p);
+    font-family: var(--fonte-titulo);
+    font-size: 0.7rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+}
+
+body.time-page .btn-sair:hover,
+body.time-page .btn-sair:focus-visible {
+    background: var(--vermelho);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--preto);
+}
+
+@media (max-width: 760px) {
+    body.time-page .topo {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    body.time-page .topo-treinador {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+    }
+
+    body.time-page .btn-sair {
+        grid-column: 2;
+        grid-row: 1;
+    }
+}
+
+@media (max-width: 520px) {
+    body.time-page .topo {
+        padding: 12px;
+    }
+
+    body.time-page .topo-marca {
+        padding: 8px 10px;
+    }
+
+    body.time-page .topo-marca h1 {
+        font-size: 0.68rem;
+    }
+
+    body.time-page .topo-treinador {
+        gap: 10px;
+        padding: 9px;
+    }
+
+    body.time-page .avatar {
+        width: 52px;
+        height: 52px;
+    }
+
+    body.time-page .topo-nome {
+        font-size: 0.62rem;
+    }
+
+    body.time-page .topo-perfil {
+        font-size: 0.95rem;
+    }
+
+    body.time-page .btn-sair {
+        padding: 10px 12px;
+        font-size: 0.58rem;
+    }
+}
+
 /* ---------- Blocos da pagina ---------- */
 .bloco {
     background-color: var(--creme);

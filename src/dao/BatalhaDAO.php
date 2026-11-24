@@ -8,6 +8,25 @@ use RuntimeException;
 
 class BatalhaDAO
 {
+    private const FAIXAS_POKEDEX_AREA = [
+        0 => [1, 151],
+        1 => [152, 251],
+        2 => [252, 386],
+        3 => [387, 493],
+        4 => [494, 649],
+        5 => [650, 721],
+        6 => [1, 721],
+    ];
+
+    private const POKEMON_LENDARIOS_E_MITICOS = [
+        144, 145, 146, 150, 151,
+        243, 244, 245, 249, 250, 251,
+        377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
+        480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493,
+        494, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
+        716, 717, 718, 719, 720, 721,
+    ];
+
     public function __construct(private PDO $pdo)
     {
     }
@@ -43,7 +62,7 @@ class BatalhaDAO
     public function listarTime(int $idPerfil): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT pk.id_pokemon, pk.id_pokedex, pk.nome, p.name AS especie, tp.nivel,
+            'SELECT pk.id_pokemon, pk.nome, p.id_pokedex, p.name AS especie, tp.nivel,
                     p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE,
                     GROUP_CONCAT(t.nome ORDER BY t.nome SEPARATOR ", ") AS tipos
                FROM times tm
@@ -52,9 +71,9 @@ class BatalhaDAO
                JOIN pokedex p ON p.id_pokedex = pk.id_pokedex
                LEFT JOIN pokemon_tipos pt ON pt.id_pokemon = pk.id_pokemon
                LEFT JOIN tipos t ON t.id_tipo = pt.id_tipo
-               WHERE tm.id_perfil = :id_perfil
-                 AND p.id_pokedex BETWEEN 1 AND 151
-              GROUP BY pk.id_pokemon, tp.nivel, tp.posicao
+              WHERE tm.id_perfil = :id_perfil
+              GROUP BY pk.id_pokemon, tp.nivel, tp.posicao, p.id_pokedex,
+                       p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE
               ORDER BY tp.posicao'
         );
         $stmt->execute([':id_perfil' => $idPerfil]);
@@ -64,15 +83,13 @@ class BatalhaDAO
     public function buscarPokemonDoTime(int $idPerfil, int $idPokemon): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT pk.id_pokemon, pk.id_pokedex, pk.nome, p.name AS especie, tp.nivel,
-                    p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE
+            'SELECT pk.id_pokemon, pk.nome, p.name AS especie, tp.nivel,
+                    p.id_pokedex, p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE
                FROM times tm
                JOIN time_pokemons tp ON tp.id_time = tm.id_time
                JOIN pokemons pk ON pk.id_pokemon = tp.id_pokemon
                JOIN pokedex p ON p.id_pokedex = pk.id_pokedex
-              WHERE tm.id_perfil = :id_perfil
-                AND pk.id_pokemon = :id_pokemon
-                AND p.id_pokedex BETWEEN 1 AND 151
+              WHERE tm.id_perfil = :id_perfil AND pk.id_pokemon = :id_pokemon
               LIMIT 1'
         );
         $stmt->execute([
@@ -80,7 +97,83 @@ class BatalhaDAO
             ':id_pokemon' => $idPokemon,
         ]);
         $pokemon = $stmt->fetch();
+        if ($pokemon !== false) {
+            $pokemon['tipos'] = $this->buscarTiposPokemon((int) $pokemon['id_pokedex']);
+        }
         return $pokemon === false ? null : $pokemon;
+    }
+
+    public function buscarTiposPokemon(int $idPokedex): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT DISTINCT t.nome
+               FROM pokemons pk
+               JOIN pokemon_tipos pt ON pt.id_pokemon = pk.id_pokemon
+               JOIN tipos t ON t.id_tipo = pt.id_tipo
+              WHERE pk.id_pokedex = :id_pokedex
+              ORDER BY t.nome'
+        );
+        $stmt->execute([':id_pokedex' => $idPokedex]);
+        return array_map('strtolower', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    public function buscarPokemonOponente(int $idPokedex, int $area): array
+    {
+        [$idMinimo, $idMaximo] = self::FAIXAS_POKEDEX_AREA[$area] ?? self::FAIXAS_POKEDEX_AREA[6];
+        $exclusoes = implode(',', self::POKEMON_LENDARIOS_E_MITICOS);
+        $stmt = $this->pdo->prepare(
+            "SELECT id_pokedex, name, HP, ATQ, ATQE, DEF, DEFE, SPE
+               FROM pokedex
+              WHERE id_pokedex BETWEEN :id_minimo AND :id_maximo
+                AND id_pokedex <> :id_pokedex
+                AND id_pokedex NOT IN ({$exclusoes})
+              ORDER BY RAND()
+              LIMIT 1"
+        );
+        $stmt->execute([
+            ':id_minimo' => $idMinimo,
+            ':id_maximo' => $idMaximo,
+            ':id_pokedex' => $idPokedex,
+        ]);
+        $pokemon = $stmt->fetch();
+        if ($pokemon !== false) {
+            $pokemon['tipos'] = $this->buscarTiposPokemon((int) $pokemon['id_pokedex']);
+            return $pokemon;
+        }
+
+        $stmt = $this->pdo->prepare(
+            "SELECT id_pokedex, name, HP, ATQ, ATQE, DEF, DEFE, SPE
+               FROM pokedex
+              WHERE id_pokedex BETWEEN :id_minimo AND :id_maximo
+                AND id_pokedex NOT IN ({$exclusoes})
+              ORDER BY RAND()
+              LIMIT 1"
+        );
+        $stmt->execute([
+            ':id_minimo' => $idMinimo,
+            ':id_maximo' => $idMaximo,
+        ]);
+        $pokemon = $stmt->fetch();
+        if ($pokemon === false) {
+            $stmt = $this->pdo->prepare(
+                "SELECT id_pokedex, name, HP, ATQ, ATQE, DEF, DEFE, SPE
+                   FROM pokedex
+                  WHERE id_pokedex BETWEEN 1 AND 721
+                    AND id_pokedex <> :id_pokedex
+                    AND id_pokedex NOT IN ({$exclusoes})
+                  ORDER BY RAND()
+                  LIMIT 1"
+            );
+            $stmt->execute([
+                ':id_pokedex' => $idPokedex,
+            ]);
+            $pokemon = $stmt->fetch();
+        }
+        if ($pokemon === false) {
+            throw new RuntimeException('Não há Pokémon cadastrados para selecionar um adversário.');
+        }
+        $pokemon['tipos'] = $this->buscarTiposPokemon((int) $pokemon['id_pokedex']);
+        return $pokemon;
     }
 
     public function buscarBatalhaAtiva(int $idPerfil, bool $travar = false): ?array

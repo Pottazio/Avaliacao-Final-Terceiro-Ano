@@ -8,7 +8,6 @@ use PDOException;
 use RuntimeException;
 use config\Database;
 use models\Batalha;
-use models\ListaPokemonTreinadores;
 use models\ProgressaoJogo;
 use src\core\Auth;
 use src\dao\BatalhaDAO;
@@ -32,12 +31,21 @@ class BattleController
             $ativa = $this->batalhaDAO->buscarBatalhaAtiva($idPerfil);
 
             if ($ativa !== null) {
+                $estado = $ativa['estado'];
+                if (!isset($estado['reservas_jogador']) || !is_array($estado['reservas_jogador'])) {
+                    $estado['reservas_jogador'] = $this->montarReservasJogador(
+                        $idPerfil,
+                        $estado['jogador'],
+                        ProgressaoJogo::nivelMaximo((int) $ativa['area'])
+                    );
+                }
+                $this->hidratarTiposEstado($estado);
                 $batalha = [
                     'id' => $ativa['id_batalha'],
                     'area' => (int) $ativa['area'],
                     'numero_treinador' => (int) $ativa['treinador_numero'],
                     'nome_oponente' => $ativa['nome_oponente'],
-                    'estado' => $ativa['estado'],
+                    'estado' => $estado,
                     'logs' => $this->batalhaDAO->listarLogs($ativa['id_batalha']),
                     'em_andamento' => true,
                 ];
@@ -119,14 +127,27 @@ class BattleController
                 return;
             }
 
-            $oponenteBase = ListaPokemonTreinadores::sortear($area);
+            $oponenteBase = $this->batalhaDAO->buscarPokemonOponente(
+                (int) $pokemon['id_pokedex'],
+                $area
+            );
             $nivelOponente = min($nivelMaximo, max($nivel, $nivelMaximo - random_int(0, 2)));
+            $multiplicadorDificuldade = 1 + ($area * 0.03) + (($numeroTreinador - 1) * 0.005);
             $jogador = Batalha::combatente($pokemon, $nivel);
-            $oponente = Batalha::combatente($oponenteBase, $nivelOponente);
+            $oponente = Batalha::combatente(
+                $oponenteBase,
+                $nivelOponente,
+                $multiplicadorDificuldade
+            );
             $nomeOponente = $this->nomeTreinador($area, $numeroTreinador);
             $estado = [
                 'jogador' => $jogador,
                 'oponente' => $oponente,
+                'reservas_jogador' => $this->montarReservasJogador(
+                    $idPerfil,
+                    $jogador,
+                    $nivelMaximo
+                ),
             ];
 
             $idBatalha = $this->batalhaDAO->iniciar(
@@ -166,18 +187,25 @@ class BattleController
         }
 
         $acao = (string) ($_POST['acao_batalha'] ?? '');
-        if (!\in_array($acao, ['atacar', 'aumentar_ataque', 'reduzir_ataque'], true)) {
+        if (!\in_array($acao, ['atacar', 'aumentar_ataque', 'reduzir_ataque', 'trocar_pokemon'], true)) {
             $this->responder(false, 'Ação de batalha inválida.', status: 400);
             return;
+        }
+
+        $idPokemonTroca = null;
+        if ($acao === 'trocar_pokemon') {
+            $idPokemon = filter_input(INPUT_POST, 'id_pokemon', FILTER_VALIDATE_INT);
+            if ($idPokemon === false || $idPokemon === null || $idPokemon <= 0) {
+                $this->responder(false, 'Escolha um Pokémon válido para trocar.', status: 400);
+                return;
+            }
+            $idPokemonTroca = (int) $idPokemon;
         }
 
         try {
             $movimento = $acao === 'atacar'
                 ? $this->lerMovimento((string) ($_POST['movimento'] ?? ''))
                 : null;
-            $movimentosOponente = $this->lerMovimentosOponente(
-                (string) ($_POST['movimentos_oponente'] ?? '')
-            );
         } catch (RuntimeException $e) {
             $this->responder(false, $e->getMessage(), status: 400);
             return;
@@ -198,14 +226,25 @@ class BattleController
             if (!isset($estado['jogador'], $estado['oponente'])) {
                 throw new RuntimeException('O estado da batalha está incompleto.');
             }
+            if (!isset($estado['reservas_jogador']) || !is_array($estado['reservas_jogador'])) {
+                $estado['reservas_jogador'] = $this->montarReservasJogador(
+                    $idPerfil,
+                    $estado['jogador'],
+                    ProgressaoJogo::nivelMaximo((int) $batalha['area'])
+                );
+            }
+            $this->hidratarTiposEstado($estado);
 
             $idBatalha = $batalha['id_batalha'];
-            $this->jogarAcao($idBatalha, $estado, $acao, $movimento);
+            $this->jogarAcao($idBatalha, $estado, $acao, $movimento, $idPokemonTroca);
             if ($estado['oponente']['hp'] <= 0) {
                 $this->registrarVitoria($idPerfil, $batalha, $progresso);
             } else {
-                $this->jogarTurnoOponente($idBatalha, $estado, $movimentosOponente);
-                if ($estado['jogador']['hp'] <= 0) {
+                $this->jogarTurnoOponente($idBatalha, $estado);
+                if (
+                    $estado['jogador']['hp'] <= 0
+                    && !$this->trocarAutomaticamente($idBatalha, $estado)
+                ) {
                     $this->batalhaDAO->registrarLog(
                         $idBatalha,
                         'result',
@@ -266,7 +305,8 @@ class BattleController
         int $idBatalha,
         array &$estado,
         string $acao,
-        ?array $movimento
+        ?array $movimento,
+        ?int $idPokemonTroca
     ): void
     {
         $jogador = &$estado['jogador'];
@@ -277,7 +317,10 @@ class BattleController
                 throw new RuntimeException('Escolha um ataque da lista para continuar.');
             }
             $nomeMovimento = ucwords(str_replace('-', ' ', $movimento['nome']));
-            if (!$this->movimentoAcertou($movimento)) {
+            if (
+                $movimento['precisao'] !== null
+                && random_int(1, 100) > $movimento['precisao']
+            ) {
                 $this->batalhaDAO->registrarLog(
                     $idBatalha,
                     'miss',
@@ -285,14 +328,43 @@ class BattleController
                 );
                 return;
             }
+
             $dano = Batalha::calcularDano(
                 $jogador,
                 $oponente,
                 $movimento['poder'],
-                $movimento['classe']
+                $movimento['classe'],
+                $movimento['tipo']
             );
             $this->causarDano($idBatalha, $jogador, $oponente, $dano, $movimento);
             return;
+        }
+
+        if ($acao === 'trocar_pokemon') {
+            if ($idPokemonTroca === null) {
+                throw new RuntimeException('Escolha um Pokémon do time para trocar.');
+            }
+
+            foreach ($estado['reservas_jogador'] as $indice => $reserva) {
+                if ((int) $reserva['id_pokemon'] !== $idPokemonTroca) {
+                    continue;
+                }
+                if ((int) $reserva['hp'] <= 0) {
+                    throw new RuntimeException('Esse Pokémon não pode mais batalhar.');
+                }
+
+                $pokemonAnterior = $jogador;
+                $jogador = $reserva;
+                $estado['reservas_jogador'][$indice] = $pokemonAnterior;
+                $this->batalhaDAO->registrarLog(
+                    $idBatalha,
+                    'switch',
+                    "Você chamou {$jogador['nome']} para a batalha."
+                );
+                return;
+            }
+
+            throw new RuntimeException('Esse Pokémon não está disponível para troca.');
         }
 
         if ($acao === 'aumentar_ataque') {
@@ -319,28 +391,105 @@ class BattleController
         );
     }
 
-    private function jogarTurnoOponente(int $idBatalha, array &$estado, array $movimentos): void
+    private function montarReservasJogador(
+        int $idPerfil,
+        array $jogadorAtivo,
+        int $nivelMaximo
+    ): array {
+        $reservas = [];
+        foreach ($this->batalhaDAO->listarTime($idPerfil) as $pokemon) {
+            if ((int) $pokemon['id_pokemon'] === (int) $jogadorAtivo['id_pokemon']) {
+                continue;
+            }
+
+            $nivel = (int) $pokemon['nivel'];
+            if ($nivel < 1 || $nivel > $nivelMaximo) {
+                continue;
+            }
+            $reservas[] = Batalha::combatente($pokemon, $nivel);
+        }
+
+        return $reservas;
+    }
+
+    private function trocarAutomaticamente(int $idBatalha, array &$estado): bool
+    {
+        foreach ($estado['reservas_jogador'] as $indice => $reserva) {
+            if ((int) $reserva['hp'] <= 0) {
+                continue;
+            }
+
+            $pokemonDerrotado = $estado['jogador'];
+            $estado['jogador'] = $reserva;
+            $estado['reservas_jogador'][$indice] = $pokemonDerrotado;
+            $this->batalhaDAO->registrarLog(
+                $idBatalha,
+                'switch',
+                "{$pokemonDerrotado['nome']} desmaiou. {$estado['jogador']['nome']} entrou na batalha."
+            );
+            return true;
+        }
+
+        return false;
+    }
+
+    private function hidratarTiposEstado(array &$estado): void
+    {
+        foreach (['jogador', 'oponente'] as $lado) {
+            if (isset($estado[$lado]) && is_array($estado[$lado])) {
+                $this->hidratarTiposPokemon($estado[$lado]);
+            }
+        }
+
+        if (isset($estado['reservas_jogador']) && is_array($estado['reservas_jogador'])) {
+            foreach ($estado['reservas_jogador'] as &$pokemon) {
+                $this->hidratarTiposPokemon($pokemon);
+            }
+            unset($pokemon);
+        }
+    }
+
+    private function hidratarTiposPokemon(array &$pokemon): void
+    {
+        if (!isset($pokemon['tipos']) || $pokemon['tipos'] === []) {
+            $pokemon['tipos'] = $this->batalhaDAO->buscarTiposPokemon(
+                (int) ($pokemon['id_pokedex'] ?? 0)
+            );
+        } elseif (is_string($pokemon['tipos'])) {
+            $pokemon['tipos'] = explode(',', $pokemon['tipos']);
+        }
+
+        $pokemon['tipos'] = array_values(array_unique(array_filter(array_map(
+            static fn ($tipo): string => strtolower(trim((string) $tipo)),
+            (array) $pokemon['tipos']
+        ))));
+    }
+
+    private function jogarTurnoOponente(int $idBatalha, array &$estado): void
     {
         $oponente = &$estado['oponente'];
         $jogador = &$estado['jogador'];
-        $movimento = $movimentos[random_int(0, count($movimentos) - 1)];
-        $nomeMovimento = ucwords(str_replace('-', ' ', $movimento['nome']));
-        if (!$this->movimentoAcertou($movimento)) {
+
+        if ($oponente['estagio_ataque'] < 2 && random_int(1, 4) === 1) {
+            $anterior = (int) $oponente['estagio_ataque'];
+            $oponente['estagio_ataque']++;
             $this->batalhaDAO->registrarLog(
                 $idBatalha,
-                'miss',
-                "{$oponente['nome']} usou {$nomeMovimento}, mas errou o ataque."
+                'boost',
+                "O ATQ de {$oponente['nome']} subiu 1 estágio ({$anterior} → {$oponente['estagio_ataque']})."
             );
             return;
         }
 
+        $tipoAtaque = $oponente['tipos'][0] ?? null;
         $dano = Batalha::calcularDano(
             $oponente,
             $jogador,
-            $movimento['poder'],
-            $movimento['classe']
+            40,
+            'physical',
+            $tipoAtaque
         );
-        $this->causarDano($idBatalha, $oponente, $jogador, $dano, $movimento);
+        $this->causarDano($idBatalha, $oponente, $jogador, $dano, tipoAtaque: $tipoAtaque);
     }
 
     private function causarDano(
@@ -348,12 +497,32 @@ class BattleController
         array &$atacante,
         array &$defensor,
         int $dano,
-        array $movimento
+        ?array $movimento = null,
+        ?string $tipoAtaque = null
     ): void
     {
+        $tipoAtaque = $movimento['tipo'] ?? $tipoAtaque;
+        $multiplicadorTipo = $tipoAtaque === null
+            ? 1.0
+            : Batalha::multiplicadorTipo($tipoAtaque, $defensor['tipos'] ?? []);
+        $descricaoAtaque = $movimento !== null
+            ? "{$atacante['nome']} usou " . ucwords(str_replace('-', ' ', $movimento['nome']))
+                . " ({$movimento['tipo']})"
+            : ($tipoAtaque === null
+                ? $atacante['nome']
+                : "{$atacante['nome']} usou um ataque do tipo {$tipoAtaque}");
+
+        if ($dano <= 0) {
+            $this->batalhaDAO->registrarLog(
+                $idBatalha,
+                'damage',
+                "{$descricaoAtaque}, mas não afetou {$defensor['nome']} (imune ao tipo {$tipoAtaque})."
+            );
+            return;
+        }
+
         $hpAnterior = (int) $defensor['hp'];
         $defensor['hp'] = max(0, $hpAnterior - $dano);
-        $nomeMovimento = ucwords(str_replace('-', ' ', $movimento['nome']));
         $danoReal = $hpAnterior - (int) $defensor['hp'];
         $percentual = number_format(
             100 * $danoReal / max(1, (int) $defensor['hp_maximo']),
@@ -362,10 +531,17 @@ class BattleController
             '.'
         );
 
+        $detalheAtaque = $movimento === null && $tipoAtaque === null
+            ? "{$descricaoAtaque} causou"
+            : "{$descricaoAtaque} e causou";
+        $efetividade = $multiplicadorTipo > 1
+            ? ' Foi super efetivo!'
+            : ($multiplicadorTipo < 1 ? ' Não foi muito efetivo.' : '');
+
         $this->batalhaDAO->registrarLog(
             $idBatalha,
             'damage',
-            "{$atacante['nome']} usou {$nomeMovimento} ({$movimento['tipo']}) e causou {$danoReal} de dano em {$defensor['nome']} ({$percentual}% do HP máximo). HP: {$defensor['hp']}/{$defensor['hp_maximo']}."
+            "{$detalheAtaque} {$danoReal} de dano em {$defensor['nome']} ({$percentual}% do HP máximo).{$efetividade} HP: {$defensor['hp']}/{$defensor['hp_maximo']}."
         );
 
         if ($defensor['hp'] === 0) {
@@ -375,7 +551,6 @@ class BattleController
                 "{$defensor['nome']} não pode mais batalhar."
             );
         }
-
     }
 
     private function lerMovimento(string $json): array
@@ -385,29 +560,6 @@ class BattleController
             throw new RuntimeException('Os dados do ataque estão inválidos. Recarregue a batalha.');
         }
 
-        return $this->validarMovimento($movimento);
-    }
-
-    private function lerMovimentosOponente(string $json): array
-    {
-        $movimentos = json_decode($json, true);
-        if (!is_array($movimentos) || $movimentos === [] || count($movimentos) > 4) {
-            throw new RuntimeException('Não foi possível carregar os ataques do oponente. Recarregue a batalha.');
-        }
-
-        $validos = [];
-        foreach ($movimentos as $movimento) {
-            if (!is_array($movimento)) {
-                throw new RuntimeException('Um dos ataques recebidos da PokéAPI é inválido.');
-            }
-            $validos[] = $this->validarMovimento($movimento);
-        }
-
-        return $validos;
-    }
-
-    private function validarMovimento(array $movimento): array
-    {
         $nome = (string) ($movimento['nome'] ?? '');
         $tipo = (string) ($movimento['tipo'] ?? '');
         $classe = (string) ($movimento['classe'] ?? '');
@@ -433,12 +585,6 @@ class BattleController
             'poder' => $poder,
             'precisao' => $precisao,
         ];
-    }
-
-    private function movimentoAcertou(array $movimento): bool
-    {
-        return $movimento['precisao'] === null
-            || random_int(1, 100) <= $movimento['precisao'];
     }
 
     private function registrarVitoria(int $idPerfil, array $batalha, array $progresso): void

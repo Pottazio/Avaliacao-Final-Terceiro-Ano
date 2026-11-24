@@ -10,8 +10,8 @@ if (Auth::logado()) {
     exit;
 }
 
-$erro = $_SESSION['erro_login'] ?? null;
-unset($_SESSION['erro_login']);
+$erro = $_SESSION['erro_cadastro'] ?? null;
+unset($_SESSION['erro_cadastro']);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">

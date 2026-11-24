@@ -15,15 +15,13 @@ class LoginApp {
         this.formLogin = document.getElementById('formLogin');
         this.formCadastro = document.getElementById('formCadastro');
 
-        this.mensagem = document.getElementById('mensagemLogin');
-        this.linkCadastro = document.getElementById('mostrarCadastro');
-        this.linkVoltar = document.getElementById('voltarLogin');
+        this.mensagem = document.getElementById('mensagemLogin')
+            || document.getElementById('mensagemCadastro');
 
         if (this.formLogin) this.formLogin.addEventListener('submit', (e) => this.ligacao(e));
         if (this.formCadastro) this.formCadastro.addEventListener('submit', (e) => this.ligacao(e));
     }
 
-    /** Um único ponto de escuta para os dois formulários. */
     ligacao(evento) {
         evento.preventDefault();
 
@@ -39,15 +37,6 @@ class LoginApp {
                 senha: document.getElementById('cadSenha').value,
             });
         }
-    }
-
-    trocarAba(evento, aba) {
-        evento.preventDefault();
-        this.limparMensagem();
-
-        const paraCadastro = aba === 'cadastro';
-        this.telaLogin.style.display = paraCadastro ? 'none' : 'block';
-        this.telaCadastro.style.display = paraCadastro ? 'block' : 'none';
     }
 
     /** Requisição assíncrona; o backend responde em JSON. */
@@ -68,22 +57,14 @@ class LoginApp {
             const json = await resposta.json();
 
             if (json.sucesso) {
-                this.mostrarMensagem('Entrando...', 'ok');
-                window.location.href = json.rota || '../public/index.php';
+                this.mostrarMensagem(json.mensagem, 'ok');
+                if (json.rota) window.location.href = json.rota;
                 return;
             }
 
-            this.mostrarMensagem(
-                acao,
-                json.mensagem || 'Não foi possível concluir a operação.',
-                'erro'
-            );
+            this.mostrarMensagem(json.mensagem || 'Não foi possível entrar.', 'erro');
         } catch (erro) {
-            this.mostrarMensagem(
-                acao,
-                erro instanceof TypeError ? 'Falha de conexão com o servidor.' : erro.message,
-                'erro'
-            );
+            this.mostrarMensagem('Falha de conexão com o servidor.', 'erro');
             console.error(erro);
         } finally {
             this.bloquear(false);
@@ -99,19 +80,13 @@ class LoginApp {
         });
     }
 
-    mostrarMensagem(acao, texto, tipo = 'erro') {
-        const mensagem = acao === 'cadastrar' ? this.mensagemCadastro : this.mensagemLogin;
-        if (!mensagem) return;
-        mensagem.textContent = texto;
-        mensagem.dataset.tipo = tipo;
-    }
-
-    limparMensagem() {
-        if (this.mensagem) this.mensagem.textContent = '';
+    mostrarMensagem(texto, tipo = 'erro') {
+        if (!this.mensagem) return;
+        this.mensagem.textContent = texto;
+        this.mensagem.dataset.tipo = tipo;
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Login and cadastro pages share this relative path to the controller.
     window.appLogin = new LoginApp('../src/controller/roteadorLogin.php');
 });

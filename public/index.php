@@ -136,7 +136,7 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
                 <span class="card-desc">Escolha seus Pokémon e monte a equipe</span>
             </a>
 
-            <a class="card-menu card-batalha" href="#" onclick="navegar('battle'); return false;">
+            <a class="card-menu card-batalha" href="battle.php">
                 <span class="card-titulo">Ir para batalha</span>
                 <span class="card-desc">Enfrente um oponente e ganhe pokédollars</span>
             </a>

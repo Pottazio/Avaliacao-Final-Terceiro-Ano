@@ -114,10 +114,6 @@ Auth::exigirLogin('../login/login.php');
             </aside>
         </div>
     </main>
-<<<<<<< HEAD
-    <script src="JavaScript/Battle.js?v=<?= filemtime(__DIR__ . '/JavaScript/Battle.js') ?>"></script>
-=======
     <script src="JavaScript/Battle.js?v=<?= hash_file('sha256', __DIR__ . '/JavaScript/Battle.js') ?>"></script>
->>>>>>> ce4690deb94eb8349b612603db06c8dcbd653761
 </body>
 </html>

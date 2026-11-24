@@ -41,8 +41,8 @@ class LoginController
 
             $this->responder(true, 'Login realizado com sucesso.', [
                 'nome' => $dados['nome'],
-                'rota' => '../../public/index.php',
-            ]);
+                'rota' => '../public/index.php',
+            ], rotaTradicional: '../../public/index.php');
         } catch (CredenciaisInvalidasException $e) {
             $this->responder(false, $e->getMessage(), error: true);
         } catch (DadosInvalidosException $e) {
@@ -66,19 +66,22 @@ class LoginController
                 ->setEmail($email)
                 ->setSenha($senha);
 
-            $idPerfil = $this->usuarioModel->cadastrar();
-
-            Auth::logar(
-                (int) $this->usuarioModel->getIdUsuario(),
-                $idPerfil,
-                $this->usuarioModel->getNome()
-            );
+            $this->usuarioModel->cadastrar();
+            $_SESSION['sucesso_cadastro'] =
+                'Cadastro realizado com sucesso. Agora entre com seu e-mail e senha.';
 
             $this->responder(true, 'Conta criada com sucesso.', [
-                'rota' => '../public/index.php',
-            ]);
+                'rota' => 'login.php',
+            ], rotaTradicional: '../../login/login.php');
         } catch (DadosInvalidosException $e) {
-            $this->responder(false, $e->getMessage(), error: true, status: 400);
+            $this->responder(
+                false,
+                $e->getMessage(),
+                error: true,
+                status: 400,
+                rotaErroTradicional: '../../login/cadastro.php',
+                chaveErro: 'erro_cadastro'
+            );
         } catch (PDOException $e) {
             // 1062 = e-mail duplicado (constraint UQ_usuarios_email).
             $duplicado = (int) ($e->errorInfo[1] ?? 0) === 1062;
@@ -86,7 +89,14 @@ class LoginController
                 error_log('[LoginController::cadastrar] ' . $e->getMessage());
             }
             $msg = $duplicado ? 'Este e-mail já está cadastrado.' : 'Erro ao cadastrar. Tente novamente.';
-            $this->responder(false, $msg, error: true, status: $duplicado ? 409 : 500);
+            $this->responder(
+                false,
+                $msg,
+                error: true,
+                status: $duplicado ? 409 : 500,
+                rotaErroTradicional: '../../login/cadastro.php',
+                chaveErro: 'erro_cadastro'
+            );
         }
     }
 
@@ -98,7 +108,12 @@ class LoginController
         foreach ($this->usuarioModel->listarPerfis() as $p) {
             if ((int) $p['id_perfil'] === $idPerfil) {
                 Auth::trocarPerfil($idPerfil);
-                $this->responder(true, 'Perfil trocado.', ['rota' => '../../public/index.php']);
+                $this->responder(
+                    true,
+                    'Perfil trocado.',
+                    ['rota' => '../public/index.php'],
+                    rotaTradicional: '../../public/index.php'
+                );
                 return;
             }
         }
@@ -127,7 +142,10 @@ class LoginController
         string $mensagem,
         array $extra = [],
         bool $error = false,
-        ?int $status = null
+        ?int $status = null,
+        ?string $rotaTradicional = null,
+        ?string $rotaErroTradicional = null,
+        string $chaveErro = 'erro_login'
     ): void
     {
         if ($this->ehAjax()) {
@@ -142,15 +160,16 @@ class LoginController
 
         // Form tradicional (sem JS): mensagem pela sessão e volta.
         if (!$sucesso) {
-            $_SESSION['erro_login'] = $mensagem;
-            $destino = ($_GET['acao'] ?? $_POST['acao'] ?? '') === 'cadastrar'
-                ? '../../login/cadastro.php'
-                : '../../login/login.php';
+            $_SESSION[$chaveErro] = $mensagem;
+            $destino = $rotaErroTradicional
+                ?? (($_GET['acao'] ?? $_POST['acao'] ?? '') === 'cadastrar'
+                    ? '../../login/cadastro.php'
+                    : '../../login/login.php');
             header('Location: ' . $destino);
             exit;
         }
 
-        header('Location: ' . ($extra['rota'] ?? '../../public/index.php'));
+        header('Location: ' . ($rotaTradicional ?? '../../public/index.php'));
         exit;
     }
 

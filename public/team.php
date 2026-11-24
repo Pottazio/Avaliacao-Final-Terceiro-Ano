@@ -50,8 +50,8 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POKENOAS | Team Builder</title>
-    <link rel="stylesheet" href="CSS/style.css?v=<?= (int) filemtime(__DIR__ . '/CSS/style.css') ?>?v=team-styles-20261123">
-    <link rel="stylesheet" href="CSS/time.css?v=<?= (int) filemtime(__DIR__ . '/CSS/time.css') ?>?v=team-styles-20261123">
+    <link rel="stylesheet" href="CSS/style.css?v=<?= (int) filemtime(__DIR__ . '/CSS/style.css') ?>">
+    <link rel="stylesheet" href="CSS/time.css?v=<?= (int) filemtime(__DIR__ . '/CSS/time.css') ?>">
 </head>
 <body class="jogo time-page">
 
@@ -86,9 +86,21 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
 
         <p id="mensagemTime" class="login-msg"></p>
 
+        <!-- ---------------- TIME ATUAL ---------------- -->
+        <section class="bloco">
+            <h2 class="bloco-titulo">Meu time</h2>
+            <p class="bloco-desc">
+                Sua equipe pode ter até seis Pokémon. Os atributos ficam resumidos em cada cartão.
+            </p>
+
+            <div id="listaTime" class="grade-time">
+                <p class="time-vazio">Carregando o time...</p>
+            </div>
+        </section>
+
         <!-- ---------------- ESCOLHA DE POKÉMON ---------------- -->
         <section class="bloco">
-            <h2 class="bloco-titulo">Escolher time</h2>
+            <h2 class="bloco-titulo">Pokédex desbloqueada</h2>
             <p class="bloco-desc">
                 Selecione um Pokémon liberado para ver os detalhes e adicioná-lo ao time.
             </p>
@@ -101,15 +113,6 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
             </div>
 
             <div id="resultadoBusca" class="resultado-busca"></div>
-        </section>
-
-        <!-- ---------------- TIME ATUAL ---------------- -->
-        <section class="bloco">
-            <h2 class="bloco-titulo">Meu time</h2>
-
-            <div id="listaTime" class="grade-time">
-                <p class="time-vazio">Carregando o time...</p>
-            </div>
         </section>
 
     </main>

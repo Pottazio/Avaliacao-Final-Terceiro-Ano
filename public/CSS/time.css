@@ -207,8 +207,8 @@ body.time-page {
 /* ---------- Grade do time ---------- */
 .grade-time {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
 }
 
 .time-vazio {
@@ -220,57 +220,90 @@ body.time-page {
 }
 
 .slot-pokemon {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr auto;
+    align-items: center;
+    gap: 5px 9px;
+    min-width: 0;
+    padding: 10px;
     background-color: var(--branco);
     border: var(--borda-fina);
     box-shadow: var(--sombra-dura-p);
-    padding: 14px 16px;
 }
 
 .slot-sprite {
-    align-self: center;
-    width: 96px;
-    height: 96px;
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: start;
+    width: 92px;
+    height: 92px;
     object-fit: contain;
     image-rendering: pixelated;
     background: #f2ece0;
     border: var(--borda-fina);
 }
 
+.slot-identificacao {
+    grid-column: 2;
+    min-width: 0;
+}
+
 .slot-nome {
     font-family: var(--fonte-titulo);
-    font-size: 0.72rem;
-    line-height: 1.6;
+    font-size: 0.62rem;
+    line-height: 1.4;
     color: var(--azul);
     text-transform: capitalize;
     word-break: break-word;
+    margin-bottom: 4px;
 }
 
 .slot-tipos {
-    font-size: 1.05rem;
+    font-size: 0.88rem;
     color: #6b6b6b;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-.slot-vel {
-    font-family: var(--fonte-titulo);
-    font-size: 0.65rem;
+.slot-atributos {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 6px;
+    margin: 0;
+}
+
+.slot-atributo {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    min-width: 0;
+    padding: 3px 5px;
+    background: #f2ece0;
+    font-size: 0.82rem;
+    line-height: 1.2;
+}
+
+.slot-atributo dt {
+    overflow-wrap: anywhere;
+}
+
+.slot-atributo dd {
+    flex: 0 0 auto;
     color: var(--vermelho);
+    font-weight: bold;
 }
 
 .btn-remover {
+    grid-column: 1 / -1;
     align-self: flex-start;
     font-family: var(--fonte-titulo);
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: var(--branco);
     background-color: var(--azul);
     border: 3px solid var(--preto);
-    padding: 8px 12px;
-    margin-top: 8px;
+    padding: 6px 9px;
     cursor: pointer;
     transition: transform 0.08s steps(2);
 }
@@ -284,6 +317,17 @@ body.time-page {
 @media (max-width: 760px) {
     .grade-time {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .slot-pokemon {
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 5px 7px;
+        padding: 8px;
+    }
+
+    .slot-sprite {
+        width: 64px;
+        height: 64px;
     }
 
     .minha-carta {
@@ -302,7 +346,28 @@ body.time-page {
 
 @media (max-width: 520px) {
     .grade-time {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
     }
 
+    .slot-pokemon {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+    }
+
+    .slot-sprite,
+    .slot-identificacao,
+    .slot-atributos,
+    .btn-remover {
+        grid-column: 1;
+    }
+
+    .slot-sprite {
+        grid-row: auto;
+    }
+
+    .slot-atributo {
+        font-size: 0.72rem;
+    }
 }

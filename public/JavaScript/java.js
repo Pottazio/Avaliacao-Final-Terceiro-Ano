@@ -21,7 +21,6 @@ class Pokenoas{
 
         const paginas = [
             "index",
-            "team",
             "battle",
             "shop"
         ];

@@ -422,20 +422,45 @@ class TimeApp {
             slot.appendChild(imagem);
         }
 
+        const identificacao = document.createElement('div');
+        identificacao.className = 'slot-identificacao';
+
         const nome = document.createElement('p');
         nome.className = 'slot-nome';
         nome.textContent = p.nome;
-        slot.appendChild(nome);
+        identificacao.appendChild(nome);
 
         const tipos = document.createElement('p');
         tipos.className = 'slot-tipos';
         tipos.textContent = p.tipos ?? '—';
-        slot.appendChild(tipos);
+        identificacao.appendChild(tipos);
+        slot.appendChild(identificacao);
 
-        const vel = document.createElement('p');
-        vel.className = 'slot-vel';
-        vel.textContent = `VEL ${p.SPE}`;
-        slot.appendChild(vel);
+        const atributos = [
+            ['HP', p.HP],
+            ['Ataque', p.ATQ],
+            ['Defesa', p.DEF],
+            ['Velocidade', p.SPE],
+            ['Ataque esp.', p.ATQE],
+            ['Defesa esp.', p.DEFE],
+        ];
+        const resumo = document.createElement('dl');
+        resumo.className = 'slot-atributos';
+
+        atributos.forEach(([rotulo, valor]) => {
+            const item = document.createElement('div');
+            item.className = 'slot-atributo';
+
+            const termo = document.createElement('dt');
+            termo.textContent = rotulo;
+
+            const valorAtributo = document.createElement('dd');
+            valorAtributo.textContent = valor ?? '—';
+
+            item.append(termo, valorAtributo);
+            resumo.appendChild(item);
+        });
+        slot.appendChild(resumo);
 
         const remover = document.createElement('button');
         remover.type = 'button';
@@ -443,7 +468,6 @@ class TimeApp {
         remover.textContent = 'Remover';
         remover.addEventListener('click', () => this.remover(p.id_pokemon));
         slot.appendChild(remover);
-
         return slot;
     }
 

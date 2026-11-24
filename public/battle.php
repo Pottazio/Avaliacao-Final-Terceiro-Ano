@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../bootstrap.php';
 
 use src\core\Auth;
 
@@ -67,10 +67,9 @@ Auth::exigirLogin('../login/login.php');
                             <p id="jogadorNivel" class="fighter-level"></p>
                             <progress id="jogadorHpBar" max="1" value="0"></progress>
                             <p id="jogadorHpTexto" class="hp-text">—</p>
-                            <p id="jogadorEstagios" class="stage-text"></p>
                         </div>
                         <img id="jogadorSprite" class="fighter-sprite player-sprite"
-                             alt="" width="180" height="180">
+                             alt="" width="180" height="180" hidden>
                     </article>
                     <article class="fighter-card opponent-card">
                         <div class="fighter-details">
@@ -79,26 +78,31 @@ Auth::exigirLogin('../login/login.php');
                             <p id="oponenteNivel" class="fighter-level"></p>
                             <progress id="oponenteHpBar" max="1" value="0"></progress>
                             <p id="oponenteHpTexto" class="hp-text">—</p>
-                            <p id="oponenteEstagios" class="stage-text"></p>
                         </div>
                         <img id="oponenteSprite" class="fighter-sprite opponent-sprite"
-                             alt="" width="180" height="180">
+                             alt="" width="180" height="180" hidden>
                     </article>
                 </section>
 
                 <section class="battle-panel moves-panel" aria-labelledby="moves-title">
                     <div class="moves-heading">
                         <h2 id="moves-title">Ataques disponíveis</h2>
-                        <p>Movimentos e atributos carregados da PokéAPI</p>
+                        <p>Área Inicial: golpes até Nv. 20; depois, golpes até o nível atual do Pokémon.</p>
                     </div>
                     <div id="ataquesDisponiveis" class="move-grid" aria-live="polite">
                         <p>Inicie uma batalha para carregar os ataques.</p>
                     </div>
-                    <div class="battle-tools" aria-label="Outras ações">
-                        <button type="button" data-acao="aumentar_ataque" disabled>Aumentar ATQ</button>
-                        <button type="button" data-acao="reduzir_ataque" disabled>Reduzir ATQ inimigo</button>
+                    <div class="battle-tools" aria-label="Ação da batalha">
                         <button id="fugirBatalha" class="btn-secondary" type="button" disabled>Encerrar batalha</button>
                     </div>
+                </section>
+
+                <section id="equipeBatalha" class="battle-panel switch-panel" aria-labelledby="switch-title" hidden>
+                    <div class="moves-heading">
+                        <h2 id="switch-title">Seu time</h2>
+                        <p>Trocar de Pokémon consome seu turno.</p>
+                    </div>
+                    <div id="opcoesPokemonTime" class="switch-grid" aria-live="polite"></div>
                 </section>
             </div>
 
@@ -110,6 +114,10 @@ Auth::exigirLogin('../login/login.php');
             </aside>
         </div>
     </main>
+<<<<<<< HEAD
     <script src="JavaScript/Battle.js?v=<?= filemtime(__DIR__ . '/JavaScript/Battle.js') ?>"></script>
+=======
+    <script src="JavaScript/Battle.js?v=<?= hash_file('sha256', __DIR__ . '/JavaScript/Battle.js') ?>"></script>
+>>>>>>> ce4690deb94eb8349b612603db06c8dcbd653761
 </body>
 </html>

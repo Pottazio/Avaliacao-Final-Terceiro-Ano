@@ -7,14 +7,17 @@
  * o PHP so recebe os atributos ja normalizados e grava no banco.
  */
 
-require_once __DIR__ . '/../bootstrap.php';
+require __DIR__ . '/../bootstrap.php';
 
 use src\core\Auth;
 use config\Database;
+use models\ProgressaoJogo;
 
 Auth::exigirLogin('../login/login.php');
 
 $pdo = Database::conectar();
+$progresso = ProgressaoJogo::carregar($pdo, Auth::idPerfil());
+$nivelMaximo = $progresso['nivel_maximo'];
 
 // Time do perfil (cria se ainda nao existir)
 $stmt = $pdo->prepare('SELECT id_time, nome FROM times WHERE id_perfil = :id_perfil ORDER BY id_time LIMIT 1');
@@ -50,7 +53,7 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
     <link rel="stylesheet" href="CSS/style.css?v=<?= (int) filemtime(__DIR__ . '/CSS/style.css') ?>">
     <link rel="stylesheet" href="CSS/time.css?v=<?= (int) filemtime(__DIR__ . '/CSS/time.css') ?>">
 </head>
-<body class="jogo time-page">
+<body class="jogo time-page" data-nivel-maximo="<?= $nivelMaximo ?>">
 
     <main class="painel">
 
@@ -86,6 +89,23 @@ $corAvatar = $paleta[abs(crc32($nomeUsuario)) % count($paleta)];
         </header>
 
         <p id="mensagemTime" class="login-msg"></p>
+
+        <!-- ---------------- BUSCA NA POKEAPI ---------------- -->
+        <section class="bloco">
+            <h2 class="bloco-titulo">Buscar na Pokédex</h2>
+            <p class="bloco-desc">
+                Digite o nome ou o número do Pokémon. Os atributos vêm da PokeAPI.
+            </p>
+
+            <form id="formBusca" class="busca-form">
+                <input type="text" id="campoPokemon" name="nome"
+                       placeholder="pikachu, charmander, 25..."
+                       autocomplete="off" required>
+                <button type="submit">Pesquisar</button>
+            </form>
+
+            <div id="resultadoBusca" class="resultado-busca"></div>
+        </section>
 
         <!-- ---------------- TIME ATUAL ---------------- -->
         <section class="bloco">

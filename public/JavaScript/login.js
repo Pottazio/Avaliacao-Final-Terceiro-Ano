@@ -15,9 +15,9 @@ class LoginApp {
         this.formLogin = document.getElementById('formLogin');
         this.formCadastro = document.getElementById('formCadastro');
 
-        this.mensagemLogin = document.getElementById('mensagemLogin');
-        this.mensagemCadastro = document.getElementById('mensagemCadastro');
-        this.mensagem = this.mensagemLogin;
+        this.mensagem = document.getElementById('mensagemLogin');
+        this.linkCadastro = document.getElementById('mostrarCadastro');
+        this.linkVoltar = document.getElementById('voltarLogin');
 
         if (this.formLogin) this.formLogin.addEventListener('submit', (e) => this.ligacao(e));
         if (this.formCadastro) this.formCadastro.addEventListener('submit', (e) => this.ligacao(e));
@@ -41,11 +41,17 @@ class LoginApp {
         }
     }
 
+    trocarAba(evento, aba) {
+        evento.preventDefault();
+        this.limparMensagem();
+
+        const paraCadastro = aba === 'cadastro';
+        this.telaLogin.style.display = paraCadastro ? 'none' : 'block';
+        this.telaCadastro.style.display = paraCadastro ? 'block' : 'none';
+    }
+
     /** Requisição assíncrona; o backend responde em JSON. */
     async enviar(acao, dados) {
-        this.mensagem = acao === 'cadastrar'
-            ? this.mensagemCadastro
-            : this.mensagemLogin;
         this.mostrarMensagem('Enviando...', 'info');
         this.bloquear(true);
 
@@ -62,22 +68,22 @@ class LoginApp {
             const json = await resposta.json();
 
             if (json.sucesso) {
-                this.mostrarMensagem(
-                    acao === 'cadastrar'
-                        ? 'Cadastro concluído. Redirecionando para o login...'
-                        : 'Entrando...',
-                    'ok'
-                );
-                if (acao === 'cadastrar') {
-                    await new Promise((resolve) => setTimeout(resolve, 900));
-                }
+                this.mostrarMensagem('Entrando...', 'ok');
                 window.location.href = json.rota || '../public/index.php';
                 return;
             }
 
-            this.mostrarMensagem(json.mensagem || 'Não foi possível entrar.', 'erro');
+            this.mostrarMensagem(
+                acao,
+                json.mensagem || 'Não foi possível concluir a operação.',
+                'erro'
+            );
         } catch (erro) {
-            this.mostrarMensagem('Falha de conexão com o servidor.', 'erro');
+            this.mostrarMensagem(
+                acao,
+                erro instanceof TypeError ? 'Falha de conexão com o servidor.' : erro.message,
+                'erro'
+            );
             console.error(erro);
         } finally {
             this.bloquear(false);
@@ -93,11 +99,15 @@ class LoginApp {
         });
     }
 
-    mostrarMensagem(texto, tipo = 'erro') {
-        if (!this.mensagem) return;
-        this.mensagem.textContent = texto;
-        this.mensagem.style.color =
-            tipo === 'erro' ? '#d62828' : tipo === 'ok' ? '#2a9d8f' : '#555';
+    mostrarMensagem(acao, texto, tipo = 'erro') {
+        const mensagem = acao === 'cadastrar' ? this.mensagemCadastro : this.mensagemLogin;
+        if (!mensagem) return;
+        mensagem.textContent = texto;
+        mensagem.dataset.tipo = tipo;
+    }
+
+    limparMensagem() {
+        if (this.mensagem) this.mensagem.textContent = '';
     }
 }
 

@@ -6,7 +6,7 @@ namespace src\core;
 /**
  * Guarda de sessão. Inclua o bootstrap e chame nas páginas protegidas:
  *
- *     require_once __DIR__ . '/../bootstrap.php';
+ *     require __DIR__ . '/../bootstrap.php';
  *     Auth::exigirLogin('../login/login.php');
  */
 class Auth

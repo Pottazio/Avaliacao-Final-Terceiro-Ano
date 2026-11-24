@@ -170,10 +170,24 @@ class Time
      * Insere o Pokemon no time, na próxima posição livre.
      * Devolve a posição usada.
      */
-    public function inserirPokemon(int $idPokemon): int
+    public function inserirPokemon(int $idPokemon, int $nivel = 1): int
     {
         if ($this->idTime === null) {
             throw new TimeInvalidoException('Time não carregado.');
+        }
+        if ($nivel < 1 || $nivel > 100) {
+            throw new TimeInvalidoException('O nível do Pokémon deve estar entre 1 e 100.');
+        }
+        $pokedex = $this->conexao->prepare(
+            'SELECT p.id_pokedex
+               FROM pokemons pk
+               JOIN pokedex p ON p.id_pokedex = pk.id_pokedex
+              WHERE pk.id_pokemon = :id_pokemon
+                AND p.id_pokedex BETWEEN 1 AND 151'
+        );
+        $pokedex->execute([':id_pokemon' => $idPokemon]);
+        if ($pokedex->fetchColumn() === false) {
+            throw new TimeInvalidoException('Só é possível adicionar Pokémon da primeira geração (#001–#151).');
         }
 
         $posicao = $this->proximaPosicao();
@@ -194,16 +208,58 @@ class Time
         }
 
         $stmt = $this->conexao->prepare(
-            'INSERT INTO time_pokemons (id_time, id_pokemon, posicao)
-             VALUES (:id_time, :id_pokemon, :posicao)'
+            'INSERT INTO time_pokemons (id_time, id_pokemon, posicao, nivel)
+             VALUES (:id_time, :id_pokemon, :posicao, :nivel)'
         );
         $stmt->execute([
             ':id_time'    => $this->idTime,
             ':id_pokemon' => $idPokemon,
             ':posicao'    => $posicao,
+            ':nivel'      => $nivel,
         ]);
 
         return $posicao;
+    }
+
+    public function atualizarNivel(int $idPokemon, int $nivel): bool
+    {
+        if ($this->idTime === null) {
+            throw new TimeInvalidoException('Time não carregado.');
+        }
+        if ($nivel < 1 || $nivel > 100) {
+            throw new TimeInvalidoException('O nível do Pokémon deve estar entre 1 e 100.');
+        }
+
+        $stmt = $this->conexao->prepare(
+            'UPDATE time_pokemons tp
+              JOIN pokemons pk ON pk.id_pokemon = tp.id_pokemon
+              JOIN pokedex p ON p.id_pokedex = pk.id_pokedex
+                SET tp.nivel = :nivel
+              WHERE tp.id_time = :id_time AND tp.id_pokemon = :id_pokemon
+                AND p.id_pokedex BETWEEN 1 AND 151'
+        );
+        $stmt->execute([
+            ':nivel' => $nivel,
+            ':id_time' => $this->idTime,
+            ':id_pokemon' => $idPokemon,
+        ]);
+        if ($stmt->rowCount() > 0) {
+            return true;
+        }
+
+        $consulta = $this->conexao->prepare(
+            'SELECT 1
+               FROM time_pokemons tp
+               JOIN pokemons pk ON pk.id_pokemon = tp.id_pokemon
+               JOIN pokedex p ON p.id_pokedex = pk.id_pokedex
+              WHERE tp.id_time = :id_time AND tp.id_pokemon = :id_pokemon
+                AND p.id_pokedex BETWEEN 1 AND 151'
+        );
+        $consulta->execute([
+            ':id_time' => $this->idTime,
+            ':id_pokemon' => $idPokemon,
+        ]);
+        return $consulta->fetchColumn() !== false;
     }
 
     public function removerPokemon(int $idPokemon): bool
@@ -241,19 +297,19 @@ class Time
         }
 
         $sql = 'SELECT pk.id_pokemon,
-                       pk.id_pokedex,
                        pk.nome,
                        pk.status,
                        p.name AS especie,
                        p.HP, p.ATQ, p.ATQE, p.DEF, p.DEFE, p.SPE,
-                       tp.posicao,
+                       tp.posicao, tp.nivel,
                        GROUP_CONCAT(t.nome ORDER BY t.nome SEPARATOR ", ") AS tipos
                   FROM time_pokemons tp
                   JOIN pokemons pk ON pk.id_pokemon = tp.id_pokemon
                   JOIN pokedex  p  ON p.id_pokedex  = pk.id_pokedex
                   LEFT JOIN pokemon_tipos pt ON pt.id_pokemon = pk.id_pokemon
                   LEFT JOIN tipos t          ON t.id_tipo    = pt.id_tipo
-                 WHERE tp.id_time = :id_time
+                  WHERE tp.id_time = :id_time
+                    AND p.id_pokedex BETWEEN 1 AND 151
                  GROUP BY pk.id_pokemon, tp.posicao
                  ORDER BY tp.posicao';
 

@@ -1,7 +1,10 @@
-
 <?php
+declare(strict_types=1);
 
-require_once __DIR__ . "/../../config/DataBase.php";
+namespace src\dao;
+
+use config\Database;
+use PDO;
 
 class UsuarioDAO
 {

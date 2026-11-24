@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Fica na RAIZ do projeto (Avaliacao-Final-Terceiro-Ano/bootstrap.php).
  */
 
-require_once __DIR__ . '/src/core/Autoload.php';
+require __DIR__ . '/src/core/Autoload.php';
 
 use src\core\Autoload;
 

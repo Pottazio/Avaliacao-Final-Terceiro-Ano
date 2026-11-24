@@ -14,6 +14,8 @@ use RuntimeException;
  */
 class Pokemon
 {
+    public const MAX_PRIMEIRA_GERACAO = 151;
+
     private ?int $idPokemon = null;
     private int $idPokedex = 0;
     private string $nome = '';
@@ -62,8 +64,8 @@ class Pokemon
 
     public function setIdPokedex(int $id): self
     {
-        if ($id <= 0) {
-            throw new DadosPokemonInvalidosException('id_pokedex inválido.');
+        if ($id < 1 || $id > self::MAX_PRIMEIRA_GERACAO) {
+            throw new DadosPokemonInvalidosException('Escolha um Pokémon da primeira geração (#001–#151).');
         }
         $this->idPokedex = $id;
         return $this;
@@ -126,6 +128,10 @@ class Pokemon
      */
     public function salvarNaPokedex(int $idPokedex, string $especie, array $atributos): void
     {
+        if ($idPokedex < 1 || $idPokedex > self::MAX_PRIMEIRA_GERACAO) {
+            throw new DadosPokemonInvalidosException('Só é permitido cadastrar Pokémon da primeira geração (#001–#151).');
+        }
+
         $sql = 'INSERT INTO pokedex (id_pokedex, name, HP, ATQ, ATQE, DEF, DEFE, SPE)
                 VALUES (:id_pokedex, :name, :HP, :ATQ, :ATQE, :DEF, :DEFE, :SPE)
                 ON DUPLICATE KEY UPDATE

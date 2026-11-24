@@ -41,16 +41,19 @@ class LoginController
 
             $this->responder(true, 'Login realizado com sucesso.', [
                 'nome' => $dados['nome'],
-                'rota' => '../public/index.php',
+                'rota' => '../../public/index.php',
             ]);
-        } catch (CredenciaisInvalidasException | DadosInvalidosException $e) {
+        } catch (CredenciaisInvalidasException $e) {
             $this->responder(false, $e->getMessage(), error: true);
+        } catch (DadosInvalidosException $e) {
+            $this->responder(false, $e->getMessage(), error: true, status: 400);
         } catch (PDOException $e) {
-            $this->responder(false, 'Erro ao consultar o banco de dados.', error: true);
+            error_log('[LoginController::entrar] ' . $e->getMessage());
+            $this->responder(false, 'Erro ao consultar o banco de dados.', error: true, status: 500);
         }
     }
 
-    /** POST nome + email + senha -> cria usuário e perfil */
+    /** POST nome + email + senha -> cria usuário e perfil sem abrir sessão */
     public function cadastrar(): void
     {
         $nome  = (string) ($_POST['nome'] ?? '');
@@ -63,19 +66,27 @@ class LoginController
                 ->setEmail($email)
                 ->setSenha($senha);
 
-            $this->usuarioModel->cadastrar();
+            $idPerfil = $this->usuarioModel->cadastrar();
 
-            $this->responder(true, 'Conta criada com sucesso. Faça login para continuar.', [
-                'rota' => $this->rotaPublica('/login/login.php'),
+            Auth::logar(
+                (int) $this->usuarioModel->getIdUsuario(),
+                $idPerfil,
+                $this->usuarioModel->getNome()
+            );
+
+            $this->responder(true, 'Conta criada com sucesso.', [
+                'rota' => '../public/index.php',
             ]);
         } catch (DadosInvalidosException $e) {
-            $this->responder(false, $e->getMessage(), error: true);
+            $this->responder(false, $e->getMessage(), error: true, status: 400);
         } catch (PDOException $e) {
             // 1062 = e-mail duplicado (constraint UQ_usuarios_email).
-            $msg = ((int) ($e->errorInfo[1] ?? 0) === 1062)
-                ? 'Este e-mail já está cadastrado.'
-                : 'Erro ao cadastrar. Tente novamente.';
-            $this->responder(false, $msg, error: true);
+            $duplicado = (int) ($e->errorInfo[1] ?? 0) === 1062;
+            if (!$duplicado) {
+                error_log('[LoginController::cadastrar] ' . $e->getMessage());
+            }
+            $msg = $duplicado ? 'Este e-mail já está cadastrado.' : 'Erro ao cadastrar. Tente novamente.';
+            $this->responder(false, $msg, error: true, status: $duplicado ? 409 : 500);
         }
     }
 
@@ -87,12 +98,12 @@ class LoginController
         foreach ($this->usuarioModel->listarPerfis() as $p) {
             if ((int) $p['id_perfil'] === $idPerfil) {
                 Auth::trocarPerfil($idPerfil);
-                $this->responder(true, 'Perfil trocado.', ['rota' => '../public/index.php']);
+                $this->responder(true, 'Perfil trocado.', ['rota' => '../../public/index.php']);
                 return;
             }
         }
 
-        $this->responder(false, 'Perfil inválido.', error: true);
+        $this->responder(false, 'Perfil inválido.', error: true, status: 400);
     }
 
     public function sair(): void
@@ -111,11 +122,17 @@ class LoginController
     }
 
     /** Transporte de dados via JSON (requisito do trabalho). */
-    private function responder(bool $sucesso, string $mensagem, array $extra = [], bool $error = false): void
+    private function responder(
+        bool $sucesso,
+        string $mensagem,
+        array $extra = [],
+        bool $error = false,
+        ?int $status = null
+    ): void
     {
         if ($this->ehAjax()) {
             header('Content-Type: application/json; charset=utf-8');
-            http_response_code($error ? 401 : 200);
+            http_response_code($status ?? ($error ? 401 : 200));
             echo json_encode(
                 ['sucesso' => $sucesso, 'mensagem' => $mensagem] + $extra,
                 JSON_UNESCAPED_UNICODE
@@ -133,7 +150,7 @@ class LoginController
             exit;
         }
 
-        header('Location: ' . ($extra['rota'] ?? '../public/index.php'));
+        header('Location: ' . ($extra['rota'] ?? '../../public/index.php'));
         exit;
     }
 

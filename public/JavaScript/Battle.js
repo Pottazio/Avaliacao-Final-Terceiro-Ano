@@ -263,6 +263,9 @@ class BattleApp {
         if (!this.progress) return;
         const progress = this.progress;
         const restante = Math.max(0, progress.vitorias_necessarias - progress.vitorias);
+        const arena = document.querySelector('.arena-panel');
+        arena.dataset.area = String(progress.area);
+        arena.classList.toggle('arena-scenic', progress.area >= 0 && progress.area <= 6);
         document.getElementById('limiteNivel').textContent = progress.nivel_maximo;
         document.getElementById('progressoTexto').textContent = progress.concluido
             ? 'A jornada foi concluída!'

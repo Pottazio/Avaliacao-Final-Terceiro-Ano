@@ -351,6 +351,59 @@ body.battle-page [hidden] {
     width: 46%;
 }
 
+.arena-panel.arena-scenic {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.arena-panel.arena-scenic::before,
+.arena-panel.arena-scenic::after {
+    display: none;
+}
+
+.arena-panel[data-area="0"] {
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.12), rgba(10, 20, 40, 0.12)),
+        url('../assets/parque.png');
+}
+
+.arena-panel[data-area="1"] {
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.12), rgba(10, 20, 40, 0.12)),
+        url('../assets/vilamimosa.png');
+}
+
+.arena-panel[data-area="2"] {
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.12), rgba(10, 20, 40, 0.12)),
+        url('../assets/rua-comercial.png');
+}
+
+.arena-panel[data-area="3"] {
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.12), rgba(10, 20, 40, 0.12)),
+        url('../assets/estacao.png');
+}
+
+.arena-panel[data-area="4"] {
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.12), rgba(10, 20, 40, 0.12)),
+        url('../assets/login-praca.png');
+}
+
+.arena-panel[data-area="5"] {
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.12), rgba(10, 20, 40, 0.12)),
+        url('../assets/rua-tranquila.png');
+}
+
+.arena-panel[data-area="6"] {
+    background-image:
+        linear-gradient(rgba(10, 20, 40, 0.12), rgba(10, 20, 40, 0.12)),
+        url('../assets/ifrs.png');
+}
+
 .fighter-card {
     align-items: flex-start;
     background: transparent;
@@ -902,5 +955,173 @@ body.battle-page [hidden] {
 @media (prefers-reduced-motion: reduce) {
     .fighter-sprite {
         animation: none;
+    }
+}
+
+@media (min-width: 1000px) {
+    body.battle-page {
+        padding: 10px 14px;
+    }
+
+    body.battle-page .painel {
+        gap: 10px;
+    }
+
+    body.battle-page .topo {
+        padding: 10px 16px;
+    }
+
+    .battle-layout {
+        gap: 12px;
+        grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
+    }
+
+    .battle-main {
+        display: grid;
+        gap: 12px;
+        grid-template-areas:
+            "progression setup"
+            "arena arena"
+            "moves moves"
+            "decision decision"
+            "team team";
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .progression-panel { grid-area: progression; }
+    .setup-panel { grid-area: setup; }
+    .arena-panel { grid-area: arena; }
+    .moves-panel { grid-area: moves; }
+    .switch-decision-panel { grid-area: decision; }
+    .switch-panel { grid-area: team; }
+
+    .battle-panel {
+        padding: 12px 14px;
+    }
+
+    .progression-heading,
+    .setup-panel {
+        gap: 8px;
+    }
+
+    .progression-heading p,
+    .setup-panel p {
+        font-size: 0.95rem;
+        margin-top: 3px;
+    }
+
+    .level-cap {
+        padding: 7px 8px;
+    }
+
+    .battle-panel progress {
+        height: 10px;
+        margin-top: 8px;
+    }
+
+    .stage-list {
+        gap: 4px;
+        margin-top: 8px;
+    }
+
+    .stage-list li {
+        font-size: 0.85rem;
+        padding: 3px;
+    }
+
+    .setup-panel {
+        align-items: stretch;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .battle-setup {
+        display: grid;
+        gap: 5px 8px;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .battle-setup label {
+        font-size: 0.58rem;
+        grid-column: 1 / -1;
+    }
+
+    .battle-setup select {
+        font-size: 0.95rem;
+        max-width: none;
+        min-width: 0;
+        padding: 5px;
+    }
+
+    .battle-setup .btn {
+        font-size: 0.55rem;
+        padding: 7px;
+    }
+
+    .arena-panel {
+        gap: 12px;
+        min-height: clamp(270px, 38vh, 340px);
+        padding: 14px;
+    }
+
+    .fighter-card {
+        min-height: 250px;
+    }
+
+    .fighter-details {
+        padding: 10px 12px;
+    }
+
+    .move-grid {
+        gap: 8px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-top: 8px;
+    }
+
+    .move-button {
+        min-height: 60px;
+        padding: 8px 10px;
+    }
+
+    .move-details {
+        font-size: 0.8rem;
+    }
+
+    .battle-tools {
+        gap: 8px;
+        margin-top: 8px;
+        padding-top: 8px;
+    }
+
+    .battle-tools button {
+        font-size: 0.52rem;
+        padding: 8px;
+    }
+
+    .log-panel {
+        max-height: calc(100vh - 20px);
+        min-height: 0;
+        padding: 10px;
+        top: 10px;
+    }
+
+    .log-panel h2 {
+        padding-bottom: 6px;
+    }
+
+    .battle-log {
+        margin-top: 8px;
+        max-height: none;
+    }
+
+    .battle-log li {
+        font-size: 0.86rem;
+        padding: 5px 7px;
+    }
+
+    .battle-log-icon {
+        flex-basis: 24px;
+        height: 24px;
+        width: 24px;
     }
 }

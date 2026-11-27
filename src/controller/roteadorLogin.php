@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Front controller do login.
  * Aceita POST ?acao=entrar | cadastrar | trocarPerfil | sair
- * e também chamadas JSON via fetch do Login.js.
+ * e também chamadas JSON via fetch do login-form.js.
  */
 
 require __DIR__ . '/../../bootstrap.php';

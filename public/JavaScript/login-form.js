@@ -1,6 +1,6 @@
 /**
  * MONSTROBOLSO - Login e cadastro (lado cliente).
- * Caminho do projeto: public/JavaScript/login.js
+ * Caminho do projeto: public/JavaScript/login-form.js
  *
  * Orientação a Objetos em JavaScript (requisito do trabalho):
  * a classe LoginApp encapsula estado e comportamento e fala com o

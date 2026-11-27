@@ -147,6 +147,6 @@ Auth::exigirLogin('../login/login.php');
             </aside>
         </div>
     </main>
-    <script src="JavaScript/Battle.js?v=<?= hash_file('sha256', __DIR__ . '/JavaScript/Battle.js') ?>"></script>
+    <script type="module" src="JavaScript/battle-app.js?v=<?= hash_file('sha256', __DIR__ . '/JavaScript/battle-app.js') ?>"></script>
 </body>
 </html>

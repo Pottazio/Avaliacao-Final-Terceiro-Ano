@@ -12,7 +12,7 @@ use src\core\Auth;
 
 /**
  * Controller de login e cadastro.
- * Responde JSON quando a requisição é assíncrona (fetch do Login.js)
+ * Responde JSON quando a requisição é assíncrona (fetch do login-form.js)
  * e redireciona quando vem de um <form> tradicional.
  */
 class LoginController

@@ -143,6 +143,5 @@ $qtdVitoria = (int) ($qtd['qtd_vitoria'] ?? 0);
         </footer>
     </main>
 
-    <script src="JavaScript/java.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/java.js') ?>"></script>
 </body>
 </html>

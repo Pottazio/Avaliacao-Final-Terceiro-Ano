@@ -4,7 +4,7 @@
  * View só apresenta; quem decide é o LoginController.
  * Caminho do projeto: login/login.php
  *
- * IMPORTANTE: os id/name dos campos abaixo são usados pelo login.js.
+ * IMPORTANTE: os id/name dos campos abaixo são usados pelo login-form.js.
  * Ao mexer no visual, mude apenas classes e estrutura, nunca os id/name.
  */
 
@@ -101,6 +101,6 @@ foreach ([
         </section>
     </main>
 
-    <script src="../public/JavaScript/login.js"></script>
+    <script src="../public/JavaScript/login-form.js"></script>
 </body>
 </html>

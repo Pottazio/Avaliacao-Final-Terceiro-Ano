@@ -3,7 +3,7 @@
  * POKENOAS - Team Builder (montagem de time).
  * Caminho do projeto: public/team.php
  *
- * Consumo de API: a PokeAPI e consultada pelo Time.js (fetch assincrono);
+ * Consumo de API: o cliente da PokeAPI e a tela do Team Builder ficam em módulos separados;
  * o PHP so recebe os atributos ja normalizados e grava no banco.
  */
 
@@ -177,6 +177,6 @@ $emBatalha = $stmtBatalha->fetchColumn() !== false;
         </form>
     </dialog>
 
-    <script src="JavaScript/Time.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/Time.js') ?>"></script>
+    <script type="module" src="JavaScript/team-builder.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/team-builder.js') ?>"></script>
 </body>
 </html>

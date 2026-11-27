@@ -57,7 +57,6 @@ $corAvatar = $paleta[abs(crc32((string) $perfil['nome_perfil'])) % count($paleta
         </section>
     </main>
 
-    <script src="JavaScript/java.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/java.js') ?>"></script>
-    <script>jogo.configurarLoja();</script>
+    <script type="module" src="JavaScript/shop-page.js?v=<?= (int) filemtime(__DIR__ . '/JavaScript/shop-page.js') ?>"></script>
 </body>
 </html>

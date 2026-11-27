@@ -63,6 +63,6 @@ unset($_SESSION['erro_cadastro']);
         </section>
     </main>
 
-    <script src="../public/JavaScript/login.js"></script>
+    <script src="../public/JavaScript/login-form.js"></script>
 </body>
 </html>

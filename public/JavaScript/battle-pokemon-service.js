@@ -1,6 +1,13 @@
+import { PokeApiClient } from './pokeapi-client.js';
+
 export class BattlePokemonService {
     constructor() {
         this.cacheMovimentos = new Map();
+        this.pokedexApi = new PokeApiClient();
+    }
+
+    obterEstagioPrimeiraGeracao(idPokemon) {
+        return this.pokedexApi.obterEstagioPrimeiraGeracao(idPokemon);
     }
 
     async buscarPokemonApi(identificador) {

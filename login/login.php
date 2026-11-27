@@ -31,7 +31,7 @@ foreach ([
     'src/core/Auth.php'                => __DIR__ . '/../src/core/Auth.php',
     'models/Usuario.php'               => __DIR__ . '/../models/Usuario.php',
     'src/controller/roteadorLogin.php' => __DIR__ . '/../src/controller/roteadorLogin.php',
-    'config/DataBase.php'              => __DIR__ . '/../config/DataBase.php',
+    'config/Database.php'              => __DIR__ . '/../config/Database.php',
 ] as $rotulo => $caminho) {
     if (!is_file($caminho)) {
         $avisos[] = "Arquivo ausente: {$rotulo}";

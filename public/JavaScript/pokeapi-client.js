@@ -6,6 +6,8 @@ export class PokeApiClient {
         this.base = base;
         this.cache = new Map();          // evita repetir a mesma busca
         this.moveCache = new Map();
+        this.evolutionStageCache = new Map();
+        this.evolutionChainCache = new Map();
         this.listaCache = null;
     }
 
@@ -83,6 +85,67 @@ export class PokeApiClient {
 
         this.cache.set(chave, normalizado);
         return normalizado;
+    }
+
+    async obterEstagioPrimeiraGeracao(idPokemon) {
+        const id = Number(idPokemon);
+        if (!Number.isInteger(id) || id < 1 || id > PokeApiClient.MAX_PRIMEIRA_GERACAO) {
+            throw new Error('Só estão disponíveis Pokémon da primeira geração (#001–#151).');
+        }
+
+        if (!this.evolutionStageCache.has(id)) {
+            const requisicao = this.carregarEstagioPrimeiraGeracao(id);
+            this.evolutionStageCache.set(id, requisicao);
+            requisicao.catch(() => this.evolutionStageCache.delete(id));
+        }
+
+        return this.evolutionStageCache.get(id);
+    }
+
+    async carregarEstagioPrimeiraGeracao(idPokemon) {
+        const respostaEspecie = await fetch(`${this.base}/pokemon-species/${idPokemon}`);
+        if (!respostaEspecie.ok) {
+            throw new Error('Não foi possível carregar a evolução deste Pokémon na PokéAPI.');
+        }
+        const especie = await respostaEspecie.json();
+        const urlCadeia = especie.evolution_chain?.url;
+        if (typeof urlCadeia !== 'string') {
+            throw new Error('A PokéAPI não informou a cadeia evolutiva deste Pokémon.');
+        }
+
+        if (!this.evolutionChainCache.has(urlCadeia)) {
+            const requisicao = fetch(urlCadeia).then((resposta) => {
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível carregar a cadeia evolutiva na PokéAPI.');
+                }
+                return resposta.json();
+            });
+            this.evolutionChainCache.set(urlCadeia, requisicao);
+            requisicao.catch(() => this.evolutionChainCache.delete(urlCadeia));
+        }
+
+        const cadeia = await this.evolutionChainCache.get(urlCadeia);
+        const estagios = new Map();
+        const percorrer = (no, proximoEstagio) => {
+            const idEspecie = Number(no.species?.url?.match(/\/pokemon-species\/(\d+)\/?$/)?.[1]);
+            const pertencePrimeiraGeracao =
+                Number.isInteger(idEspecie) && idEspecie >= 1
+                && idEspecie <= PokeApiClient.MAX_PRIMEIRA_GERACAO;
+
+            if (pertencePrimeiraGeracao) {
+                estagios.set(idEspecie, proximoEstagio);
+            }
+
+            const estagioDosFilhos = proximoEstagio + (pertencePrimeiraGeracao ? 1 : 0);
+            (no.evolves_to ?? []).forEach((filho) => percorrer(filho, estagioDosFilhos));
+        };
+        percorrer(cadeia.chain, 0);
+
+        const estagio = estagios.get(idPokemon);
+        if (!Number.isInteger(estagio)) {
+            throw new Error('Não foi possível identificar o estágio evolutivo deste Pokémon.');
+        }
+        return estagio;
     }
 
     async listarMovimentosDisponiveis(idPokemon, nivel) {

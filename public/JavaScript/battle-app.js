@@ -101,12 +101,15 @@ class BattleApp {
         const quantidade = Number(this.progress?.pokemons_oponente);
         const minimo = Number(this.progress?.pokedex_minimo);
         const maximo = Number(this.progress?.pokedex_maximo);
+        const area = Number(this.progress?.area);
         if (
             !Number.isInteger(quantidade) || quantidade < 1 || quantidade > 6
             || !Number.isInteger(minimo) || !Number.isInteger(maximo) || minimo > maximo
+            || !Number.isInteger(area) || area < 0
         ) {
             throw new Error('Os dados da área não permitem preparar a equipe adversária.');
         }
+        const estagioMaximo = Math.min(area, 2);
 
         const usados = new Set([
             ...this.idsPokemonExcluidos.map(Number),
@@ -124,12 +127,23 @@ class BattleApp {
             ];
         }
 
-        const ids = candidatos.slice(0, quantidade);
-        if (ids.length !== quantidade) {
+        const selecionados = [];
+        for (let inicio = 0; inicio < candidatos.length && selecionados.length < quantidade; inicio += 8) {
+            const lote = candidatos.slice(inicio, inicio + 8);
+            const estagios = await Promise.all(
+                lote.map((id) => this.pokemonService.obterEstagioPrimeiraGeracao(id))
+            );
+            lote.forEach((id, indice) => {
+                if (estagios[indice] <= estagioMaximo && selecionados.length < quantidade) {
+                    selecionados.push({ id, estagio: estagios[indice] });
+                }
+            });
+        }
+        if (selecionados.length !== quantidade) {
             throw new Error('Não há Pokémon suficientes disponíveis para esta equipe.');
         }
 
-        return Promise.all(ids.map(async (id) => {
+        return Promise.all(selecionados.map(async ({ id, estagio }) => {
             const pokemon = await this.pokemonService.buscarPokemonApi(id);
             const atributos = Object.fromEntries(
                 pokemon.stats.map((stat) => [stat.stat.name, stat.base_stat])
@@ -144,6 +158,7 @@ class BattleApp {
                 defense: atributos.defense,
                 'special-defense': atributos['special-defense'],
                 speed: atributos.speed,
+                estagio_evolutivo: estagio,
             };
         }));
     }

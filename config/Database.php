@@ -11,10 +11,8 @@ use RuntimeException;
  * Conexão única com o banco (padrão Singleton).
  * Uso: $pdo = Database::conectar();
  *
- * ATENCAO ao nome do arquivo: ele se chama DataBase.php (o seu nome), mas a
- * CLASSE e `Database`. O autoload PSR-4 casa o nome do ARQUIVO com o da
- * CLASSE, entao o arquivo precisa estar em config/ e a classe declarada
- * aqui. Se preferir, renomeie o arquivo para Database.php.
+ * O nome do arquivo corresponde a classe para manter o autoload PSR-4
+ * consistente em sistemas de arquivos que diferenciam maiusculas e minusculas.
  */
 class Database
 {

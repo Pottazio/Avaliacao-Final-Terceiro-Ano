@@ -159,12 +159,48 @@ class TimeApp {
 
         try {
             const pokemon = await this.api.buscar(this.campo.value);
+            const progresso = await this.carregarProgresso();
+            const estagio = await this.api.obterEstagioPrimeiraGeracao(pokemon.id_pokedex);
+            const estagioMaximo = this.estagioMaximoPermitido(progresso.area);
+            if (estagio > estagioMaximo) {
+                throw new Error(
+                    `Sua área permite Pokémon até o estágio ${this.rotuloEstagio(estagioMaximo)}.`
+                );
+            }
+            pokemon.estagioEvolutivo = estagio;
             this.painel.innerHTML = '';
             this.painel.appendChild(this.criarCartao(pokemon));
         } catch (erro) {
             this.painel.innerHTML = '';
             this.mostrarMensagem(erro.message, 'erro');
         }
+    }
+
+    estagioMaximoPermitido(area) {
+        const numeroArea = Number(area);
+        if (!Number.isInteger(numeroArea) || numeroArea < 0) {
+            throw new Error('Não foi possível identificar a área atual do treinador.');
+        }
+        return Math.min(numeroArea, 2);
+    }
+
+    rotuloEstagio(estagio) {
+        return estagio === 0 ? 'inicial' : String(estagio);
+    }
+
+    async carregarEstagios(pokemons) {
+        const resultado = [];
+        const tamanhoLote = 8;
+        for (let inicio = 0; inicio < pokemons.length; inicio += tamanhoLote) {
+            const lote = await Promise.all(
+                pokemons.slice(inicio, inicio + tamanhoLote).map(async (pokemon) => ({
+                    ...pokemon,
+                    estagioEvolutivo: await this.api.obterEstagioPrimeiraGeracao(pokemon.id),
+                }))
+            );
+            resultado.push(...lote);
+        }
+        return resultado;
     }
 
     async carregarProgresso() {
@@ -193,6 +229,7 @@ class TimeApp {
             throw new Error(json.mensagem || 'Não foi possível carregar o progresso.');
         }
 
+        this.estagioMaximoPermitido(json.progresso?.area);
         this.progresso = json.progresso;
         return this.progresso;
     }
@@ -202,10 +239,15 @@ class TimeApp {
 
         try {
             const progresso = await this.carregarProgresso();
+            const estagioMaximo = this.estagioMaximoPermitido(progresso.area);
+            const descricaoEstagio = estagioMaximo === 0
+                ? 'somente estágio inicial'
+                : `até o estágio ${this.rotuloEstagio(estagioMaximo)}`;
             if (this.resumoProgresso) {
                 this.resumoProgresso.textContent =
-                    `Pokémon liberados: #001–#${String(progresso.pokedex_maximo).padStart(3, '0')} de 151 `
-                    + `(${progresso.vitorias} vitórias). Selecione um para adicionar ao time.`;
+                    `${progresso.nome_area}: ${descricaoEstagio}. Pokémon liberados: `
+                    + `#001–#${String(progresso.pokedex_maximo).padStart(3, '0')} de 151 `
+                    + `(${progresso.vitorias} vitórias).`;
             }
 
             this.galeriaPokemon.innerHTML = '';
@@ -215,9 +257,20 @@ class TimeApp {
             this.galeriaPokemon.appendChild(carregando);
 
             const pokemons = await this.api.listarPrimeiraGeracao(progresso.pokedex_maximo);
+            const pokemonsComEstagio = await this.carregarEstagios(pokemons);
+            const liberados = pokemonsComEstagio.filter(
+                (pokemon) => pokemon.estagioEvolutivo <= estagioMaximo
+            );
 
             this.galeriaPokemon.innerHTML = '';
-            pokemons.forEach((pokemon) => {
+            if (liberados.length === 0) {
+                const vazio = document.createElement('p');
+                vazio.className = 'time-vazio';
+                vazio.textContent = 'Não há Pokémon deste estágio na Pokédex liberada.';
+                this.galeriaPokemon.appendChild(vazio);
+                return;
+            }
+            liberados.forEach((pokemon) => {
                 this.galeriaPokemon.appendChild(this.criarCartaoGaleria(pokemon));
             });
         } catch (erro) {
@@ -253,7 +306,8 @@ class TimeApp {
 
         const nome = document.createElement('span');
         nome.className = 'pokedex-nome';
-        nome.textContent = pokemon.nome;
+        nome.textContent =
+            `${pokemon.nome} · Estágio ${this.rotuloEstagio(pokemon.estagioEvolutivo)}`;
         cartao.appendChild(nome);
 
         cartao.addEventListener('click', () => this.selecionarPokemon(pokemon.id));
@@ -368,6 +422,11 @@ class TimeApp {
         this.mostrarMensagem('Salvando...', 'info');
 
         try {
+            const progresso = await this.carregarProgresso();
+            if (pokemon.estagioEvolutivo > this.estagioMaximoPermitido(progresso.area)) {
+                throw new Error('Este Pokémon ainda não está liberado para a sua área.');
+            }
+
             const dados = new URLSearchParams();
             dados.append('nome', pokemon.nome);
             dados.append('especie', pokemon.especie);

@@ -283,8 +283,13 @@ class TeamController
     public function progresso(): void
     {
         try {
+            $progresso = $this->progressaoDAO->calcular(Auth::idPerfil());
+            $areaAtual = ProgressaoJogo::carregar(Database::conectar(), Auth::idPerfil());
+            $progresso['area'] = $areaAtual['area'];
+            $progresso['nome_area'] = $areaAtual['nome_area'];
+
             $this->responder(true, 'Progresso carregado.', [
-                'progresso' => $this->progressaoDAO->calcular(Auth::idPerfil()),
+                'progresso' => $progresso,
             ]);
         } catch (PDOException $e) {
             $this->responder(false, 'Não foi possível carregar a progressão de batalhas.', error: true);

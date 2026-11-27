@@ -574,10 +574,16 @@ class BattleController
             }
 
             $idPokedex = filter_var($pokemon['id_pokedex'] ?? null, FILTER_VALIDATE_INT);
+            $estagioEvolutivo = filter_var(
+                $pokemon['estagio_evolutivo'] ?? null,
+                FILTER_VALIDATE_INT
+            );
             $nome = $pokemon['name'] ?? null;
             $tipos = $pokemon['types'] ?? null;
             if (
                 $idPokedex === false || $idPokedex === null
+                || $estagioEvolutivo === false || $estagioEvolutivo === null
+                || $estagioEvolutivo < 0 || $estagioEvolutivo > 2
                 || !is_string($nome) || !preg_match('/^[a-z0-9-]{1,60}$/', $nome)
                 || !is_array($tipos) || count($tipos) < 1 || count($tipos) > 2
             ) {
@@ -620,6 +626,7 @@ class BattleController
 
             $equipeValidada[] = [
                 'id_pokedex' => (int) $idPokedex,
+                'estagio_evolutivo' => (int) $estagioEvolutivo,
                 'name' => $nome,
                 'tipos' => $tipos,
             ] + $atributos;
@@ -645,6 +652,7 @@ class BattleController
             $this->batalhaDAO->listarTime($idPerfil)
         );
         $equipe = [];
+        $estagioMaximo = min($area, 2);
         foreach ($dadosEquipe as $pokemon) {
             $idPokedex = (int) $pokemon['id_pokedex'];
             if (
@@ -654,6 +662,9 @@ class BattleController
                 || in_array($idPokedex, $idsPokemonDoJogador, true)
             ) {
                 throw new RuntimeException('Um Pokémon adversário não pertence à Pokédex desta área.');
+            }
+            if ((int) $pokemon['estagio_evolutivo'] > $estagioMaximo) {
+                throw new RuntimeException('Um Pokémon adversário excede o estágio evolutivo permitido nesta área.');
             }
 
             $nivel = random_int(
